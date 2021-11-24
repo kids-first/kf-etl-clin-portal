@@ -94,14 +94,9 @@ fabric.properties
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
-### Import Task ###
-/.idea/
-import-task/derby.log
-import-task/metastore_db/
-import-task//spark-warehouse/
-import-task/.idea/
-import-task/target/
-import-task/project/
-
+derby.log
 # End of https://www.toptal.com/developers/gitignore/api/scala,intellij
-
+/metastore_db/
+/spark-warehouse/
+/.idea/
+/target/
