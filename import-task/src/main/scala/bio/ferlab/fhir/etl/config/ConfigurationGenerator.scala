@@ -6,6 +6,11 @@ import bio.ferlab.datalake.commons.config._
 import bio.ferlab.datalake.commons.file.FileSystemType.S3
 
 object ConfigurationGenerator extends App {
+  //TODO check is args is empty
+
+  val studies = args.slice(1, args.length)
+  val release = args(0)
+
   val input = "kfdrc"
   val output = "output"
 
@@ -31,21 +36,31 @@ object ConfigurationGenerator extends App {
     "spark.hadoop.fs.s3a.impl" -> "org.apache.hadoop.fs.s3a.S3AFileSystem"
   )
 
-  val sources = List(
-    DatasetConf("raw_patient", input, "/raw/fhir/patient/study=SD_Z6MWD3H0", AVRO, OverWrite),
-    DatasetConf(
-      "normalized_patient",
-      output,
-      "/normalized/fhir/patient/study=SD_Z6MWD3H0",
-      PARQUET,
-      OverWrite,
-      TableConf("kfdrc", "fhir_patient")
-    )
-  )
+//  val sourceNames = Seq("condition", "documentreference", "group", "observation", "patient", "researchstudy", "researchsubject", "specimen")
+//val sourceNames = Seq("condition", "group", "observation", "patient", "researchstudy", "researchsubject", "specimen")
+val sourceNames = Seq("condition")
+
+  val sources = sourceNames.flatMap(sn =>
+    studies.flatMap(study => {
+      Seq(
+        DatasetConf(s"raw_$sn", input, s"/raw/fhir/$sn/study=$study", AVRO, OverWrite),
+        DatasetConf(
+          s"normalized_$sn",
+          output,
+          s"/normalized/fhir/$sn/study=$study/release=$release",
+          PARQUET,
+          OverWrite,
+          TableConf("kfdrc", s"fhir_$sn")
+        )
+      )
+    })
+  ).toList
+
 
   val local_conf = Configuration(
     storages = storage,
     sources = sources.map(ds => ds.copy(table = ds.table.map(t => TableConf(database, t.name)))),
+    args=args.toList,
     sparkconf = local_spark_conf
   )
 

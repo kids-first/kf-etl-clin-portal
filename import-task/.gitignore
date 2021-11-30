@@ -100,3 +100,6 @@ derby.log
 /spark-warehouse/
 /.idea/
 /target/
+
+.bsp/
+
