@@ -23,7 +23,8 @@ object Transformations {
       .withColumn("study_id", regexp_extract(col("identifier")(2)("value"), patternParticipantStudy, 1))
       .withColumn("participant_id", regexp_extract(col("identifier")(2)("value"), patternParticipantStudy, 2))
     ),
-    Drop("extension", "id", "identifier", "meta")
+//    Drop("extension", "id", "identifier", "meta")
+    Drop()
   )
 
   val specimenMappings: List[Transformation] = List(

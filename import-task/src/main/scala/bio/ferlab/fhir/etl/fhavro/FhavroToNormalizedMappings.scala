@@ -30,7 +30,8 @@ object FhavroToNormalizedMappings {
   def mappings(implicit c: Configuration): List[(DatasetConf, DatasetConf, List[Transformation])] = c.sources.filter(s => s.format == Format.AVRO).map(s =>
     {
       val pattern(table ) = s.id
-      (s.copy(readoptions = Map("avroSchema" -> asJson.toString())), c.getDataset(s"normalized_$table"), defaultTransformations ++ extractionMappings(table))
+//      (s.copy(readoptions = Map("avroSchema" -> asJson.toString())), c.getDataset(s"normalized_$table"), defaultTransformations ++ extractionMappings(table))
+      (s, c.getDataset(s"normalized_$table"), defaultTransformations ++ extractionMappings(table))
     }
   )
 }
