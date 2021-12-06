@@ -24,16 +24,18 @@ object Utils {
   val codingClassify: UserDefinedFunction =
     udf((arr: Seq[(String, String, String, String, String, String)]) => arr.map(r => (codingSystemClassify(r._2), r._4)))
 
-//  def firstNonNull[T >: Null : ClassTag]: UserDefinedFunction = udf((arr: Seq[T]) => arr.find(_ != null).orNull)
   def firstNonNull: UserDefinedFunction = udf((arr: Seq[String]) => arr.find(_ != null).orNull)
-  def firstNonNullDecimal: UserDefinedFunction = udf((arr: Seq[BigDecimal]) => arr.find(_ != null).orNull)
-//  def firstNonNullFloat: UserDefinedFunction = udf((arr: Seq[Float]) => arr.find(_ != null).orNull)
 
-//  val firstNonNull: UserDefinedFunction =
-//    udf((arr: Seq[String]) => arr.find(_ != null).orNull)
+  val ncitIdAnatomicalSite: UserDefinedFunction =
+    udf((arr: Seq[(String, String, String, String, String, Boolean)]) => arr.find(r => r._2 matches "ncit\\.owl$" ) match {
+      case Some(v) => v._4
+      case None => null
+    })
 
-
-//  val firstNonNullr: UserDefinedFunction =
-//    udf((arr: Seq[Numeric]) => arr.find(_ != null).orNull)
+  val uberonIdAnatomicalSite: UserDefinedFunction =
+    udf((arr: Seq[(String, String, String, String, String, Boolean)]) => arr.find(r => r._2 matches "uberon\\.owl$" ) match {
+      case Some(v) => v._4
+      case None => null
+    })
 
 }
