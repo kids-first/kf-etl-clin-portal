@@ -58,27 +58,22 @@ object Transformations {
 
   val conditionMappings: List[Transformation] = List(
     Custom(_
-      .select("code")
-//      .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
-//      .withColumn("diagnosis_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
-//      .withColumn("condition_coding", codingClassify(col("code")("coding")))
-//      .withColumn("source_text", col("code")("text"))
-//      .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
-//      //could be phenotype OR disease per condition
-//      .withColumn("condition_profile", regexp_extract(col("meta")("profile")(0), conditionTypeR, 1))
-//      .withColumn("observed", col("verificationStatus")("text"))
-//      .withColumn("tumor_location", col("bodySite"))
-
-
-//      .withColumn("icd_id_diagnosis", col("code")) //TODO
-//      .withColumn("mondo_id_diagnosis", col("code")) //TODO
-//      .withColumn("ncit_id_diagnosis", col("code")) //TODO
-//      .withColumn("hpo_id_phenotype", col("code")) //TODO
-//      .withColumn("source_text_diagnosis", col("code")) //TODO
-//      .withColumn("snomed_id_phenotype", col("code")) //TODO
-//      .withColumn("source_text_phenotype", col("code")) //TODO
+      .select("bodySite")
+            .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
+            .withColumn("diagnosis_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
+            .withColumn("condition_coding", codingClassify(col("code")("coding")))
+            .withColumn("source_text", col("code")("text"))
+            .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
+            //could be phenotype OR disease per condition
+            .withColumn("observed", col("verificationStatus")("text"))
+            .withColumn("source_text_tumor_location", col("bodySite")("text"))
+            .withColumn("uberon_id_tumor_location", col("bodySite")("coding")) //TODO
+            .withColumn("condition_profile", regexp_extract(col("meta")("profile")(0), conditionTypeR, 1))
+      //      .withColumn("snomed_id_phenotype", col("code")) //TODO
+      //      .withColumn("external_id", col("identifier")) //TODO
+      //      .withColumn("diagnosis_category", col("code")) //TODO
     ),
-    Drop()
+    Drop("bodySite")
   )
 
   val researchsubjectMappings: List[Transformation] = List(
