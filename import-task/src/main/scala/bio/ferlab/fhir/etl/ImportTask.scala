@@ -14,6 +14,8 @@ object ImportTask extends SparkApp {
       .mappings
       .map { case (src, dst, transformations) => new RawToNormalizedETL(src, dst, transformations) }
 
-//  jobs.foreach(_.run().printSchema())
-  jobs.foreach(_.run().show(false))
+//  spark.read.format("avro").options(avroSchema=jsonFormatSchema).load("/tmp/avro")
+
+//    jobs.foreach(_.run().printSchema())
+  jobs.foreach(_.run().show(20, false))
 }
