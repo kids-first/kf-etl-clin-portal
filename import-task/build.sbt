@@ -1,4 +1,4 @@
-import sbt.Keys.libraryDependencies
+
 
 val projectName = "import-task"
 val organization = "bio.ferlab"
@@ -48,4 +48,12 @@ javaOptions ++= Seq(
   "-Xmx2G",
   "-XX:MaxPermSize=2048M"
 )
+
+assembly / assemblyMergeStrategy:= {
+  case PathList("META-INF", _*) => MergeStrategy.discard
+  case _ => MergeStrategy.first
+}
+
+assembly / test := {}
+assembly / mainClass := Some("bio.ferlab.fhir.etl.ImportTask")
 assembly / assemblyJarName := "import-task.jar"

@@ -1,8 +1,8 @@
 package bio.ferlab.fhir.etl.transformations
 
 import bio.ferlab.datalake.spark3.transformation.{Custom, Drop, Transformation}
-import bio.ferlab.fhir.etl.Utils.{codingClassify, extractAclFromList, firstNonNull, ncitIdAnatomicalSite, uberonIdAnatomicalSite}
-import org.apache.spark.sql.functions.{col, collect_list, explode, filter, regexp_extract, struct}
+import bio.ferlab.fhir.etl.Utils.{extractAclFromList, extractHashes, firstNonNull, ncitIdAnatomicalSite, retrieveIsHarmonized, uberonIdAnatomicalSite}
+import org.apache.spark.sql.functions._
 
 object Transformations {
 
@@ -10,6 +10,7 @@ object Transformations {
 
   val URL_US_CORE_ETHNICITY = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity"
   val URL_FILE_SIZE = "https://nih-ncpi.github.io/ncpi-fhir-ig/StructureDefinition/file-size"
+  val URL_HASHES = "https://nih-ncpi.github.io/ncpi-fhir-ig/StructureDefinition/hashes"
   val patternParticipantStudy = "[A-Z][a-z]+-(SD_[0-9A-Za-z]+)-([A-Z]{2}_[0-9A-Za-z]+)"
   val participantSpecimen = "[A-Z][a-z]+/([0-9A-Za-z]+)"
   val conditionTypeR = "^https:\\/\\/[A-Za-z0-9-_.\\/]+\\/([A-Za-z0-9]+)"
@@ -93,15 +94,32 @@ object Transformations {
   val documentreferenceMappings: List[Transformation] = List(
     Custom(_
       .select("*")
-      .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
-      .withColumn("genomic_file_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
       .withColumn("acl", extractAclFromList(col("securityLabel")("text")))
       .withColumn("access_urls", col("content")("attachment")("url")(0))
-      .withColumn("external_id", col("content")("attachment")("url")(1))
+      // TODO availability
+      // TODO controlled_access
+      // TODO created_at
       .withColumn("data_type", col("type")("text"))
+      .withColumn("external_id", col("content")(1)("attachment")("url"))
       .withColumn("file_format", firstNonNull(col("content")("format")("display")))
       .withColumn("file_name", firstNonNull(col("content")("attachment")("title")))
-      .withColumn("size", col("content")("attachment")("extension")(1)("valueDecimal"))
+      .withColumn("genomic_file_fhir_id", col("fhir_id"))
+      .withColumn("genomic_file_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
+      .withColumn("hashes", extractHashes(filter(col("content")(1)("attachment")("extension"), c => c("url") === URL_HASHES)("valueCodeableConcept")))
+      // TODO instrument_models
+      .withColumn("is_harmonized", retrieveIsHarmonized(col("content")(1)("attachment")("url")))
+      // TODO is_paired_end
+      .withColumn("latest_did", split(col("content")("attachment")("url")(0), "\\/\\/")(2))
+      // TODO metadata
+      // TODO modified_at
+      // TODO platforms
+      // TODO reference_genome
+      // TODO repository
+      .withColumn("size", filter(col("content")(1)("attachment")("extension"), c => c("url") === URL_FILE_SIZE)("valueDecimal")(0))
+      .withColumn("urls", col("content")(1)("attachment")("url"))
+      // TODO visible
+      .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
+      // TODO release_id
       .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
     ),
     Drop("content")
