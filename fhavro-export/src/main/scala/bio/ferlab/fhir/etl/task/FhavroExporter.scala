@@ -9,7 +9,7 @@ import bio.ferlab.fhir.schema.repository.SchemaMode
 import ca.uhn.fhir.rest.client.impl.GenericClient
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
-import org.hl7.fhir.r4.model.{Bundle, DomainResource}
+import org.hl7.fhir.r4.model.{Bundle, DomainResource, ResearchStudy}
 import org.slf4j.{Logger, LoggerFactory}
 import software.amazon.awssdk.services.s3.S3Client
 
@@ -34,14 +34,19 @@ class FhavroExporter(config: Config) {
 
     val bundle = fhirClient.search()
       .forResource(request.`type`)
-      .withTag(null, request.tag)
       .returnBundle(classOf[Bundle])
 
-    if (request.profile.isDefined) {
-      bundle.withProfile(request.profile.get)
+    val bundleEnriched = request.`type` match {
+      case "ResearchStudy" => bundle.where(ResearchStudy.IDENTIFIER.exactly().identifier(request.tag))
+      case "Organization" => bundle
+      case _ => bundle.withTag(null, request.tag)
     }
 
-    var query = bundle.execute()
+    if (request.profile.isDefined) {
+      bundleEnriched.withProfile(request.profile.get)
+    }
+
+    var query = bundleEnriched.execute()
     resources.addAll(getResourcesFromBundle(query))
 
     while (query.getLink("next") != null) {
