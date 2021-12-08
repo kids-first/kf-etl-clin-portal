@@ -14,7 +14,8 @@ object Utils {
       case "http://purl.obolibrary.org/obo/mondo.owl" => "MONDO"
       case "https://www.who.int/classifications/classification-of-diseases" => "ICD"
       case "http://purl.obolibrary.org/obo/hp.owl" => "HPO"
-      case _ => "Unknown" //TODO determine other types  NCIT???
+      case "http://purl.obolibrary.org/obo/ncit.owl" => "NCIT"
+      case _ => "Unknown"
     }
   }
 
