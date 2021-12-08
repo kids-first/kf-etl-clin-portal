@@ -105,3 +105,4 @@ import-task/.idea/
 
 # End of https://www.toptal.com/developers/gitignore/api/scala,intellij
 
+*.iml
