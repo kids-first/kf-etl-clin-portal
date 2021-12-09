@@ -3,8 +3,6 @@ package bio.ferlab.fhir.etl
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions.udf
 
-import scala.reflect.ClassTag
-
 object Utils {
 
   val actCodeR = "^phs[0-9.a-z]+"
@@ -43,7 +41,7 @@ object Utils {
   val extractHashes: UserDefinedFunction =
     udf(
       (arr: Seq[(Option[String], Seq[(Option[String], Option[String], Option[String], Option[String], Option[String], Option[Boolean])], Option[String])])
-        => arr.map(r => r._2(0)._5 -> r._3).toMap)
+        => arr.map(r => r._2.head._5 -> r._3).toMap)
 
   val retrieveIsHarmonized: UserDefinedFunction = udf((s: Option[String]) => s.exists(_.contains("harmonized-data")))
 }

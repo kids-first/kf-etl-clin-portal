@@ -1,14 +1,14 @@
 package bio.ferlab.fhir.etl.transformations
 
 import bio.ferlab.datalake.spark3.transformation.{Custom, Drop, Transformation}
+import bio.ferlab.fhir.etl._
+import bio.ferlab.fhir.etl.Utils.{codingClassify, extractAclFromList, firstNonNull, ncitIdAnatomicalSite, uberonIdAnatomicalSite}
+import org.apache.spark.sql.functions.{col, collect_list, explode, expr, filter, regexp_extract, struct}
 import bio.ferlab.fhir.etl.Utils.{extractAclFromList, extractHashes, firstNonNull, ncitIdAnatomicalSite, retrieveIsHarmonized, uberonIdAnatomicalSite}
 import org.apache.spark.sql.functions._
 
 object Transformations {
 
-  val URL_US_CORE_RACE = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race"
-
-  val URL_US_CORE_ETHNICITY = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity"
   val URL_FILE_SIZE = "https://nih-ncpi.github.io/ncpi-fhir-ig/StructureDefinition/file-size"
   val URL_HASHES = "https://nih-ncpi.github.io/ncpi-fhir-ig/StructureDefinition/hashes"
   val patternParticipantStudy = "[A-Z][a-z]+-(SD_[0-9A-Za-z]+)-([A-Z]{2}_[0-9A-Za-z]+)"
@@ -18,8 +18,8 @@ object Transformations {
   val patientMappings: List[Transformation] = List(
     Custom(_
       .select("*")
-      .withColumn("race", filter(col("extension"), c => c("url") === URL_US_CORE_RACE)(0)("extension")(0)("valueString"))
-      .withColumn("ethnicity", filter(col("extension"), c => c("url") === URL_US_CORE_ETHNICITY)(0)("extension")(0)("valueString"))
+      .withColumn("race", filter(col("extension"), c => c("url") === SYS_US_CORE_RACE_URL)(0)("extension")(0)("valueString"))
+      .withColumn("ethnicity", filter(col("extension"), c => c("url") === SYS_US_CORE_ETHNICITY_URL)(0)("extension")(0)("valueString"))
       .withColumn("external_id", col("identifier")(0)("value"))
       .withColumn("study_id", regexp_extract(col("identifier")(2)("value"), patternParticipantStudy, 1))
       .withColumn("participant_id", regexp_extract(col("identifier")(2)("value"), patternParticipantStudy, 2))
@@ -68,7 +68,7 @@ object Transformations {
             //could be phenotype OR disease per condition
             .withColumn("observed", col("verificationStatus")("text"))
             .withColumn("source_text_tumor_location", col("bodySite")("text"))
-            .withColumn("uberon_id_tumor_location", col("bodySite")("coding")) //TODO
+            .withColumn("uberon_id_tumor_location", col("bodySite")("coding"))
             .withColumn("condition_profile", regexp_extract(col("meta")("profile")(0), conditionTypeR, 1))
       //      .withColumn("snomed_id_phenotype", col("code")) //TODO
       //      .withColumn("external_id", col("identifier")) //TODO
@@ -77,7 +77,7 @@ object Transformations {
     Drop("bodySite")
   )
 
-  val researchsubjectMappings: List[Transformation] = List(
+  val organizationMappings: List[Transformation] = List(
     Custom(_
       .select("*")
     ),
@@ -87,8 +87,10 @@ object Transformations {
   val researchstudyMappings: List[Transformation] = List(
     Custom(_
       .select("*")
-    ),
-    Drop()
+      .withColumnRenamed("title", "name")
+      .withColumn("study_id", filter(col("identifier"), c => c("system") === s"${SYS_DATASERVICE_URL}studies/")(0)("value"))
+      .withColumn("attribution", filter(col("identifier"), c => c("system") === SYS_NCBI_URL)(0)("value"))
+    )
   )
 
   val documentreferenceMappings: List[Transformation] = List(
@@ -147,10 +149,11 @@ object Transformations {
     "specimen" -> specimenMappings,
     "observation" -> observationMappings,
     "condition" -> conditionMappings,
-    "researchsubject" -> researchsubjectMappings,
+    "researchsubject" -> patientMappings,
     "researchstudy" -> researchstudyMappings,
     "group" -> groupMappings,
     "documentreference" -> documentreferenceMappings,
+    "organization" -> organizationMappings,
   )
 
 }

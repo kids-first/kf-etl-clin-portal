@@ -36,9 +36,8 @@ object ConfigurationGenerator extends App {
     "spark.hadoop.fs.s3a.impl" -> "org.apache.hadoop.fs.s3a.S3AFileSystem"
   )
 
-//  val sourceNames = Seq("condition", "documentreference", "group", "observation", "patient", "researchstudy", "researchsubject", "specimen")
-//val sourceNames = Seq("condition", "group", "observation", "patient", "researchstudy", "researchsubject", "specimen")
-val sourceNames = Seq("condition")
+//  val sourceNames = Seq("condition", "documentreference", "group", "observation", "patient", "researchstudy", "researchsubject", "specimen", organization)
+val sourceNames = Seq("researchstudy")
 
   val sources = sourceNames.flatMap(sn =>
     studies.flatMap(study => {

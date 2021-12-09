@@ -11,7 +11,7 @@ import scala.util.matching.Regex
 object FhavroToNormalizedMappings {
   val pattern: Regex = "raw_([A-Za-z0-9]+)".r
 
-  val idFromUrlRegex = "https://kf-api-fhir-service.kidsfirstdrc.org/[A-Za-z]+/([0-9A-Za-z]+)/_history/2"
+  val idFromUrlRegex = "https://kf-api-fhir-service.kidsfirstdrc.org/[A-Za-z]+/([0-9A-Za-z]+)/_history"
 
 
 
