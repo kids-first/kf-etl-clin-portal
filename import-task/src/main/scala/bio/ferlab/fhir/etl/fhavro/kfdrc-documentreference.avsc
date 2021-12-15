@@ -1,14 +1,18 @@
 {
-  "name": "bio.ferlab.fhir.DocumentReference",
   "type": "record",
+  "name": "DocumentReference",
+  "doc": "A reference to a document of any kind for any purpose. Provides metadata about the document so that the document can be discovered and managed. The scope of a document is any seralized object with a mime-type, so includes formal patient centric documents (CDA), cliical notes, scanned paper, and non-patient specific documents like policy text.",
+  "namespace": "bio.ferlab.fhir",
   "fields": [
     {
       "name": "extension",
       "type": {
         "type": "array",
         "items": {
-          "name": "bio.ferlab.fhir.Extension",
           "type": "record",
+          "name": "Extension",
+          "doc": "An Extension",
+          "namespace": "bio.ferlab.fhir",
           "fields": [
             {
               "name": "url",
@@ -23,8 +27,10 @@
               "type": {
                 "type": "array",
                 "items": {
-                  "name": "DocumentReference.extension",
                   "type": "record",
+                  "name": "DocumentReference.extension",
+                  "doc": "An Extension",
+                  "namespace": "bio.ferlab.fhir",
                   "fields": [
                     {
                       "name": "url",
@@ -38,7 +44,10 @@
                       "name": "valueDate",
                       "type": [
                         "null",
-                        "int"
+                        {
+                          "type": "int",
+                          "logicalType": "date"
+                        }
                       ],
                       "default": null
                     },
@@ -46,7 +55,10 @@
                       "name": "valueDateTime",
                       "type": [
                         "null",
-                        "long"
+                        {
+                          "type": "long",
+                          "logicalType": "timestamp-micros"
+                        }
                       ],
                       "default": null
                     },
@@ -54,7 +66,10 @@
                       "name": "valueInstant",
                       "type": [
                         "null",
-                        "long"
+                        {
+                          "type": "long",
+                          "logicalType": "timestamp-millis"
+                        }
                       ],
                       "default": null
                     },
@@ -69,8 +84,10 @@
                     {
                       "name": "valueCoding",
                       "type": {
-                        "name": "bio.ferlab.fhir.Coding",
                         "type": "record",
+                        "name": "Coding",
+                        "doc": "A reference to a code defined by a terminology system.",
+                        "namespace": "bio.ferlab.fhir",
                         "fields": [
                           {
                             "name": "id",
@@ -121,22 +138,17 @@
                             "default": null
                           }
                         ],
-                        "doc": "A reference to a code defined by a terminology system."
+                        "default": {}
                       },
-                      "default": {
-                        "id": null,
-                        "system": null,
-                        "version": null,
-                        "code": null,
-                        "display": null,
-                        "userSelected": null
-                      }
+                      "default": {}
                     },
                     {
                       "name": "valueCodeableConcept",
                       "type": {
-                        "name": "bio.ferlab.fhir.CodeableConcept",
                         "type": "record",
+                        "name": "CodeableConcept",
+                        "doc": "A concept that may be defined by a formal reference to a terminology or ontology or may be provided by text.",
+                        "namespace": "bio.ferlab.fhir",
                         "fields": [
                           {
                             "name": "id",
@@ -150,7 +162,8 @@
                             "name": "coding",
                             "type": {
                               "type": "array",
-                              "items": "bio.ferlab.fhir.Coding"
+                              "items": "bio.ferlab.fhir.Coding",
+                              "default": []
                             },
                             "default": []
                           },
@@ -163,13 +176,9 @@
                             "default": null
                           }
                         ],
-                        "doc": "A concept that may be defined by a formal reference to a terminology or ontology or may be provided by text."
+                        "default": {}
                       },
-                      "default": {
-                        "id": null,
-                        "coding": [],
-                        "text": null
-                      }
+                      "default": {}
                     },
                     {
                       "name": "valueBase64Binary",
@@ -294,8 +303,10 @@
                     {
                       "name": "valueCount",
                       "type": {
-                        "name": "bio.ferlab.fhir.Count",
                         "type": "record",
+                        "name": "Count",
+                        "doc": "A measured amount (or an amount that can potentially be measured). Note that measured amounts include amounts that are not precisely quantified, including amounts involving arbitrary units and floating currencies.",
+                        "namespace": "bio.ferlab.fhir",
                         "fields": [
                           {
                             "name": "id",
@@ -309,7 +320,12 @@
                             "name": "value",
                             "type": [
                               "null",
-                              "bytes"
+                              {
+                                "type": "bytes",
+                                "logicalType": "decimal",
+                                "precision": 18,
+                                "scale": 0
+                              }
                             ],
                             "default": null
                           },
@@ -346,22 +362,17 @@
                             "default": null
                           }
                         ],
-                        "doc": "A measured amount (or an amount that can potentially be measured). Note that measured amounts include amounts that are not precisely quantified, including amounts involving arbitrary units and floating currencies."
+                        "default": {}
                       },
-                      "default": {
-                        "id": null,
-                        "value": null,
-                        "comparator": null,
-                        "unit": null,
-                        "system": null,
-                        "code": null
-                      }
+                      "default": {}
                     },
                     {
                       "name": "valueDistance",
                       "type": {
-                        "name": "bio.ferlab.fhir.Distance",
                         "type": "record",
+                        "name": "Distance",
+                        "doc": "A length - a value with a unit that is a physical distance.",
+                        "namespace": "bio.ferlab.fhir",
                         "fields": [
                           {
                             "name": "id",
@@ -375,7 +386,12 @@
                             "name": "value",
                             "type": [
                               "null",
-                              "bytes"
+                              {
+                                "type": "bytes",
+                                "logicalType": "decimal",
+                                "precision": 18,
+                                "scale": 0
+                              }
                             ],
                             "default": null
                           },
@@ -412,22 +428,17 @@
                             "default": null
                           }
                         ],
-                        "doc": "A length - a value with a unit that is a physical distance."
+                        "default": {}
                       },
-                      "default": {
-                        "id": null,
-                        "value": null,
-                        "comparator": null,
-                        "unit": null,
-                        "system": null,
-                        "code": null
-                      }
+                      "default": {}
                     },
                     {
                       "name": "valueDuration",
                       "type": {
-                        "name": "bio.ferlab.fhir.Duration",
                         "type": "record",
+                        "name": "Duration",
+                        "doc": "A length of time.",
+                        "namespace": "bio.ferlab.fhir",
                         "fields": [
                           {
                             "name": "id",
@@ -441,7 +452,12 @@
                             "name": "value",
                             "type": [
                               "null",
-                              "bytes"
+                              {
+                                "type": "bytes",
+                                "logicalType": "decimal",
+                                "precision": 18,
+                                "scale": 0
+                              }
                             ],
                             "default": null
                           },
@@ -478,22 +494,17 @@
                             "default": null
                           }
                         ],
-                        "doc": "A length of time."
+                        "default": {}
                       },
-                      "default": {
-                        "id": null,
-                        "value": null,
-                        "comparator": null,
-                        "unit": null,
-                        "system": null,
-                        "code": null
-                      }
+                      "default": {}
                     },
                     {
                       "name": "valueQuantity",
                       "type": {
-                        "name": "bio.ferlab.fhir.Quantity",
                         "type": "record",
+                        "name": "Quantity",
+                        "doc": "A measured amount (or an amount that can potentially be measured). Note that measured amounts include amounts that are not precisely quantified, including amounts involving arbitrary units and floating currencies.",
+                        "namespace": "bio.ferlab.fhir",
                         "fields": [
                           {
                             "name": "id",
@@ -507,7 +518,12 @@
                             "name": "value",
                             "type": [
                               "null",
-                              "bytes"
+                              {
+                                "type": "bytes",
+                                "logicalType": "decimal",
+                                "precision": 18,
+                                "scale": 0
+                              }
                             ],
                             "default": null
                           },
@@ -544,20 +560,14 @@
                             "default": null
                           }
                         ],
-                        "doc": "A measured amount (or an amount that can potentially be measured). Note that measured amounts include amounts that are not precisely quantified, including amounts involving arbitrary units and floating currencies."
+                        "default": {}
                       },
-                      "default": {
-                        "id": null,
-                        "value": null,
-                        "comparator": null,
-                        "unit": null,
-                        "system": null,
-                        "code": null
-                      }
+                      "default": {}
                     }
                   ],
-                  "doc": "An Extension"
-                }
+                  "default": {}
+                },
+                "default": []
               },
               "default": []
             },
@@ -565,7 +575,10 @@
               "name": "valueDate",
               "type": [
                 "null",
-                "int"
+                {
+                  "type": "int",
+                  "logicalType": "date"
+                }
               ],
               "default": null
             },
@@ -573,7 +586,10 @@
               "name": "valueDateTime",
               "type": [
                 "null",
-                "long"
+                {
+                  "type": "long",
+                  "logicalType": "timestamp-micros"
+                }
               ],
               "default": null
             },
@@ -581,7 +597,10 @@
               "name": "valueInstant",
               "type": [
                 "null",
-                "long"
+                {
+                  "type": "long",
+                  "logicalType": "timestamp-millis"
+                }
               ],
               "default": null
             },
@@ -594,25 +613,14 @@
               "default": null
             },
             {
-              "name": "valueCoding",
               "type": "bio.ferlab.fhir.Coding",
-              "default": {
-                "id": null,
-                "system": null,
-                "version": null,
-                "code": null,
-                "display": null,
-                "userSelected": null
-              }
+              "name": "valueCoding",
+              "default": {}
             },
             {
-              "name": "valueCodeableConcept",
               "type": "bio.ferlab.fhir.CodeableConcept",
-              "default": {
-                "id": null,
-                "coding": [],
-                "text": null
-              }
+              "name": "valueCodeableConcept",
+              "default": {}
             },
             {
               "name": "valueBase64Binary",
@@ -735,56 +743,29 @@
               "default": null
             },
             {
-              "name": "valueCount",
               "type": "bio.ferlab.fhir.Count",
-              "default": {
-                "id": null,
-                "value": null,
-                "comparator": null,
-                "unit": null,
-                "system": null,
-                "code": null
-              }
+              "name": "valueCount",
+              "default": {}
             },
             {
-              "name": "valueDistance",
               "type": "bio.ferlab.fhir.Distance",
-              "default": {
-                "id": null,
-                "value": null,
-                "comparator": null,
-                "unit": null,
-                "system": null,
-                "code": null
-              }
+              "name": "valueDistance",
+              "default": {}
             },
             {
-              "name": "valueDuration",
               "type": "bio.ferlab.fhir.Duration",
-              "default": {
-                "id": null,
-                "value": null,
-                "comparator": null,
-                "unit": null,
-                "system": null,
-                "code": null
-              }
+              "name": "valueDuration",
+              "default": {}
             },
             {
-              "name": "valueQuantity",
               "type": "bio.ferlab.fhir.Quantity",
-              "default": {
-                "id": null,
-                "value": null,
-                "comparator": null,
-                "unit": null,
-                "system": null,
-                "code": null
-              }
+              "name": "valueQuantity",
+              "default": {}
             }
           ],
-          "doc": "An Extension"
-        }
+          "default": {}
+        },
+        "default": []
       },
       "default": []
     },
@@ -803,14 +784,17 @@
     {
       "name": "meta",
       "type": {
-        "name": "bio.ferlab.fhir.Meta",
         "type": "record",
+        "name": "Meta",
+        "doc": "The metadata about a resource. This is content in the resource that is maintained by the infrastructure. Changes to the content might not always be associated with version changes to the resource.",
+        "namespace": "bio.ferlab.fhir",
         "fields": [
           {
             "name": "extension",
             "type": {
               "type": "array",
-              "items": "bio.ferlab.fhir.Extension"
+              "items": "bio.ferlab.fhir.Extension",
+              "default": []
             },
             "default": []
           },
@@ -834,7 +818,10 @@
             "name": "lastUpdated",
             "type": [
               "null",
-              "long"
+              {
+                "type": "long",
+                "logicalType": "timestamp-millis"
+              }
             ],
             "default": null
           },
@@ -850,7 +837,11 @@
             "name": "profile",
             "type": {
               "type": "array",
-              "items": "string"
+              "items": {
+                "name": "profile",
+                "type": "string"
+              },
+              "default": []
             },
             "default": []
           },
@@ -858,7 +849,8 @@
             "name": "security",
             "type": {
               "type": "array",
-              "items": "bio.ferlab.fhir.Coding"
+              "items": "bio.ferlab.fhir.Coding",
+              "default": []
             },
             "default": []
           },
@@ -866,23 +858,15 @@
             "name": "tag",
             "type": {
               "type": "array",
-              "items": "bio.ferlab.fhir.Coding"
+              "items": "bio.ferlab.fhir.Coding",
+              "default": []
             },
             "default": []
           }
         ],
-        "doc": "The metadata about a resource. This is content in the resource that is maintained by the infrastructure. Changes to the content might not always be associated with version changes to the resource."
+        "default": {}
       },
-      "default": {
-        "extension": [],
-        "id": null,
-        "versionId": null,
-        "lastUpdated": null,
-        "source": null,
-        "profile": [],
-        "security": [],
-        "tag": []
-      }
+      "default": {}
     },
     {
       "name": "implicitRules",
@@ -903,14 +887,17 @@
     {
       "name": "text",
       "type": {
-        "name": "bio.ferlab.fhir.Narrative",
         "type": "record",
+        "name": "Narrative",
+        "doc": "A human-readable summary of the resource conveying the essential clinical and business information for the resource.",
+        "namespace": "bio.ferlab.fhir",
         "fields": [
           {
             "name": "extension",
             "type": {
               "type": "array",
-              "items": "bio.ferlab.fhir.Extension"
+              "items": "bio.ferlab.fhir.Extension",
+              "default": []
             },
             "default": []
           },
@@ -939,28 +926,29 @@
             "default": null
           }
         ],
-        "doc": "A human-readable summary of the resource conveying the essential clinical and business information for the resource."
+        "default": {}
       },
-      "default": {
-        "extension": [],
-        "id": null,
-        "status": null,
-        "div": null
-      }
+      "default": {}
     },
     {
       "name": "contained",
       "type": {
         "type": "array",
-        "items": "string"
+        "items": {
+          "name": "resourcelist",
+          "type": "string"
+        },
+        "default": []
       },
       "default": []
     },
     {
       "name": "masterIdentifier",
       "type": {
-        "name": "bio.ferlab.fhir.Identifier",
         "type": "record",
+        "name": "Identifier",
+        "doc": "An identifier - identifies some entity uniquely and unambiguously. Typically this is used for business identifiers.",
+        "namespace": "bio.ferlab.fhir",
         "fields": [
           {
             "name": "use",
@@ -987,25 +975,24 @@
             "default": null
           },
           {
-            "name": "type",
             "type": "bio.ferlab.fhir.CodeableConcept",
-            "default": {
-              "id": null,
-              "coding": [],
-              "text": null
-            }
+            "name": "type",
+            "default": {}
           },
           {
             "name": "period",
             "type": {
-              "name": "bio.ferlab.fhir.Period",
               "type": "record",
+              "name": "Period",
+              "doc": "A time period defined by a start and end date and optionally time.",
+              "namespace": "bio.ferlab.fhir",
               "fields": [
                 {
                   "name": "extension",
                   "type": {
                     "type": "array",
-                    "items": "bio.ferlab.fhir.Extension"
+                    "items": "bio.ferlab.fhir.Extension",
+                    "default": []
                   },
                   "default": []
                 },
@@ -1021,7 +1008,10 @@
                   "name": "start",
                   "type": [
                     "null",
-                    "long"
+                    {
+                      "type": "long",
+                      "logicalType": "timestamp-micros"
+                    }
                   ],
                   "default": null
                 },
@@ -1029,25 +1019,25 @@
                   "name": "end",
                   "type": [
                     "null",
-                    "long"
+                    {
+                      "type": "long",
+                      "logicalType": "timestamp-micros"
+                    }
                   ],
                   "default": null
                 }
               ],
-              "doc": "A time period defined by a start and end date and optionally time."
+              "default": {}
             },
-            "default": {
-              "extension": [],
-              "id": null,
-              "start": null,
-              "end": null
-            }
+            "default": {}
           },
           {
             "name": "assigner",
             "type": {
-              "name": "bio.ferlab.fhir.Reference",
               "type": "record",
+              "name": "Reference",
+              "doc": "A Reference",
+              "namespace": "bio.ferlab.fhir",
               "fields": [
                 {
                   "name": "reference",
@@ -1082,46 +1072,21 @@
                   "default": null
                 }
               ],
-              "doc": "A Reference"
+              "default": {}
             },
-            "default": {
-              "reference": null,
-              "type": null,
-              "identifier": null,
-              "display": null
-            }
+            "default": {}
           }
         ],
-        "doc": "An identifier - identifies some entity uniquely and unambiguously. Typically this is used for business identifiers."
+        "default": {}
       },
-      "default": {
-        "use": null,
-        "value": null,
-        "system": null,
-        "type": {
-          "id": null,
-          "coding": [],
-          "text": null
-        },
-        "period": {
-          "extension": [],
-          "id": null,
-          "start": null,
-          "end": null
-        },
-        "assigner": {
-          "reference": null,
-          "type": null,
-          "identifier": null,
-          "display": null
-        }
-      }
+      "default": {}
     },
     {
       "name": "identifier",
       "type": {
         "type": "array",
-        "items": "bio.ferlab.fhir.Identifier"
+        "items": "bio.ferlab.fhir.Identifier",
+        "default": []
       },
       "default": []
     },
@@ -1142,37 +1107,32 @@
       "default": null
     },
     {
-      "name": "type",
       "type": "bio.ferlab.fhir.CodeableConcept",
-      "default": {
-        "id": null,
-        "coding": [],
-        "text": null
-      }
+      "name": "type",
+      "default": {}
     },
     {
       "name": "category",
       "type": {
         "type": "array",
-        "items": "bio.ferlab.fhir.CodeableConcept"
+        "items": "bio.ferlab.fhir.CodeableConcept",
+        "default": []
       },
       "default": []
     },
     {
-      "name": "subject",
       "type": "bio.ferlab.fhir.Reference",
-      "default": {
-        "reference": null,
-        "type": null,
-        "identifier": null,
-        "display": null
-      }
+      "name": "subject",
+      "default": {}
     },
     {
       "name": "date",
       "type": [
         "null",
-        "long"
+        {
+          "type": "long",
+          "logicalType": "timestamp-millis"
+        }
       ],
       "default": null
     },
@@ -1180,43 +1140,37 @@
       "name": "author",
       "type": {
         "type": "array",
-        "items": "bio.ferlab.fhir.Reference"
+        "items": "bio.ferlab.fhir.Reference",
+        "default": []
       },
       "default": []
     },
     {
-      "name": "authenticator",
       "type": "bio.ferlab.fhir.Reference",
-      "default": {
-        "reference": null,
-        "type": null,
-        "identifier": null,
-        "display": null
-      }
+      "name": "authenticator",
+      "default": {}
     },
     {
-      "name": "custodian",
       "type": "bio.ferlab.fhir.Reference",
-      "default": {
-        "reference": null,
-        "type": null,
-        "identifier": null,
-        "display": null
-      }
+      "name": "custodian",
+      "default": {}
     },
     {
       "name": "relatesTo",
       "type": {
         "type": "array",
         "items": {
-          "name": "bio.ferlab.fhir.DocumentReference_RelatesTo",
           "type": "record",
+          "name": "DocumentReference_RelatesTo",
+          "doc": "A reference to a document of any kind for any purpose. Provides metadata about the document so that the document can be discovered and managed. The scope of a document is any seralized object with a mime-type, so includes formal patient centric documents (CDA), cliical notes, scanned paper, and non-patient specific documents like policy text.",
+          "namespace": "bio.ferlab.fhir",
           "fields": [
             {
               "name": "extension",
               "type": {
                 "type": "array",
-                "items": "bio.ferlab.fhir.Extension"
+                "items": "bio.ferlab.fhir.Extension",
+                "default": []
               },
               "default": []
             },
@@ -1237,18 +1191,14 @@
               "default": null
             },
             {
-              "name": "target",
               "type": "bio.ferlab.fhir.Reference",
-              "default": {
-                "reference": null,
-                "type": null,
-                "identifier": null,
-                "display": null
-              }
+              "name": "target",
+              "default": {}
             }
           ],
-          "doc": "A reference to a document of any kind for any purpose. Provides metadata about the document so that the document can be discovered and managed. The scope of a document is any seralized object with a mime-type, so includes formal patient centric documents (CDA), cliical notes, scanned paper, and non-patient specific documents like policy text."
-        }
+          "default": {}
+        },
+        "default": []
       },
       "default": []
     },
@@ -1264,7 +1214,8 @@
       "name": "securityLabel",
       "type": {
         "type": "array",
-        "items": "bio.ferlab.fhir.CodeableConcept"
+        "items": "bio.ferlab.fhir.CodeableConcept",
+        "default": []
       },
       "default": []
     },
@@ -1273,14 +1224,17 @@
       "type": {
         "type": "array",
         "items": {
-          "name": "bio.ferlab.fhir.DocumentReference_Content",
           "type": "record",
+          "name": "DocumentReference_Content",
+          "doc": "A reference to a document of any kind for any purpose. Provides metadata about the document so that the document can be discovered and managed. The scope of a document is any seralized object with a mime-type, so includes formal patient centric documents (CDA), cliical notes, scanned paper, and non-patient specific documents like policy text.",
+          "namespace": "bio.ferlab.fhir",
           "fields": [
             {
               "name": "extension",
               "type": {
                 "type": "array",
-                "items": "bio.ferlab.fhir.Extension"
+                "items": "bio.ferlab.fhir.Extension",
+                "default": []
               },
               "default": []
             },
@@ -1295,14 +1249,17 @@
             {
               "name": "attachment",
               "type": {
-                "name": "bio.ferlab.fhir.Attachment",
                 "type": "record",
+                "name": "Attachment",
+                "doc": "For referring to data content defined in other formats.",
+                "namespace": "bio.ferlab.fhir",
                 "fields": [
                   {
                     "name": "extension",
                     "type": {
                       "type": "array",
-                      "items": "bio.ferlab.fhir.Extension"
+                      "items": "bio.ferlab.fhir.Extension",
+                      "default": []
                     },
                     "default": []
                   },
@@ -1374,55 +1331,44 @@
                     "name": "creation",
                     "type": [
                       "null",
-                      "long"
+                      {
+                        "type": "long",
+                        "logicalType": "timestamp-micros"
+                      }
                     ],
                     "default": null
                   }
                 ],
-                "doc": "For referring to data content defined in other formats."
+                "default": {}
               },
-              "default": {
-                "extension": [],
-                "id": null,
-                "contentType": null,
-                "language": null,
-                "data": null,
-                "url": null,
-                "size": null,
-                "hash": null,
-                "title": null,
-                "creation": null
-              }
+              "default": {}
             },
             {
-              "name": "format",
               "type": "bio.ferlab.fhir.Coding",
-              "default": {
-                "id": null,
-                "system": null,
-                "version": null,
-                "code": null,
-                "display": null,
-                "userSelected": null
-              }
+              "name": "format",
+              "default": {}
             }
           ],
-          "doc": "A reference to a document of any kind for any purpose. Provides metadata about the document so that the document can be discovered and managed. The scope of a document is any seralized object with a mime-type, so includes formal patient centric documents (CDA), cliical notes, scanned paper, and non-patient specific documents like policy text."
-        }
+          "default": {}
+        },
+        "default": []
       },
       "default": []
     },
     {
       "name": "context",
       "type": {
-        "name": "bio.ferlab.fhir.DocumentReference_Context",
         "type": "record",
+        "name": "DocumentReference_Context",
+        "doc": "A reference to a document of any kind for any purpose. Provides metadata about the document so that the document can be discovered and managed. The scope of a document is any seralized object with a mime-type, so includes formal patient centric documents (CDA), cliical notes, scanned paper, and non-patient specific documents like policy text.",
+        "namespace": "bio.ferlab.fhir",
         "fields": [
           {
             "name": "extension",
             "type": {
               "type": "array",
-              "items": "bio.ferlab.fhir.Extension"
+              "items": "bio.ferlab.fhir.Extension",
+              "default": []
             },
             "default": []
           },
@@ -1438,7 +1384,8 @@
             "name": "encounter",
             "type": {
               "type": "array",
-              "items": "bio.ferlab.fhir.Reference"
+              "items": "bio.ferlab.fhir.Reference",
+              "default": []
             },
             "default": []
           },
@@ -1446,89 +1393,45 @@
             "name": "event",
             "type": {
               "type": "array",
-              "items": "bio.ferlab.fhir.CodeableConcept"
+              "items": "bio.ferlab.fhir.CodeableConcept",
+              "default": []
             },
             "default": []
           },
           {
-            "name": "period",
             "type": "bio.ferlab.fhir.Period",
-            "default": {
-              "extension": [],
-              "id": null,
-              "start": null,
-              "end": null
-            }
+            "name": "period",
+            "default": {}
           },
           {
+            "type": "bio.ferlab.fhir.CodeableConcept",
             "name": "facilityType",
-            "type": "bio.ferlab.fhir.CodeableConcept",
-            "default": {
-              "id": null,
-              "coding": [],
-              "text": null
-            }
+            "default": {}
           },
           {
+            "type": "bio.ferlab.fhir.CodeableConcept",
             "name": "practiceSetting",
-            "type": "bio.ferlab.fhir.CodeableConcept",
-            "default": {
-              "id": null,
-              "coding": [],
-              "text": null
-            }
+            "default": {}
           },
           {
-            "name": "sourcePatientInfo",
             "type": "bio.ferlab.fhir.Reference",
-            "default": {
-              "reference": null,
-              "type": null,
-              "identifier": null,
-              "display": null
-            }
+            "name": "sourcePatientInfo",
+            "default": {}
           },
           {
             "name": "related",
             "type": {
               "type": "array",
-              "items": "bio.ferlab.fhir.Reference"
+              "items": "bio.ferlab.fhir.Reference",
+              "default": []
             },
             "default": []
           }
         ],
-        "doc": "A reference to a document of any kind for any purpose. Provides metadata about the document so that the document can be discovered and managed. The scope of a document is any seralized object with a mime-type, so includes formal patient centric documents (CDA), cliical notes, scanned paper, and non-patient specific documents like policy text."
+        "default": {}
       },
-      "default": {
-        "extension": [],
-        "id": null,
-        "encounter": [],
-        "event": [],
-        "period": {
-          "extension": [],
-          "id": null,
-          "start": null,
-          "end": null
-        },
-        "facilityType": {
-          "id": null,
-          "coding": [],
-          "text": null
-        },
-        "practiceSetting": {
-          "id": null,
-          "coding": [],
-          "text": null
-        },
-        "sourcePatientInfo": {
-          "reference": null,
-          "type": null,
-          "identifier": null,
-          "display": null
-        },
-        "related": []
-      }
+      "default": {}
     }
   ],
-  "doc": "A reference to a document of any kind for any purpose. Provides metadata about the document so that the document can be discovered and managed. The scope of a document is any seralized object with a mime-type, so includes formal patient centric documents (CDA), cliical notes, scanned paper, and non-patient specific documents like policy text."
+  "default": null
 }
