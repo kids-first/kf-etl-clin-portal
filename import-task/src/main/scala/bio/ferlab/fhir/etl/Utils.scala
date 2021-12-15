@@ -7,6 +7,8 @@ object Utils {
 
   val actCodeR = "^phs[0-9.a-z]+"
   val studyCodePattern = "^SD_[0-9A-Za-z]+"
+  val gen3Host = "data.kidsfirstdrc.org"
+  val dcfHost = "api.gdc.cancer.gov"
 
   private def codingSystemClassify(url: String) = {
     url match {
@@ -44,4 +46,19 @@ object Utils {
         => arr.map(r => r._2.head._5 -> r._3).toMap)
 
   val retrieveIsHarmonized: UserDefinedFunction = udf((s: Option[String]) => s.exists(_.contains("harmonized-data")))
+
+  val retrieveIsControlledAccess: UserDefinedFunction = udf((s: Option[String]) => s.exists(_.equals("R")))
+
+  val retrieveRepository: UserDefinedFunction = udf((s: Option[String]) => {
+    if(s.exists(_.contains(gen3Host))) {
+      "gen3"
+    }
+    else if (s.exists(_.contains(dcfHost))) {
+      "dcf"
+    } else {
+      null
+    }
+  })
+
+  val retrieveSize: UserDefinedFunction = udf((d: Option[String]) => d.map(BigInt(_)))
 }

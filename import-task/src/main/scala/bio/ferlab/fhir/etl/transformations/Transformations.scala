@@ -2,9 +2,8 @@ package bio.ferlab.fhir.etl.transformations
 
 import bio.ferlab.datalake.spark3.transformation.{Custom, Drop, Transformation}
 import bio.ferlab.fhir.etl._
-import bio.ferlab.fhir.etl.Utils.{codingClassify, extractAclFromList, firstNonNull, ncitIdAnatomicalSite, uberonIdAnatomicalSite}
+import bio.ferlab.fhir.etl.Utils.{codingClassify, extractAclFromList, extractHashes, firstNonNull, ncitIdAnatomicalSite, retrieveIsControlledAccess, retrieveIsHarmonized, retrieveRepository, retrieveSize, uberonIdAnatomicalSite}
 import org.apache.spark.sql.functions.{col, collect_list, explode, expr, filter, regexp_extract, struct}
-import bio.ferlab.fhir.etl.Utils.{extractAclFromList, extractHashes, firstNonNull, ncitIdAnatomicalSite, retrieveIsHarmonized, uberonIdAnatomicalSite}
 import org.apache.spark.sql.functions._
 
 object Transformations {
@@ -99,7 +98,7 @@ object Transformations {
       .withColumn("acl", extractAclFromList(col("securityLabel")("text")))
       .withColumn("access_urls", col("content")("attachment")("url")(0))
       // TODO availability
-      // TODO controlled_access
+      .withColumn("controlled_access", retrieveIsControlledAccess(col("securityLabel")(0)("coding")(0)("code")))
       // TODO created_at
       .withColumn("data_type", col("type")("text"))
       .withColumn("external_id", col("content")(1)("attachment")("url"))
@@ -116,8 +115,8 @@ object Transformations {
       // TODO modified_at
       // TODO platforms
       // TODO reference_genome
-      // TODO repository
-      .withColumn("size", filter(col("content")(1)("attachment")("extension"), c => c("url") === URL_FILE_SIZE)("valueDecimal")(0))
+      .withColumn("repository", retrieveRepository(col("content")("attachment")("url")(0)))
+      .withColumn("size", retrieveSize(filter(col("content")(1)("attachment")("extension"), c => c("url") === URL_FILE_SIZE)("valueDecimal")(0)))
       .withColumn("urls", col("content")(1)("attachment")("url"))
       // TODO visible
       .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
