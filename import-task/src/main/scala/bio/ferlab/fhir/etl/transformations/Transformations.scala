@@ -2,7 +2,7 @@ package bio.ferlab.fhir.etl.transformations
 
 import bio.ferlab.datalake.spark3.transformation.{Custom, Drop, Transformation}
 import bio.ferlab.fhir.etl._
-import bio.ferlab.fhir.etl.Utils.{codingClassify, extractAclFromList, extractHashes, firstNonNull, ncitIdAnatomicalSite, retrieveIsControlledAccess, retrieveIsHarmonized, retrieveRepository, retrieveSize, uberonIdAnatomicalSite}
+import bio.ferlab.fhir.etl.Utils.{codingClassify, extractAclFromList, extractHashes, extractStudyExternalId, extractStudyVersion, firstNonNull, ncitIdAnatomicalSite, retrieveIsControlledAccess, retrieveIsHarmonized, retrieveRepository, retrieveSize, uberonIdAnatomicalSite}
 import org.apache.spark.sql.functions.{col, collect_list, explode, expr, filter, regexp_extract, struct}
 import org.apache.spark.sql.functions._
 
@@ -86,9 +86,21 @@ object Transformations {
   val researchstudyMappings: List[Transformation] = List(
     Custom(_
       .select("*")
-      .withColumnRenamed("title", "name")
-      .withColumn("study_id", filter(col("identifier"), c => c("system") === s"${SYS_DATASERVICE_URL}studies/")(0)("value"))
       .withColumn("attribution", filter(col("identifier"), c => c("system") === SYS_NCBI_URL)(0)("value"))
+      // TODO created_at
+      // TODO data_access_authority
+      .withColumn("external_id", extractStudyExternalId(filter(col("identifier"), c => c("system") === SYS_NCBI_URL)(0)("value")))
+      // TODO modified_at
+      .withColumnRenamed("title", "name")
+      .withColumnRenamed("status", "release_status")
+      .withColumn("version", extractStudyVersion(filter(col("identifier"), c => c("system") === SYS_NCBI_URL)(0)("value")))
+      // TODO short_name
+      // TODO code
+      // TODO domain
+      // TODO program
+      // TODO visible
+      .withColumn("study_id", filter(col("identifier"), c => c("system") === s"${SYS_DATASERVICE_URL}studies/")(0)("value"))
+      // TODO release_id
     )
   )
 
