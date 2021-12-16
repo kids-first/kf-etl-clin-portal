@@ -5,7 +5,10 @@ import org.apache.spark.sql.functions._
 
 object OntologyUtils {
 
-//TODO add age_at_event_days field
+  //TODO add age_at_event_days field
+  val SCHEMA_PHENOTYPE = "array<struct<name:string,parents:array<string>,is_tagged:boolean,is_leaf:boolean>>"
+
+  //TODO add age_at_event_days field
   val transformAncestors: UserDefinedFunction =
     udf((arr: Seq[(String, String, Seq[String])]) => arr.map(a => (s"${a._2} (${a._1})", a._3, false, false)))
 

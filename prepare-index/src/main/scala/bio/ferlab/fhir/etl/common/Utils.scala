@@ -1,12 +1,11 @@
 package bio.ferlab.fhir.etl.common
 
-import bio.ferlab.fhir.etl.common.OntologyUtils.{transformAncestors, transformTaggedPhenotype}
+import bio.ferlab.fhir.etl.common.OntologyUtils.{SCHEMA_PHENOTYPE, transformAncestors, transformTaggedPhenotype}
 import org.apache.spark.sql.expressions.UserDefinedFunction
-import org.apache.spark.sql.functions.{array, array_union, col, collect_list, filter, lit, map, size, struct, transform, udf}
+import org.apache.spark.sql.functions.{array, array_union, col, collect_list, filter, lit, map, size, struct, transform, udf, when}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object Utils {
-
 
   val hpoPhenotype: UserDefinedFunction =
     udf((code: String, observed: String, source_text: String) => observed.toLowerCase.trim match {
@@ -55,22 +54,30 @@ object Utils {
         .withColumn("transform_ancestors", transformAncestors(col("ancestors")))
         .withColumn("transform_tagged_phenotype", transformTaggedPhenotype(col("id"), col("name"),col("parents"), col("is_leaf") ))
         .withColumn("phenotype_with_ancestors", array_union(col("transform_ancestors"), array(col("transform_tagged_phenotype"))))
+        .withColumn("phenotype_with_ancestors", col("phenotype_with_ancestors").cast(SCHEMA_PHENOTYPE))
         .drop("transform_ancestors", "transform_tagged_phenotype", "ancestors", "id", "is_leaf", "name", "parents")
-      //        .groupBy("participant_fhir_id")
-//        .agg(
-//          collect_list(struct(
-//            col("fhir_id"),
-//            col("hpo_phenotype_observed"),
-//            col("hpo_phenotype_not_observed"),
-//            col("hpo_phenotype_observed_text"),
-//            col("hpo_phenotype_not_observed_text"),
-//            col("observed_bool") as "observed"
-//          )) as "phenotype"
-//        )
+        .groupBy("participant_fhir_id")
+        .agg(
+          collect_list(struct(
+            col("fhir_id"),
+            col("hpo_phenotype_observed"),
+            col("hpo_phenotype_not_observed"),
+            col("hpo_phenotype_observed_text"),
+            col("hpo_phenotype_not_observed_text"),
+            col("observed_bool") as "observed"
+          )) as "phenotype",
+          collect_list(
+            when(col("observed") === "Positive", col("phenotype_with_ancestors"))
+          ) as "observed_phenotype",
+          collect_list(
+            when(col("observed") === "Negative", col("phenotype_with_ancestors"))
+          ) as "non_observed_phenotype"
+        )
 
 //      val toto = df.join(phenotypes, "participant_fhir_id")
 
       phenotypes.show(false)
+//      phenotypes.printSchema()
 
       phenotypes
 
