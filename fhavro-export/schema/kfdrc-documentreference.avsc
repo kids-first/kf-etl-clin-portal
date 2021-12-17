@@ -77,12 +77,7 @@
                       "name": "valueDecimal",
                       "type": [
                         "null",
-                        {
-                          "type": "bytes",
-                          "logicalType": "decimal",
-                          "precision": 18,
-                          "scale": 0
-                        }
+                        "bytes"
                       ],
                       "default": null
                     },
@@ -613,12 +608,7 @@
               "name": "valueDecimal",
               "type": [
                 "null",
-                {
-                  "type": "bytes",
-                  "logicalType": "decimal",
-                  "precision": 18,
-                  "scale": 0
-                }
+                "bytes"
               ],
               "default": null
             },

@@ -17,31 +17,52 @@ object Transformations {
   val patientMappings: List[Transformation] = List(
     Custom(_
       .select("*")
-      .withColumn("race", filter(col("extension"), c => c("url") === SYS_US_CORE_RACE_URL)(0)("extension")(0)("valueString"))
+      // TODO affected_status
+      // TODO alias_group
+      // TODO created_at
       .withColumn("ethnicity", filter(col("extension"), c => c("url") === SYS_US_CORE_ETHNICITY_URL)(0)("extension")(0)("valueString"))
       .withColumn("external_id", col("identifier")(0)("value"))
-      .withColumn("study_id", regexp_extract(col("identifier")(2)("value"), patternParticipantStudy, 1))
+      // TODO is_proband
       .withColumn("participant_id", regexp_extract(col("identifier")(2)("value"), patternParticipantStudy, 2))
+      // TODO modified_at
+      .withColumn("race", filter(col("extension"), c => c("url") === SYS_US_CORE_RACE_URL)(0)("extension")(0)("valueString"))
+      .withColumn("study_id", regexp_extract(col("identifier")(2)("value"), patternParticipantStudy, 1))
+      // TODO visible
     ),
-//    Drop("extension", "id", "identifier", "meta")
-    Drop()
+    Drop("extension", "id", "identifier", "meta")
   )
 
   val specimenMappings: List[Transformation] = List(
     Custom(_
-      .select("collection")
-      .withColumn("participant_fhir_id",   regexp_extract(col("subject")("reference"), participantSpecimen, 1))
-      .withColumn("specimen_id", col("identifier")(0)("value"))
+      .select("*")
+      // TODO age_at_event_days
+      // TODO analyte_type
       .withColumn("composition", col("type")("text"))
+      // TODO concentration_mg_per_ml
+      // TODO consent_type
+      // TODO created_at
+      // TODO duo_ids
+      // TODO dbgap_consent_code
+      // TODO external_aliquot_id
+      // TODO external_sample_id
+      .withColumn("specimen_id", col("identifier")(0)("value"))
       .withColumn("method_of_sample_procurement", col("collection")("method")("coding"))
-      .withColumn("source_text_anatomical_site", col("collection")("bodySite")("text"))
+      // TODO modified_at
       .withColumn("ncit_id_anatomical_site", ncitIdAnatomicalSite(col("collection")("bodySite")("coding")))
+      // TODO ncit_id_tissue_type
+      // TODO shipment_date
+      // TODO shipment_origin
+      .withColumn("participant_fhir_id",   regexp_extract(col("subject")("reference"), participantSpecimen, 1))
+      // TODO source_text_tumor_descriptor
+      // TODO source_text_tissue_type
+      .withColumn("source_text_anatomical_site", col("collection")("bodySite")("text"))
+      // TODO spatial_descriptor
       .withColumn("uberon_id_anatomical_site", uberonIdAnatomicalSite(col("collection")("bodySite")("coding")))
       .withColumn("volume_ul", col("collection")("quantity")("value"))
       .withColumn("volume_ul_unit", col("collection")("quantity")("unit"))
-//      .withColumn("external_aliquot_id", col("identifier")) //FIXME
+      // TODO visible
+      .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
     ),
-    //    Drop("id", "subject", "identifier")
     Drop()
   )
 
@@ -51,14 +72,14 @@ object Transformations {
       .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
       .withColumn("vital_status", col("valueCodeableConcept")("text"))
       .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
-      .withColumn("participant_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
+      .withColumn("observation_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
     ),
-    Drop()
+    Drop("extension", "id", "identifier", "meta")
   )
 
   val conditionMappings: List[Transformation] = List(
     Custom(_
-      .select("bodySite")
+      .select("*")
             .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
             .withColumn("diagnosis_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
             .withColumn("condition_coding", codingClassify(col("code")("coding")))
@@ -73,14 +94,15 @@ object Transformations {
       //      .withColumn("external_id", col("identifier")) //TODO
       //      .withColumn("diagnosis_category", col("code")) //TODO
     ),
-    Drop("bodySite")
+    Drop("extension", "id", "identifier", "meta")
   )
 
   val organizationMappings: List[Transformation] = List(
     Custom(_
       .select("*")
+      .withColumn("organization_id", col("identifier")(0)("value"))
     ),
-    Drop()
+    Drop("extension", "id", "identifier", "meta")
   )
 
   val researchstudyMappings: List[Transformation] = List(
@@ -100,8 +122,8 @@ object Transformations {
       // TODO program
       // TODO visible
       .withColumn("study_id", filter(col("identifier"), c => c("system") === s"${SYS_DATASERVICE_URL}studies/")(0)("value"))
-      // TODO release_id
-    )
+    ),
+    Drop("extension", "id", "identifier", "meta")
   )
 
   val documentreferenceMappings: List[Transformation] = List(
@@ -132,10 +154,9 @@ object Transformations {
       .withColumn("urls", col("content")(1)("attachment")("url"))
       // TODO visible
       .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
-      // TODO release_id
       .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
     ),
-    Drop("content")
+    Drop("extension", "id", "identifier", "meta", "content")
   )
 
   val groupMappings: List[Transformation] = List(
@@ -152,7 +173,7 @@ object Transformations {
         collect_list("family_members") as "family_members"
       )
     ),
-    Drop()
+    Drop("extension", "id", "identifier", "meta")
   )
 
   val extractionMappings: Map[String, List[Transformation]] = Map(
