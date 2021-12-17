@@ -35,7 +35,20 @@ object Utils {
 
       df
         .join(reformatBiospecimen, col("fhir_id") === col("participant_fhir_id"))
-        .drop("fhir_id")
+        .drop("participant_fhir_id")
+    }
+
+    def addOutcomes(observationsDf: DataFrame): DataFrame = {
+      val reformatObservation: DataFrame = observationsDf
+        .withColumn("outcome", struct(observationsDf.columns.map(col): _*))
+        .select("participant_fhir_id", "outcome")
+        .groupBy("participant_fhir_id")
+        .agg(
+          collect_list(col("outcome")) as "outcomes")
+
+      df
+        .join(reformatObservation, col("fhir_id") === col("participant_fhir_id"))
+        .drop("fhir_id", "participant_fhir_id")
     }
 
     def addDiagnosysPhenotypes(conditionDf: DataFrame)(hpoTerms: DataFrame): DataFrame = {

@@ -37,6 +37,7 @@ class ParticipantCentric(batchId: String, loadType: String = "incremental")(impl
       patientDF
       .addStudy(data("normalized_researchstudy"))
       .addBiospecimen(data("normalized_specimen"))
+      .addOutcomes(data("normalized_observation"))
       .addDiagnosysPhenotypes(data("normalized_condition"))(allHpoThems)
 
 //    transformedParticipant.show(false)
