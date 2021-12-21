@@ -20,12 +20,12 @@ object Transformations {
       // TODO affected_status
       // TODO alias_group
       // TODO created_at
-      .withColumn("ethnicity", filter(col("extension"), c => c("url") === SYS_US_CORE_ETHNICITY_URL)(0)("extension")(0)("valueString"))
+      .withColumn("ethnicity", col("ethnicity.text"))
       .withColumn("external_id", col("identifier")(0)("value"))
       // TODO is_proband
       .withColumn("participant_id", regexp_extract(col("identifier")(2)("value"), patternParticipantStudy, 2))
       // TODO modified_at
-      .withColumn("race", filter(col("extension"), c => c("url") === SYS_US_CORE_RACE_URL)(0)("extension")(0)("valueString"))
+      .withColumn("race", col("race.text"))
       .withColumn("study_id", regexp_extract(col("identifier")(2)("value"), patternParticipantStudy, 1))
       // TODO visible
     ),
