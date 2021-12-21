@@ -82,7 +82,7 @@ object Transformations {
       .select("*")
             .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
             .withColumn("diagnosis_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
-            .withColumn("condition_coding", codingClassify(col("code")("coding")))
+            .withColumn("condition_coding", codingClassify(col("code")("coding")).cast("array<struct<category:string,code:string>>"))
             .withColumn("source_text", col("code")("text"))
             .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
             //could be phenotype OR disease per condition
