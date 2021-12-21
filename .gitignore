@@ -90,7 +90,7 @@ fabric.properties
 ### Scala ###
 *.class
 *.log
-
+*.bsp
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
@@ -100,8 +100,8 @@ import-task/derby.log
 import-task/metastore_db/
 import-task//spark-warehouse/
 import-task/.idea/
-import-task/target/
-import-task/project/
+**/target/
+**/project/
 
 # End of https://www.toptal.com/developers/gitignore/api/scala,intellij
 
