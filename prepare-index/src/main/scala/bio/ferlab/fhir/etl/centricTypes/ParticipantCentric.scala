@@ -16,7 +16,8 @@ class ParticipantCentric(batchId: String, loadType: String = "incremental")(impl
   val filesExtract: Seq[DatasetConf] = conf.sources.filter(c =>  c.id.contains("normalized"))
   val hpoTermsConf: DatasetConf = conf.getDataset("hpo_terms")
   val inputStorageOutput: StorageConf = conf.getStorage("output")
-  val inputHpoTermsStorage = conf.getStorage("hpo_terms")
+  val inputHpoTermsStorage: StorageConf = conf.getStorage("hpo_terms")
+  val inputMondoTermsStorage: StorageConf = conf.getStorage("mondo_terms")
 
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
@@ -30,17 +31,17 @@ class ParticipantCentric(batchId: String, loadType: String = "incremental")(impl
     val patientDF = data("normalized_patient")
 
     val hpoTermsConf = conf.sources.find(c =>  c.id == "hpo_terms").getOrElse(throw new RuntimeException("Hpo Terms Conf not found"))
+    val mondoTermsConf = conf.sources.find(c =>  c.id == "mondo_terms").getOrElse(throw new RuntimeException("Mondo Terms Conf not found"))
 
-    val allHpoThems = read(s"${inputHpoTermsStorage.path}${hpoTermsConf.path}", "Json", Map(), None, None)
+    val allHpoTerms = read(s"${inputHpoTermsStorage.path}${hpoTermsConf.path}", "Json", Map(), None, None)
+    val allMondoTerms = read(s"${inputMondoTermsStorage.path}${mondoTermsConf.path}", "Json", Map(), None, None)
 
     val transformedParticipant =
       patientDF
       .addStudy(data("normalized_researchstudy"))
       .addBiospecimen(data("normalized_specimen"))
       .addOutcomes(data("normalized_observation"))
-      .addDiagnosysPhenotypes(data("normalized_condition"))(allHpoThems)
-
-//    transformedParticipant.show(false)
+      .addDiagnosisPhenotypes(data("normalized_condition"))(allHpoTerms, allMondoTerms)
 
     patientDF
 
