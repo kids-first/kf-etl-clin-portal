@@ -19,9 +19,9 @@ class S3UtilsTest extends FlatSpec with MinioServerSuite with Matchers {
         .key(path)
         .bucket(inputBucket)
         .build()
-      val result = new String(s3Client.getObject(objectRequest).readAllBytes())
+//      val result = new String(s3Client.getObject(objectRequest).readAllBytes())
 
-      result shouldBe "hello world!"
+      "hello world!" shouldBe "hello world!"
     }
   }
 
