@@ -49,7 +49,7 @@ object Utils {
 
       df
         .join(reformatObservation, col("fhir_id") === col("participant_fhir_id"))
-        .drop("fhir_id", "participant_fhir_id")
+        .drop( "participant_fhir_id")
     }
 
     def addDiagnosisPhenotypes(conditionDf: DataFrame)(hpoTerms: DataFrame, mondoTerms: DataFrame): DataFrame = {
@@ -79,20 +79,56 @@ object Utils {
               col("observed_bool") as "observed"
             )) as "phenotype",
             collect_list(
-              when(col("observed") === "Positive", col("phenotype_with_ancestors"))
+              when(col("observed") === "Positive", col("observable_with_ancestors"))
             ) as "observed_phenotype",
             collect_list(
-              when(col("observed") === "Negative", col("phenotype_with_ancestors"))
+              when(col("observed") === "Negative", col("observable_with_ancestors"))
             ) as "non_observed_phenotype"
           )
 
       val diseases = addDiseases(conditionDf)
-      val diseasesWithMondoTerms = mapObservableTerms(diseases, "mondo_id_diagnosis")(mondoTerms)
+      val commonColumns = Seq("fhir_id", "study_id")
+      val diseaseColumns = diseases.columns.filter(col => !commonColumns.contains(col))
 
-      phenotypesWithHPOTerms.show(false)
-      diseasesWithMondoTerms.show(false)
+      val diseasesWithMondoTerms =
+        mapObservableTerms(diseases, "mondo_id_diagnosis")(mondoTerms)
+          .withColumn("mondo", explode(col("observable_with_ancestors")))
+          .drop(commonColumns :+ "observable_with_ancestors": _*)
+          .groupBy("participant_fhir_id")
+          .agg(
+            collect_list(
+              struct(
+                diseaseColumns.head,
+                diseaseColumns.tail :+ "mondo": _*
+              )
+            ) as "diagnoses",
+          )
 
-      conditionDf
+      df
+        .join(phenotypesWithHPOTerms, col("fhir_id") === col("participant_fhir_id"), "left_outer")
+        .drop("participant_fhir_id")
+        .join(diseasesWithMondoTerms, col("fhir_id") === col("participant_fhir_id"), "left_outer")
+        .drop("participant_fhir_id")
+    }
+    def addFiles(filesDf: DataFrame): DataFrame = {
+      val columnsGroup = Seq("study_id", "participant_fhir_id")
+      val columnsFile = filesDf.columns.filter(col => !columnsGroup.contains(col) )
+      val filesPerParticipant =
+        filesDf
+          .groupBy(columnsGroup.head, columnsGroup.tail: _*)
+          .agg(
+            collect_list(
+              struct(
+                columnsFile.head,
+                columnsFile.tail: _*
+              )
+            ) as "files",
+          )
+          .drop("study_id")
+
+      df
+        .join(filesPerParticipant, col("fhir_id") === col("participant_fhir_id"), "left_outer")
+        .drop("participant_fhir_id")
     }
   }
 }

@@ -38,11 +38,14 @@ class ParticipantCentric(batchId: String, loadType: String = "incremental")(impl
 
     val transformedParticipant =
       patientDF
-      .addStudy(data("normalized_researchstudy"))
-      .addBiospecimen(data("normalized_specimen"))
-      .addOutcomes(data("normalized_observation"))
-      .addDiagnosisPhenotypes(data("normalized_condition"))(allHpoTerms, allMondoTerms)
+        .addStudy(data("normalized_researchstudy"))
+        .addBiospecimen(data("normalized_specimen"))
+        .addDiagnosisPhenotypes(data("normalized_condition"))(allHpoTerms, allMondoTerms)
+        .addFiles(data("normalized_documentreference"))
+//        .addOutcomes(data("normalized_observation"))
+      //TODO add Families
 
+    transformedParticipant.show(false)
     patientDF
 
   }

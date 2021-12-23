@@ -47,11 +47,12 @@ object OntologyUtils {
 
   def mapObservableTerms(df: DataFrame, pivotColumn: String)(observableTerms: DataFrame): DataFrame= {
     df
+//      .filter("mondo_id_diagnosis is not null") //FIXME REMOVE
       .join(observableTerms, col(pivotColumn) === col("id"), "left_outer")
       .withColumn("transform_ancestors", when(col("ancestors").isNotNull,  transformAncestors(col("ancestors"))))
-      .withColumn("transform_tagged_phenotype", transformTaggedTerm(col("id"), col("name"),col("parents"), col("is_leaf") ))
-      .withColumn("phenotype_with_ancestors", array_union(col("transform_ancestors"), array(col("transform_tagged_phenotype"))))
-      .withColumn("phenotype_with_ancestors", col("phenotype_with_ancestors").cast(SCHEMA_OBSERVABLE_TERM))
-      .drop("transform_ancestors", "transform_tagged_phenotype", "ancestors", "id", "is_leaf", "name", "parents")
+      .withColumn("transform_tagged_observable", transformTaggedTerm(col("id"), col("name"),col("parents"), col("is_leaf") ))
+      .withColumn("observable_with_ancestors", array_union(col("transform_ancestors"), array(col("transform_tagged_observable"))))
+      .withColumn("observable_with_ancestors", col("observable_with_ancestors").cast(SCHEMA_OBSERVABLE_TERM))
+      .drop("transform_ancestors", "transform_tagged_observable", "ancestors", "id", "is_leaf", "name", "parents")
   }
 }
