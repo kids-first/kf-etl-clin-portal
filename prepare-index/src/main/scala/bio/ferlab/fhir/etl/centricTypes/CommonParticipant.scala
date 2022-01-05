@@ -14,14 +14,14 @@ class CommonParticipant(batchId: String, loadType: String = "incremental")(impli
   override val mainDestination: DatasetConf = conf.getDataset("common_participant")
   val filesExtract: Seq[DatasetConf] = conf.sources.filter(c => c.id.contains("normalized"))
   val hpoTermsConf: DatasetConf = conf.getDataset("hpo_terms")
-  val inputStorageOutput: StorageConf = conf.getStorage("output")
-  val inputHpoTermsStorage: StorageConf = conf.getStorage("hpo_terms")
-  val inputMondoTermsStorage: StorageConf = conf.getStorage("mondo_terms")
+  val storageOutput: StorageConf = conf.getStorage("output")
+  val storageHpoTerms: StorageConf = conf.getStorage("hpo_terms")
+  val storageMondoTerms: StorageConf = conf.getStorage("mondo_terms")
 
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    filesExtract.map(f => f.id -> read(s"${inputStorageOutput.path}${f.path}", "Parquet", Map(), None, None)).toMap
+    filesExtract.map(f => f.id -> read(s"${storageOutput.path}${f.path}", "Parquet", Map(), None, None)).toMap
   }
 
   override def transform(data: Map[String, DataFrame],
@@ -32,8 +32,8 @@ class CommonParticipant(batchId: String, loadType: String = "incremental")(impli
     val hpoTermsConf = conf.sources.find(c => c.id == "hpo_terms").getOrElse(throw new RuntimeException("Hpo Terms Conf not found"))
     val mondoTermsConf = conf.sources.find(c => c.id == "mondo_terms").getOrElse(throw new RuntimeException("Mondo Terms Conf not found"))
 
-    val allHpoTerms = read(s"${inputHpoTermsStorage.path}${hpoTermsConf.path}", "Json", Map(), None, None)
-    val allMondoTerms = read(s"${inputMondoTermsStorage.path}${mondoTermsConf.path}", "Json", Map(), None, None)
+    val allHpoTerms = read(s"${storageHpoTerms.path}${hpoTermsConf.path}", "Json", Map(), None, None)
+    val allMondoTerms = read(s"${storageMondoTerms.path}${mondoTermsConf.path}", "Json", Map(), None, None)
 
     val transformedParticipant =
       patientDF

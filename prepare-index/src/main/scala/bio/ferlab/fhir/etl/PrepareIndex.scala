@@ -1,7 +1,7 @@
 package bio.ferlab.fhir.etl
 
 import bio.ferlab.datalake.spark3.public.SparkApp
-import bio.ferlab.fhir.etl.centricTypes.{CommonParticipant, FileCentric, ParticipantCentric}
+import bio.ferlab.fhir.etl.centricTypes.{CommonParticipant, FileCentric, ParticipantCentric, StudyCentric}
 
 object PrepareIndex extends SparkApp {
 
@@ -12,6 +12,11 @@ object PrepareIndex extends SparkApp {
   //  val commonParticipantInput  = commonParticipant.extract()
   //  val commonParticipantDf  = commonParticipant.transform(commonParticipantInput)
   //  commonParticipant.load(commonParticipantDf)
+
+  val studyCentric = new StudyCentric("re_00001").run()
+  //  val studyCentricInput  = studyCentric.extract()
+  //  val studyCentricDf  = studyCentric.transform(studyCentricInput)
+  //  studyCentric.load(studyCentricDf)
 
   val participantCentric = new ParticipantCentric("re_00001").run()
 //  val participantCentricInput  = participantCentric.extract()

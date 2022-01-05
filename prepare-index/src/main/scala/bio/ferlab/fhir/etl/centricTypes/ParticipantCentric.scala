@@ -14,16 +14,16 @@ class ParticipantCentric(batchId: String, loadType: String = "incremental")(impl
   override val mainDestination: DatasetConf = conf.getDataset("es_index_participant_centric")
   val common_participant: DatasetConf = conf.getDataset("common_participant")
   val normalized_documentreference: DatasetConf = conf.getDataset("normalized_documentreference")
-  val inputStorageOutput: StorageConf = conf.getStorage("output")
-  val inputStorageParticipantCentric: StorageConf = conf.getStorage("es_index")
+  val storageOutput: StorageConf = conf.getStorage("output")
+  val storageEsIndex: StorageConf = conf.getStorage("es_index")
 
 
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     Map(
-      "common_participant" -> read(s"${inputStorageParticipantCentric.path}${common_participant.path}", "Parquet", Map(), None, None),
-      "normalized_documentreference" -> read(s"${inputStorageOutput.path}${normalized_documentreference.path}", "Parquet", Map(), None, None),
+      "common_participant" -> read(s"${storageEsIndex.path}${common_participant.path}", "Parquet", Map(), None, None),
+      "normalized_documentreference" -> read(s"${storageOutput.path}${normalized_documentreference.path}", "Parquet", Map(), None, None),
     )
   }
 

@@ -1,6 +1,6 @@
 import bio.ferlab.datalake.commons.config.{Configuration, StorageConf}
 import bio.ferlab.datalake.commons.file.FileSystemType.{LOCAL, S3}
-import bio.ferlab.datalake.spark3.{ClassGenerator, etl}
+import bio.ferlab.datalake.spark3.etl
 import bio.ferlab.datalake.spark3.loader.GenericLoader.read
 import bio.ferlab.fhir.etl.centricTypes.ParticipantCentric
 
