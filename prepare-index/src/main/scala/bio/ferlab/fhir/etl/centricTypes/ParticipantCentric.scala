@@ -45,8 +45,7 @@ class ParticipantCentric(batchId: String, loadType: String = "incremental")(impl
 //        .addOutcomes(data("normalized_observation"))
       //TODO add Families
 
-    transformedParticipant.show(false)
-    patientDF
+    transformedParticipant
 
   }
 

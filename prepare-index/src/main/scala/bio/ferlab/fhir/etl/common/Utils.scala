@@ -27,6 +27,8 @@ object Utils {
     }
 
     def addBiospecimen(biospecimensDf: DataFrame): DataFrame = {
+      //todo - prior - add sequencing experiment to genomic files
+      //todo add genomic files to biospecimen
       val reformatBiospecimen: DataFrame = biospecimensDf
         .withColumn("biospecimen", struct(biospecimensDf.columns.map(col): _*))
         .select("participant_fhir_id", "biospecimen")
@@ -34,10 +36,14 @@ object Utils {
         .agg(
           collect_list(col("biospecimen")) as "biospecimens")
 
+      val arrSchema = reformatBiospecimen.schema(1).dataType
+
       df
-        .join(reformatBiospecimen, col("fhir_id") === col("participant_fhir_id"))
+        .join(reformatBiospecimen, col("fhir_id") === col("participant_fhir_id"), "left_outer")
+        .withColumn("biospecimens", when(col("biospecimens").isNull, array().cast(arrSchema)).otherwise(col("biospecimens")))
         .drop("participant_fhir_id")
     }
+
 
     def addOutcomes(observationsDf: DataFrame): DataFrame = {
       val reformatObservation: DataFrame = observationsDf
