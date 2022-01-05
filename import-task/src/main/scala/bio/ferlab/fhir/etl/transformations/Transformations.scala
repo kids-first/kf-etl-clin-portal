@@ -138,7 +138,6 @@ object Transformations {
       .withColumn("external_id", col("content")(1)("attachment")("url"))
       .withColumn("file_format", firstNonNull(col("content")("format")("display")))
       .withColumn("file_name", firstNonNull(col("content")("attachment")("title")))
-      .withColumn("genomic_file_fhir_id", col("fhir_id"))
       .withColumn("genomic_file_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
       .withColumn("hashes", extractHashes(filter(col("content")(1)("attachment")("extension"), c => c("url") === URL_HASHES)("valueCodeableConcept")))
       // TODO instrument_models
@@ -156,7 +155,9 @@ object Transformations {
       .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
       .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
     ),
-    Drop("extension", "id", "identifier", "meta", "content")
+    Drop("extension", "id", "implicitRules", "language", "text", "meta", "contained",
+      "status", "docStatus", "type", "category", "subject", "date", "author", "authenticator",
+      "custodian", "relatesTo", "description", "masterIdentifier", "identifier", "securityLabel", "content", "context")
   )
 
   val groupMappings: List[Transformation] = List(

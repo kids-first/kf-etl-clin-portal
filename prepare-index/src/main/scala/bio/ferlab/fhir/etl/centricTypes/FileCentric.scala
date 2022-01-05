@@ -9,42 +9,41 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
 
-class ParticipantCentric(batchId: String, loadType: String = "incremental")(implicit configuration: Configuration) extends ETL {
+class FileCentric(batchId: String, loadType: String = "incremental")(implicit configuration: Configuration) extends ETL {
 
-  override val mainDestination: DatasetConf = conf.getDataset("es_index_participant_centric")
-  val common_participant: DatasetConf = conf.getDataset("common_participant")
+  override val mainDestination: DatasetConf = conf.getDataset("es_index_file_centric")
   val normalized_documentreference: DatasetConf = conf.getDataset("normalized_documentreference")
+  val common_participant: DatasetConf = conf.getDataset("common_participant")
   val inputStorageOutput: StorageConf = conf.getStorage("output")
   val inputStorageParticipantCentric: StorageConf = conf.getStorage("es_index")
-
 
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     Map(
-      "common_participant" -> read(s"${inputStorageParticipantCentric.path}${common_participant.path}", "Parquet", Map(), None, None),
       "normalized_documentreference" -> read(s"${inputStorageOutput.path}${normalized_documentreference.path}", "Parquet", Map(), None, None),
+      "common_participant" -> read(s"${inputStorageParticipantCentric.path}${common_participant.path}", "Parquet", Map(), None, None)
     )
   }
 
   override def transform(data: Map[String, DataFrame],
                          lastRunDateTime: LocalDateTime = minDateTime,
                          currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    val patientDF = data("common_participant")
+    val fileDF = data("normalized_documentreference")
 
-    val transformedParticipant =
-      patientDF
-        .addFiles(data("normalized_documentreference"))
+    val transformedFile =
+      fileDF
+        .addParticipant(data("common_participant"))
 
-    transformedParticipant.show(false)
-    Map("es_index_participant_centric" -> transformedParticipant)
+    transformedFile.show(false)
+    Map("es_index_file_centric" -> transformedFile)
   }
 
   override def load(data: Map[String, DataFrame],
                     lastRunDateTime: LocalDateTime = minDateTime,
                     currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    println(s"COUNT: ${data("es_index_participant_centric").count()}")
-    val dataToLoad = Map("es_index_participant_centric" -> data("es_index_participant_centric")
+    println(s"COUNT: ${data("es_index_file_centric").count()}")
+    val dataToLoad = Map("es_index_file_centric" -> data("es_index_file_centric")
       .repartition(1, col("study_id"))
       .sortWithinPartitions("fhir_id").toDF())
     super.load(dataToLoad)

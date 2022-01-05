@@ -6,7 +6,7 @@ ThisBuild / scalaVersion := "2.12.14"
 
 libraryDependencies ++= Seq(
   "bio.ferlab" % "fhavro" % "0.0.10-SNAPSHOT",
-  "bio.ferlab" %% "datalake-spark31" % "0.1.7",
+  "bio.ferlab" %% "datalake-spark31" % "0.2.1",
   "org.apache.spark" %% "spark-sql" % "3.1.2",
   "org.apache.spark" %% "spark-hive" % "3.1.2",
   "org.apache.spark" %% "spark-avro" % "3.1.2",

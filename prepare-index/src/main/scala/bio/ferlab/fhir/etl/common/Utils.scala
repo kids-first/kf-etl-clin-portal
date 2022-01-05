@@ -130,5 +130,14 @@ object Utils {
         .join(filesPerParticipant, col("fhir_id") === col("participant_fhir_id"), "left_outer")
         .drop("participant_fhir_id")
     }
+
+    def addParticipant(participantsDf: DataFrame): DataFrame = {
+      val reformatParticipant: DataFrame = participantsDf
+        .withColumn("participant", struct(participantsDf.columns.map(col): _*))
+        .withColumnRenamed("fhir_id", "participant_fhir_id")
+        .select("participant_fhir_id", "participant")
+
+      df.join(reformatParticipant, "participant_fhir_id")
+    }
   }
 }
