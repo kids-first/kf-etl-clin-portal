@@ -171,7 +171,8 @@ object Transformations {
       .withColumn("family_members", struct("exploded_member_entity", "exploded_member_inactive"))
       .groupBy("fhir_id", "study_id", "family_id")
       .agg(
-        collect_list("family_members") as "family_members"
+        collect_list("family_members") as "family_members",
+        collect_list("exploded_member_entity") as "family_members_id"
       )
     ),
     Drop("extension", "id", "identifier", "meta")

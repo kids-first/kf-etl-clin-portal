@@ -13,4 +13,6 @@ case class PARTICIPANT_CENTRIC(`participant_id`: String = "PT_48DYT4PP",
                                `deceasedDateTime`: Timestamp = Timestamp.valueOf("2020-12-17 13:14:26.581"),
                                `study`: STUDY = STUDY(),
                                `biospecimens`: Seq[BIOSPECIMEN] = null,
+                               `families_id`: Seq[String] = null,
+                               `families`: Seq[FAMILY] = null
                             )

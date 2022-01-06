@@ -2,7 +2,7 @@ package bio.ferlab.fhir.etl.common
 
 import bio.ferlab.fhir.etl.common.OntologyUtils._
 import org.apache.spark.sql.expressions.UserDefinedFunction
-import org.apache.spark.sql.functions.{array, array_union, col, collect_list, explode, filter, first, lit, map, size, struct, transform, udf, when}
+import org.apache.spark.sql.functions.{array, array_union, col, collect_list, explode, expr, filter, first, lit, map, size, struct, transform, udf, when}
 import org.apache.spark.sql.DataFrame
 
 object Utils {
@@ -135,6 +135,19 @@ object Utils {
       df
         .join(filesPerParticipant, col("fhir_id") === col("participant_fhir_id"), "left_outer")
         .drop("participant_fhir_id")
+    }
+
+    def addFamily(familyDf: DataFrame): DataFrame = {
+      val reformatFamily: DataFrame = familyDf
+        .withColumn("family", struct(familyDf.columns.map(col): _*))
+        .select("family_members_id", "family_id", "family")
+
+      val groupCols = df.columns.diff(Seq("family_id", "family"))
+
+      df.join(reformatFamily, expr("array_contains(family_members_id,fhir_id)"), "left_outer")
+        .groupBy(groupCols.map(col): _*)
+        .agg(collect_list("family_id") as "families_id", collect_list("family") as "families")
+        .drop("family_members_id")
     }
 
     def addParticipant(participantsDf: DataFrame): DataFrame = {

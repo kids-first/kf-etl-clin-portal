@@ -41,7 +41,7 @@ class CommonParticipant(batchId: String, loadType: String = "incremental")(impli
         .addBiospecimen(data("normalized_specimen"))
         .addDiagnosisPhenotypes(data("normalized_condition"))(allHpoTerms, allMondoTerms)
     //        .addOutcomes(data("normalized_observation"))
-    //TODO add Families
+        .addFamily(data("normalized_group"))
 
     transformedParticipant.show(false)
     Map("common_participant" -> transformedParticipant)
