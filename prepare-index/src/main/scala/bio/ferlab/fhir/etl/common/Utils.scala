@@ -9,6 +9,7 @@ object Utils {
 
   val hpoPhenotype: UserDefinedFunction =
     udf((code: String, observed: String, source_text: String) => observed.toLowerCase.trim match {
+      //  hpo_observed/hpo_non_observed/hpo_observed_text/hpo_non_observed_text/observed_bool
       case "positive" => (s"$source_text ($code)", null, source_text, null, true)
       case _ => (null, s"$source_text ($code)", null, source_text, false)
     })
@@ -36,11 +37,11 @@ object Utils {
         .agg(
           collect_list(col("biospecimen")) as "biospecimens")
 
-      val arrSchema = reformatBiospecimen.schema(1).dataType
+      val arrBioSchema = reformatBiospecimen.schema(1).dataType
 
       df
         .join(reformatBiospecimen, col("fhir_id") === col("participant_fhir_id"), "left_outer")
-        .withColumn("biospecimens", when(col("biospecimens").isNull, array().cast(arrSchema)).otherwise(col("biospecimens")))
+        .withColumn("biospecimens", when(col("biospecimens").isNull, array().cast(arrBioSchema)).otherwise(col("biospecimens")))
         .drop("participant_fhir_id")
     }
 
@@ -64,7 +65,14 @@ object Utils {
         .select("*").where("""condition_profile == "phenotype"""")
         //filter out phenopype with empty code
         .filter(size(col("condition_coding")) > 0)
-        .withColumn("phenotype_code_text", hpoPhenotype(col("condition_coding")(0)("code"), col("observed"), col("source_text")))
+        .withColumn("phenotype_code_text",
+          hpoPhenotype(
+            col("condition_coding")(0)("code"),
+            when(col("observed").isNull, "negative")
+              .otherwise(col("observed")),
+            col("source_text")
+          )
+        )
         .withColumn("hpo_phenotype_observed", col("phenotype_code_text")("_1"))
         .withColumn("hpo_phenotype_not_observed", col("phenotype_code_text")("_2"))
         .withColumn("hpo_phenotype_observed_text", col("phenotype_code_text")("_3"))
@@ -92,6 +100,8 @@ object Utils {
             ) as "non_observed_phenotype"
           )
 
+      val arrPhenotypeSchema = phenotypesWithHPOTerms.schema("phenotype").dataType
+
       val diseases = addDiseases(conditionDf)
       val commonColumns = Seq("fhir_id", "study_id")
       val diseaseColumns = diseases.columns.filter(col => !commonColumns.contains(col))
@@ -112,6 +122,7 @@ object Utils {
 
       df
         .join(phenotypesWithHPOTerms, col("fhir_id") === col("participant_fhir_id"), "left_outer")
+        .withColumn("phenotype", when(col("phenotype").isNull, array().cast(arrPhenotypeSchema)).otherwise(col("phenotype")))
         .drop("participant_fhir_id")
         .join(diseasesWithMondoTerms, col("fhir_id") === col("participant_fhir_id"), "left_outer")
         .drop("participant_fhir_id")
