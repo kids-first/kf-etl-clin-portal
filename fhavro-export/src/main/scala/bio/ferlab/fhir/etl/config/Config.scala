@@ -37,16 +37,11 @@ object Config {
 
   private def loadConfiguration: Result[Config] = {
     val environment = readEnvironment
-    val manifest = readConfigurationPath
-    LOGGER.info(s"Loading configuration in $environment in $manifest")
-    ConfigSource.file(s"$manifest/application-$environment.conf").load[Config]
+    LOGGER.info(s"Loading configuration in $environment")
+    ConfigSource.resources(s"application-$environment.conf").load[Config]
   }
 
   private def readEnvironment: Environment = {
-    Environment.fromString(sys.env.getOrElse("ENV", "dev"))
-  }
-
-  private def readConfigurationPath: String = {
-    sys.env.getOrElse("CONF", "./src/main/resources").stripSuffix("/").trim
+    Environment.fromString(sys.env.getOrElse("ENV", "kfdrc-dev"))
   }
 }

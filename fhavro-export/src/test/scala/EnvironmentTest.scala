@@ -4,11 +4,11 @@ import org.scalatest.FunSuite
 class EnvironmentTest extends FunSuite {
 
   test("fromString to Environment enum.") {
-    assert(Environment.fromString("DEV") === Environment.DEV)
+    assert(Environment.fromString("INCLUDE-DEV") === Environment.INCLUDEDEV)
   }
 
   test("fromString with lowercase string to Environment enum.") {
-    assert(Environment.fromString("dev") === Environment.DEV)
+    assert(Environment.fromString("include-dev") === Environment.INCLUDEDEV)
   }
 
   test("fromString with invalid string to Environment enum throws NoSuchElementException") {
@@ -16,6 +16,6 @@ class EnvironmentTest extends FunSuite {
   }
 
   test("toString should be lowercase") {
-    assert(Environment.DEV.toString === "dev")
+    assert(Environment.INCLUDEDEV.toString === "include-dev")
   }
 }

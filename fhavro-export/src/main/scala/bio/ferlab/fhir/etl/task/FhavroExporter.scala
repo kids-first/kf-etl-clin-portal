@@ -68,10 +68,8 @@ class FhavroExporter(config: Config) {
   def convertResources(fhirRequest: FhirRequest, schemaPath: String, resources: List[DomainResource]): File = {
     val resourceName = fhirRequest.`type`.toLowerCase
 
-    val schemaRelativePath = s"$schemaPath/${fhirRequest.schema}"
-
-    LOGGER.info(s"--- Loading schema: ${fhirRequest.schema} from ./$schemaRelativePath")
-    val schema = Fhavro.loadSchema(schemaRelativePath, SchemaMode.ADVANCED)
+    LOGGER.info(s"--- Loading schema: ${fhirRequest.schema}")
+    val schema = Fhavro.loadSchemaFromResources(s"schema/${fhirRequest.schema}.avsc")
 
     LOGGER.info(s"--- Converting $resourceName to GenericRecord(s)")
     val genericRecords: List[GenericRecord] = convertResourcesToGenericRecords(schema, resources)
