@@ -66,7 +66,7 @@ object Transformations {
     Drop()
   )
 
-  val observationMappings: List[Transformation] = List(
+  val observationVitalStatusMappings: List[Transformation] = List(
     Custom(_
       .select("*")
       .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
@@ -74,27 +74,41 @@ object Transformations {
       .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
       .withColumn("observation_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
     ),
-    Drop("extension", "id", "identifier", "meta")
+    Drop()
+    //    Drop("extension", "id", "identifier", "meta")
   )
 
-  val conditionMappings: List[Transformation] = List(
+  val conditionDiseaseMappings: List[Transformation] = List(
     Custom(_
       .select("*")
-            .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
-            .withColumn("diagnosis_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
-            .withColumn("condition_coding", codingClassify(col("code")("coding")).cast("array<struct<category:string,code:string>>"))
-            .withColumn("source_text", col("code")("text"))
-            .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
-            //could be phenotype OR disease per condition
-            .withColumn("observed", col("verificationStatus")("text"))
-            .withColumn("source_text_tumor_location", col("bodySite")("text"))
-            .withColumn("uberon_id_tumor_location", col("bodySite")("coding"))
-            .withColumn("condition_profile", regexp_extract(col("meta")("profile")(0), conditionTypeR, 1))
-      //      .withColumn("snomed_id_phenotype", col("code")) //TODO
+      .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
+      .withColumn("diagnosis_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
+      .withColumn("condition_coding", codingClassify(col("code")("coding")).cast("array<struct<category:string,code:string>>"))
+      .withColumn("source_text", col("code")("text"))
+      .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
+      .withColumn("source_text_tumor_location", col("bodySite")("text"))
+      .withColumn("uberon_id_tumor_location", col("bodySite")("coding"))
       //      .withColumn("external_id", col("identifier")) //TODO
       //      .withColumn("diagnosis_category", col("code")) //TODO
     ),
-    Drop("extension", "id", "identifier", "meta")
+    Drop()
+    //    Drop("extension", "id", "identifier", "meta")
+  )
+
+  val conditionPhenotypeMappings: List[Transformation] = List(
+    Custom(_
+      .select("*")
+      .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
+      .withColumn("phenotype_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
+      .withColumn("condition_coding", codingClassify(col("code")("coding")).cast("array<struct<category:string,code:string>>"))
+      .withColumn("source_text", col("code")("text"))
+      .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
+      .withColumn("observed", col("verificationStatus")("text"))
+      //      .withColumn("snomed_id_phenotype", col("code")) //TODO
+      //      .withColumn("external_id", col("identifier")) //TODO
+    ),
+    //    Drop("extension", "id", "identifier", "meta")
+    Drop()
   )
 
   val organizationMappings: List[Transformation] = List(
@@ -181,8 +195,10 @@ object Transformations {
   val extractionMappings: Map[String, List[Transformation]] = Map(
     "patient" -> patientMappings,
     "specimen" -> specimenMappings,
-    "observation" -> observationMappings,
-    "condition" -> conditionMappings,
+    "observation_vital-status" -> observationVitalStatusMappings,
+    "observation_family-relationship" -> observationVitalStatusMappings,
+    "condition_phenotype" -> conditionPhenotypeMappings,
+    "condition_disease" -> conditionDiseaseMappings,
     "researchsubject" -> patientMappings,
     "researchstudy" -> researchstudyMappings,
     "group" -> groupMappings,

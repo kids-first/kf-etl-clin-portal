@@ -801,16 +801,16 @@
       "default": []
     },
     {
-      "name": "recordedDate",
+      "name": "_recordedDate",
       "type": {
         "type": "record",
-        "name": "recordedDateExt",
+        "name": "recordedDateExt1",
         "fields": [
           {
-            "name": "relativeDate",
+            "name": "recordedDateExt2",
             "type": {
               "type": "record",
-              "name": "relativeDateExt",
+              "name": "recordedDateExt3",
               "fields": [
                 {
                   "name": "event",
