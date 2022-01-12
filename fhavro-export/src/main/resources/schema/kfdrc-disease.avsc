@@ -807,7 +807,7 @@
         "name": "recordedDateExt1",
         "fields": [
           {
-            "name": "recordedDateExt2",
+            "name": "recordedDate",
             "type": {
               "type": "record",
               "name": "recordedDateExt3",
@@ -851,12 +851,7 @@
                         "name": "value",
                         "type": [
                           "null",
-                          {
-                            "type": "bytes",
-                            "logicalType": "decimal",
-                            "precision": 18,
-                            "scale": 0
-                          }
+                          "string"
                         ],
                         "default": null
                       },

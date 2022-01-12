@@ -80,7 +80,7 @@ object Transformations {
 
   val conditionDiseaseMappings: List[Transformation] = List(
     Custom(_
-      .select("*")
+      .select("identifier", "code", "bodySite", "subject", "verificationStatus", "_recordedDate")
       .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
       .withColumn("diagnosis_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
       .withColumn("condition_coding", codingClassify(col("code")("coding")).cast("array<struct<category:string,code:string>>"))
@@ -88,27 +88,35 @@ object Transformations {
       .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
       .withColumn("source_text_tumor_location", col("bodySite")("text"))
       .withColumn("uberon_id_tumor_location", col("bodySite")("coding"))
+      .withColumn("age_at_event", struct(
+        col("_recordedDate")("recordedDate")("offset")("value") as "value",
+        col("_recordedDate")("recordedDate")("offset")("unit") as "units",
+        filter(col("_recordedDate")("recordedDate")("event")("coding"), c => c("system") === "http://snomed.info/sct")(0)("display") as "from"
+      ))
       //      .withColumn("external_id", col("identifier")) //TODO
       //      .withColumn("diagnosis_category", col("code")) //TODO
     ),
-    Drop()
-    //    Drop("extension", "id", "identifier", "meta")
+    Drop("identifier", "code", "subject", "verificationStatus", "_recordedDate")
   )
 
   val conditionPhenotypeMappings: List[Transformation] = List(
     Custom(_
-      .select("*")
+      .select("identifier", "code", "subject", "verificationStatus", "_recordedDate")
       .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
       .withColumn("phenotype_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
       .withColumn("condition_coding", codingClassify(col("code")("coding")).cast("array<struct<category:string,code:string>>"))
       .withColumn("source_text", col("code")("text"))
       .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
       .withColumn("observed", col("verificationStatus")("text"))
+      .withColumn("age_at_event", struct(
+        col("_recordedDate")("recordedDate")("offset")("value") as "value",
+        col("_recordedDate")("recordedDate")("offset")("unit") as "units",
+        filter(col("_recordedDate")("recordedDate")("event")("coding"), c => c("system") === "http://snomed.info/sct")(0)("display") as "from"
+      ))
       //      .withColumn("snomed_id_phenotype", col("code")) //TODO
       //      .withColumn("external_id", col("identifier")) //TODO
     ),
-    //    Drop("extension", "id", "identifier", "meta")
-    Drop()
+    Drop("identifier", "code", "subject", "verificationStatus", "_recordedDate")
   )
 
   val organizationMappings: List[Transformation] = List(
