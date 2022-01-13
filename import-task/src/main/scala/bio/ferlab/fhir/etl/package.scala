@@ -12,4 +12,7 @@ package object etl {
   val SYS_US_CORE_RACE_URL = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race"
   val SYS_US_CORE_ETHNICITY_URL = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity"
 
+  //Observation
+  val ROLE_CODE_URL = "http://terminology.hl7.org/CodeSystem/v3-RoleCode"
+
 }

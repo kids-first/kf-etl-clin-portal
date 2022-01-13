@@ -851,7 +851,7 @@
                         "name": "value",
                         "type": [
                           "null",
-                          "string"
+                          "int"
                         ],
                         "default": null
                       },

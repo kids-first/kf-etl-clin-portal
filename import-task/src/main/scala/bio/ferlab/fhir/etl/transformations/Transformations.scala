@@ -29,7 +29,8 @@ object Transformations {
       .withColumn("study_id", regexp_extract(col("identifier")(2)("value"), patternParticipantStudy, 1))
       // TODO visible
     ),
-    Drop("extension", "id", "identifier", "meta")
+//    Drop("extension", "id", "identifier", "meta")
+    Drop()
   )
 
   val specimenMappings: List[Transformation] = List(
@@ -68,14 +69,33 @@ object Transformations {
 
   val observationVitalStatusMappings: List[Transformation] = List(
     Custom(_
-      .select("*")
+      .select("subject", "valueCodeableConcept", "identifier")
       .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
       .withColumn("vital_status", col("valueCodeableConcept")("text"))
       .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
       .withColumn("observation_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
+      // TODO age_at_event_days
+      // TODO external_id
     ),
-    Drop()
-    //    Drop("extension", "id", "identifier", "meta")
+    Drop("subject", "valueCodeableConcept", "identifier")
+  )
+
+  val observationFamilyRelationshipMappings: List[Transformation] = List(
+    Custom(_
+      .select("subject", "identifier", "focus", "valueCodeableConcept")
+      .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
+      .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
+      .withColumn("observation_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
+      .withColumn("participant1_id", col("subject")("reference"))
+      .withColumn("participant2_id", col("focus")(0)("reference"))
+      .withColumn(
+        "participant1_to_participant_2_relationship",
+        filter(col("valueCodeableConcept")("coding"), c => c("system") === ROLE_CODE_URL)(0)("display")
+      )
+      // TODO external_id
+
+    ),
+    Drop("subject", "identifier", "focus", "valueCodeableConcept")
   )
 
   val conditionDiseaseMappings: List[Transformation] = List(
@@ -93,8 +113,8 @@ object Transformations {
         col("_recordedDate")("recordedDate")("offset")("unit") as "units",
         filter(col("_recordedDate")("recordedDate")("event")("coding"), c => c("system") === "http://snomed.info/sct")(0)("display") as "from"
       ))
-      //      .withColumn("external_id", col("identifier")) //TODO
-      //      .withColumn("diagnosis_category", col("code")) //TODO
+      // TODO external_id
+      // TODO diagnosis_category
     ),
     Drop("identifier", "code", "subject", "verificationStatus", "_recordedDate")
   )
@@ -113,8 +133,8 @@ object Transformations {
         col("_recordedDate")("recordedDate")("offset")("unit") as "units",
         filter(col("_recordedDate")("recordedDate")("event")("coding"), c => c("system") === "http://snomed.info/sct")(0)("display") as "from"
       ))
-      //      .withColumn("snomed_id_phenotype", col("code")) //TODO
-      //      .withColumn("external_id", col("identifier")) //TODO
+      // TODO snomed_id_phenotype
+      // TODO external_id
     ),
     Drop("identifier", "code", "subject", "verificationStatus", "_recordedDate")
   )
@@ -204,7 +224,7 @@ object Transformations {
     "patient" -> patientMappings,
     "specimen" -> specimenMappings,
     "observation_vital-status" -> observationVitalStatusMappings,
-    "observation_family-relationship" -> observationVitalStatusMappings,
+    "observation_family-relationship" -> observationFamilyRelationshipMappings,
     "condition_phenotype" -> conditionPhenotypeMappings,
     "condition_disease" -> conditionDiseaseMappings,
     "researchsubject" -> patientMappings,

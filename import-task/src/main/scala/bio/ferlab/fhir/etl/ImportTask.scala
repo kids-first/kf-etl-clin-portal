@@ -16,6 +16,6 @@ object ImportTask extends SparkApp {
 
 //  spark.read.format("avro").options(avroSchema=jsonFormatSchema).load("/tmp/avro")
 
-    jobs.foreach(_.run().printSchema())
+//    jobs.foreach(_.run().printSchema())
   jobs.foreach(_.run().show(20, false))
 }

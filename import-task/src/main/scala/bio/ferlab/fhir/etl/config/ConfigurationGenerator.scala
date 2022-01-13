@@ -37,11 +37,17 @@ object ConfigurationGenerator extends App {
   )
 
 val sourceNames: Seq[(String, Option[String])] = Seq(
-  //    "observation" -> Some("family-relationship"),
-  //    "observation" -> Some("vital-status"),
-  "condition" -> Some("disease"),
-  "condition" -> Some("phenotype"),
-  //    "patient" -> None
+      "observation" -> Some("family-relationship"),
+      "observation" -> Some("vital-status"),
+      "condition" -> Some("disease"),
+      "condition" -> Some("phenotype"),
+      "patient" -> None,
+      "group" -> None,
+//      "documentreference" -> None,
+//      "researchstudy" -> None,
+//      "researchsubject" -> None,
+      "specimen" -> None,
+      "organization" -> None,
 )
 
   val sources = sourceNames.flatMap(sn => {
@@ -63,7 +69,6 @@ val sourceNames: Seq[(String, Option[String])] = Seq(
       )
     })
   }).toList
-
 
   val local_conf = Configuration(
     storages = storage,
