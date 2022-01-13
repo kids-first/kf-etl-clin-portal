@@ -33,6 +33,16 @@ object Transformations {
     Drop()
   )
 
+  val researchSubjectMappings: List[Transformation] = List(
+    Custom(_
+      .select("identifier")
+      .withColumn("external_id", col("identifier")(0)("value"))
+      .withColumn("participant_id", regexp_extract(col("identifier")(2)("value"), patternParticipantStudy, 2))
+      .withColumn("study_id", regexp_extract(col("identifier")(2)("value"), patternParticipantStudy, 1))
+    ),
+    Drop("identifier")
+  )
+
   val specimenMappings: List[Transformation] = List(
     Custom(_
       .select("*")
@@ -227,7 +237,7 @@ object Transformations {
     "observation_family-relationship" -> observationFamilyRelationshipMappings,
     "condition_phenotype" -> conditionPhenotypeMappings,
     "condition_disease" -> conditionDiseaseMappings,
-    "researchsubject" -> patientMappings,
+    "researchsubject" -> researchSubjectMappings,
     "researchstudy" -> researchstudyMappings,
     "group" -> groupMappings,
     "documentreference" -> documentreferenceMappings,

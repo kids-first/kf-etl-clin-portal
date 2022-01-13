@@ -44,8 +44,8 @@ val sourceNames: Seq[(String, Option[String])] = Seq(
       "patient" -> None,
       "group" -> None,
 //      "documentreference" -> None,
-//      "researchstudy" -> None,
-//      "researchsubject" -> None,
+      "researchstudy" -> None,
+      "researchsubject" -> None,
       "specimen" -> None,
       "organization" -> None,
 )
