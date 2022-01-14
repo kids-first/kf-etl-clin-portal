@@ -36,25 +36,39 @@ object ConfigurationGenerator extends App {
     "spark.hadoop.fs.s3a.impl" -> "org.apache.hadoop.fs.s3a.S3AFileSystem"
   )
 
-//  val sourceNames = Seq("condition", "documentreference", "group", "observation", "patient", "researchstudy", "researchsubject", "specimen", organization)
-val sourceNames = Seq("researchstudy")
+val sourceNames: Seq[(String, Option[String])] = Seq(
+      "observation" -> Some("family-relationship"),
+      "observation" -> Some("vital-status"),
+      "condition" -> Some("disease"),
+      "condition" -> Some("phenotype"),
+      "patient" -> None,
+      "group" -> None,
+      "documentreference" -> None,
+      "researchstudy" -> None,
+      "researchsubject" -> None,
+      "specimen" -> None,
+      "organization" -> None,
+)
 
-  val sources = sourceNames.flatMap(sn =>
+  val sources = sourceNames.flatMap(sn => {
+    val (profileDash, profileUnderscore) = sn._2 match {
+      case Some(p) => (s"/$p", s"_$p")
+      case None => ("", "")
+    }
     studies.flatMap(study => {
       Seq(
-        DatasetConf(s"raw_$sn", input, s"/raw/fhir/$sn/study=$study", AVRO, OverWrite),
+        DatasetConf(s"raw_${sn._1}$profileUnderscore", input, s"/raw/fhir/${sn._1}$profileDash/study=$study", AVRO, OverWrite),
         DatasetConf(
-          s"normalized_$sn",
+          s"normalized_${sn._1}$profileUnderscore",
           output,
-          s"/normalized/fhir/$sn/study=$study/release=$release",
+          s"/normalized/fhir/${sn._1}${profileDash}/study=$study/release=$release",
           PARQUET,
           OverWrite,
-          TableConf("kfdrc", s"fhir_$sn")
+          TableConf("kfdrc", s"fhir_${sn._1}")
         )
       )
     })
-  ).toList
-
+  }).toList
 
   val local_conf = Configuration(
     storages = storage,
@@ -63,5 +77,5 @@ val sourceNames = Seq("researchstudy")
     sparkconf = local_spark_conf
   )
 
-  ConfigurationWriter.writeTo("./src/main/resources/config/dev.conf", local_conf)
+  ConfigurationWriter.writeTo("./import-task/src/main/resources/config/dev.conf", local_conf)
 }

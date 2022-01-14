@@ -108,5 +108,5 @@ import-task/.idea/
 *.iml
 metastore_db/*
 
-
+/tmp
 .DS_store

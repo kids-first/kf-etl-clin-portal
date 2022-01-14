@@ -9,7 +9,7 @@ import play.api.libs.json.{JsValue, Json}
 import scala.util.matching.Regex
 
 object FhavroToNormalizedMappings {
-  val pattern: Regex = "raw_([A-Za-z0-9]+)".r
+  val pattern: Regex = "raw_([A-Za-z0-9-_]+)".r
 
   val idFromUrlRegex = "https://kf-api-fhir-service.kidsfirstdrc.org/[A-Za-z]+/([0-9A-Za-z]+)/_history"
 
@@ -29,7 +29,7 @@ object FhavroToNormalizedMappings {
 
   def mappings(implicit c: Configuration): List[(DatasetConf, DatasetConf, List[Transformation])] = c.sources.filter(s => s.format == Format.AVRO).map(s =>
     {
-      val pattern(table ) = s.id
+      val pattern(table) = s.id
 //      (s.copy(readoptions = Map("avroSchema" -> asJson.toString())), c.getDataset(s"normalized_$table"), defaultTransformations ++ extractionMappings(table))
       (s, c.getDataset(s"normalized_$table"), defaultTransformations ++ extractionMappings(table))
     }

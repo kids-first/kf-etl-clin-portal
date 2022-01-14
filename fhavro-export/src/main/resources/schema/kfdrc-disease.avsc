@@ -801,16 +801,16 @@
       "default": []
     },
     {
-      "name": "recordedDate",
+      "name": "_recordedDate",
       "type": {
         "type": "record",
-        "name": "recordedDateExt",
+        "name": "recordedDateExt1",
         "fields": [
           {
-            "name": "relativeDate",
+            "name": "recordedDate",
             "type": {
               "type": "record",
-              "name": "relativeDateExt",
+              "name": "recordedDateExt3",
               "fields": [
                 {
                   "name": "event",
@@ -851,12 +851,7 @@
                         "name": "value",
                         "type": [
                           "null",
-                          {
-                            "type": "bytes",
-                            "logicalType": "decimal",
-                            "precision": 18,
-                            "scale": 0
-                          }
+                          "int"
                         ],
                         "default": null
                       },
