@@ -7,4 +7,5 @@ case class PHENOTYPE(
                         `hpo_phenotype_observed_text`: String = "Patent ductus arteriosus",
                         `hpo_phenotype_not_observed_text`: String = null,
                         `observed`: Boolean = false
+                    //todo add age at event days
                       )

@@ -79,21 +79,33 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
       PATIENT(participant_id = "B", fhir_id = "B")
     ).toDF()
 
-    val inputConditions = Seq(
-      CONDITION(fhir_id = "1", participant_fhir_id = "A", condition_coding = Seq(CONDITION_CODING(`category` = "HPO", `code` = "HP_0001631")), observed = "positive", condition_profile = "phenotype"),
-      CONDITION(fhir_id = "2", participant_fhir_id = "A", condition_coding = Seq(CONDITION_CODING()), condition_profile = "phenotype"),
-      CONDITION(fhir_id = "3", participant_fhir_id = "A", condition_coding = Seq(CONDITION_CODING()), observed = "not", condition_profile = "phenotype"),
-      CONDITION(fhir_id = "4", participant_fhir_id = "A", condition_profile = "phenotype")
+    val inputPhenotypes = Seq(
+      CONDITION_PHENOTYPE(fhir_id = "1p", participant_fhir_id = "A", condition_coding = Seq(CONDITION_CODING(`category` = "HPO", `code` = "HP_0001631")), observed = "positive"),
+      CONDITION_PHENOTYPE(fhir_id = "2p", participant_fhir_id = "A", condition_coding = Seq(CONDITION_CODING())),
+      CONDITION_PHENOTYPE(fhir_id = "3p", participant_fhir_id = "A", condition_coding = Seq(CONDITION_CODING()), observed = "not"),
+      CONDITION_PHENOTYPE(fhir_id = "4p", participant_fhir_id = "A")
     ).toDF()
 
-    val output = inputParticipants.addDiagnosisPhenotypes(inputConditions)(allHpoTerms, allMondoTerms)
+    val inputDiseases = Seq(
+      CONDITION_DISEASE(fhir_id = "1d", diagnosis_id = "diag1", participant_fhir_id = "A", condition_coding = Seq(CONDITION_CODING(`category` = "ICD", `code` = "Q90.9"))),
+      CONDITION_DISEASE(fhir_id = "2d", diagnosis_id = "diag2", participant_fhir_id = "A", condition_coding = Seq(CONDITION_CODING(`category` = "NCIT", `code` = "Some NCIT"))),
+      CONDITION_DISEASE(fhir_id = "3d", diagnosis_id = "diag3", participant_fhir_id = "A")
+    ).toDF()
 
+    val output = inputParticipants.addDiagnosisPhenotypes(inputPhenotypes, inputDiseases)(allHpoTerms, allMondoTerms)
     val participantPhenotypes = output.select("participant_id", "phenotype").as[(String, Seq[PHENOTYPE])].collect()
-    val participantA = participantPhenotypes.filter(_._1 == "A").head
-    val participantB = participantPhenotypes.filter(_._1 == "B").head
+    val participantDiseases = output.select("participant_id", "diagnoses").as[(String, Seq[DISEASE])].collect()
 
-    participantA._2.map(p => (p.fhir_id, p.observed)) shouldEqual Seq(("1", true), ("2", false), ("3", false))
-    participantB._2.map(p => (p.fhir_id, p.observed)) shouldEqual Nil
+    val participantA_Ph = participantPhenotypes.filter(_._1 == "A").head
+    val participantB_Ph = participantPhenotypes.filter(_._1 == "B").head
+    val participantA_D = participantDiseases.filter(_._1 == "A").head
+    val participantB_D = participantDiseases.filter(_._1 == "B").head
+
+    participantA_Ph._2.map(p => (p.fhir_id, p.observed)) should contain theSameElementsAs Seq(("1p", true), ("2p", false), ("3p", false))
+    participantB_Ph._2.map(p => (p.fhir_id, p.observed)) should contain theSameElementsAs Nil
+
+    participantA_D._2.map(p =>  p.diagnosis_id) should contain theSameElementsAs Seq("diag1", "diag2")
+//    participantB_D._2.map(p => p.diagnosis_id) shouldEqual Nil
   }
 
   "addParticipant" should "add participant to file" in {

@@ -1,6 +1,6 @@
 package bio.ferlab.fhir.etl.common
 
-import bio.ferlab.fhir.etl.common.Utils.observableTiteStandard
+import bio.ferlab.fhir.etl.common.Utils.{hpoPhenotype, observableTiteStandard}
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions._
@@ -20,7 +20,6 @@ object OntologyUtils {
   def addDiseases(df: DataFrame): DataFrame= {
     val conditionDfColumns = df.columns
     df
-      .select("*").where("""condition_profile == "disease"""")
       //filter out disease with empty code
       .filter(size(col("condition_coding")) > 0)
       .withColumn("exploded_condition_coding", explode(col("condition_coding")))
@@ -45,6 +44,26 @@ object OntologyUtils {
       .drop("condition_coding")
   }
 
+  def addPhenotypes(df: DataFrame): DataFrame= {
+    df
+      //filter out phenopype with empty code
+      .filter(size(col("condition_coding")) > 0)
+      .withColumn("phenotype_code_text",
+        hpoPhenotype(
+          col("condition_coding")(0)("code"),
+          when(col("observed").isNull, "negative")
+            .otherwise(col("observed")),
+          col("source_text")
+        )
+      )
+      .withColumn("hpo_phenotype_observed", col("phenotype_code_text")("_1"))
+      .withColumn("hpo_phenotype_not_observed", col("phenotype_code_text")("_2"))
+      .withColumn("hpo_phenotype_observed_text", col("phenotype_code_text")("_3"))
+      .withColumn("hpo_phenotype_not_observed_text", col("phenotype_code_text")("_4"))
+      .withColumn("observed_bool", col("phenotype_code_text")("_5"))
+      .withColumn("observable_term", observableTiteStandard(col("condition_coding")(0)("code")))
+  }
+
   def mapObservableTerms(df: DataFrame, pivotColumn: String)(observableTerms: DataFrame): DataFrame= {
     df
 //      .filter("mondo_id_diagnosis is not null") //FIXME REMOVE
@@ -52,7 +71,10 @@ object OntologyUtils {
       .withColumn("transform_ancestors", when(col("ancestors").isNotNull,  transformAncestors(col("ancestors"))))
       .withColumn("transform_tagged_observable", transformTaggedTerm(col("id"), col("name"),col("parents"), col("is_leaf") ))
       .withColumn("observable_with_ancestors", array_union(col("transform_ancestors"), array(col("transform_tagged_observable"))))
-      .withColumn("observable_with_ancestors", col("observable_with_ancestors").cast(SCHEMA_OBSERVABLE_TERM))
+      .withColumn("observable_with_ancestors",
+        when(col("observable_with_ancestors").isNull, array().cast(SCHEMA_OBSERVABLE_TERM))
+          .otherwise(col("observable_with_ancestors").cast(SCHEMA_OBSERVABLE_TERM))
+      )
       .drop("transform_ancestors", "transform_tagged_observable", "ancestors", "id", "is_leaf", "name", "parents")
   }
 }

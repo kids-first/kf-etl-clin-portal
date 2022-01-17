@@ -1,9 +1,9 @@
 package bio.ferlab.fhir.etl.common
 
 import bio.ferlab.fhir.etl.common.OntologyUtils._
-import org.apache.spark.sql.expressions.UserDefinedFunction
-import org.apache.spark.sql.functions.{array, array_union, col, collect_list, explode, expr, filter, first, lit, map, size, struct, transform, udf, when}
 import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.expressions.UserDefinedFunction
+import org.apache.spark.sql.functions._
 
 object Utils {
 
@@ -59,26 +59,9 @@ object Utils {
         .drop( "participant_fhir_id")
     }
 
-    def addDiagnosisPhenotypes(conditionDf: DataFrame)(hpoTerms: DataFrame, mondoTerms: DataFrame): DataFrame = {
+    def addDiagnosisPhenotypes(phenotypeDF: DataFrame, diagnosesDF: DataFrame)(hpoTerms: DataFrame, mondoTerms: DataFrame): DataFrame = {
 
-      val phenotypes = conditionDf
-        .select("*").where("""condition_profile == "phenotype"""")
-        //filter out phenopype with empty code
-        .filter(size(col("condition_coding")) > 0)
-        .withColumn("phenotype_code_text",
-          hpoPhenotype(
-            col("condition_coding")(0)("code"),
-            when(col("observed").isNull, "negative")
-              .otherwise(col("observed")),
-            col("source_text")
-          )
-        )
-        .withColumn("hpo_phenotype_observed", col("phenotype_code_text")("_1"))
-        .withColumn("hpo_phenotype_not_observed", col("phenotype_code_text")("_2"))
-        .withColumn("hpo_phenotype_observed_text", col("phenotype_code_text")("_3"))
-        .withColumn("hpo_phenotype_not_observed_text", col("phenotype_code_text")("_4"))
-        .withColumn("observed_bool", col("phenotype_code_text")("_5"))
-        .withColumn("observable_term", observableTiteStandard(col("condition_coding")(0)("code")))
+      val phenotypes = addPhenotypes(phenotypeDF)
 
       val phenotypesWithHPOTerms =
         mapObservableTerms(phenotypes, "observable_term")(hpoTerms)
@@ -102,15 +85,16 @@ object Utils {
 
       val arrPhenotypeSchema = phenotypesWithHPOTerms.schema("phenotype").dataType
 
-      val diseases = addDiseases(conditionDf)
-      val commonColumns = Seq("fhir_id", "study_id")
+      val diseases = addDiseases(diagnosesDF)
+      val commonColumns = Seq("participant_fhir_id", "study_id")
+
       val diseaseColumns = diseases.columns.filter(col => !commonColumns.contains(col))
 
       val diseasesWithMondoTerms =
         mapObservableTerms(diseases, "mondo_id_diagnosis")(mondoTerms)
-          .withColumn("mondo", explode(col("observable_with_ancestors")))
-          .drop(commonColumns :+ "observable_with_ancestors": _*)
-          .groupBy("participant_fhir_id")
+          .withColumn("mondo", explode_outer(col("observable_with_ancestors")))
+          .drop("observable_with_ancestors")
+          .groupBy(commonColumns.head, commonColumns.tail: _*)
           .agg(
             collect_list(
               struct(
