@@ -685,6 +685,29 @@
                       }
                     ],
                     "default":null
+                  },
+                  {
+                    "name" : "hashes",
+                    "aliases": [
+                      "ext:https://nih-ncpi.github.io/ncpi-fhir-ig/StructureDefinition/hashes"
+                    ],
+                    "type": {
+                      "type": "array",
+                      "items": "bio.ferlab.fhir.CodeableConcept",
+                      "default": []
+                    },
+                    "default": []
+                  },
+                  {
+                    "name" : "fileSize",
+                    "aliases": [
+                      "ext:https://nih-ncpi.github.io/ncpi-fhir-ig/StructureDefinition/file-size"
+                    ],
+                    "type": [
+                      "null",
+                      "bytes"
+                    ],
+                    "default": null
                   }
                 ],
                 "default":{
