@@ -93,8 +93,8 @@ object Utils {
       val diseasesWithMondoTerms =
         mapObservableTerms(diseases, "mondo_id_diagnosis")(mondoTerms)
           .withColumn("mondo", explode_outer(col("observable_with_ancestors")))
-          .drop("observable_with_ancestors")
-          .groupBy(commonColumns.head, commonColumns.tail: _*)
+          .drop("observable_with_ancestors", "study_id")
+          .groupBy("participant_fhir_id")
           .agg(
             collect_list(
               struct(

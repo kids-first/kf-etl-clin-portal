@@ -86,6 +86,28 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
       CONDITION_PHENOTYPE(fhir_id = "4p", participant_fhir_id = "A")
     ).toDF()
 
+    val inputDiseases = Seq.empty[CONDITION_DISEASE].toDF()
+
+    val output = inputParticipants.addDiagnosisPhenotypes(inputPhenotypes, inputDiseases)(allHpoTerms, allMondoTerms)
+    val participantPhenotypes = output.select("participant_id", "phenotype").as[(String, Seq[PHENOTYPE])].collect()
+    val participantA_Ph = participantPhenotypes.filter(_._1 == "A").head
+    val participantB_Ph = participantPhenotypes.filter(_._1 == "B").head
+
+    participantA_Ph._2.map(p => (p.fhir_id, p.observed)) should contain theSameElementsAs Seq(("1p", true), ("2p", false), ("3p", false))
+    participantB_Ph._2.map(p => (p.fhir_id, p.observed)) should contain theSameElementsAs Nil
+  }
+
+  it should "map diseases to participants" in {
+    val allHpoTerms = read("./prepare-index/src/test/resources/hpo_terms.json", "Json", Map(), None, None)
+    val allMondoTerms = read("./prepare-index/src/test/resources/mondo_terms.json", "Json", Map(), None, None)
+
+    val inputParticipants = Seq(
+      PARTICIPANT(participant_id = "A", fhir_id = "A"),
+      PARTICIPANT(participant_id = "B", fhir_id = "B")
+    ).toDF()
+
+    val inputPhenotypes = Seq.empty[CONDITION_PHENOTYPE].toDF()
+
     val inputDiseases = Seq(
       CONDITION_DISEASE(fhir_id = "1d", diagnosis_id = "diag1", participant_fhir_id = "A", condition_coding = Seq(CONDITION_CODING(`category` = "ICD", `code` = "Q90.9"))),
       CONDITION_DISEASE(fhir_id = "2d", diagnosis_id = "diag2", participant_fhir_id = "A", condition_coding = Seq(CONDITION_CODING(`category` = "NCIT", `code` = "Some NCIT"))),
@@ -93,19 +115,16 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val output = inputParticipants.addDiagnosisPhenotypes(inputPhenotypes, inputDiseases)(allHpoTerms, allMondoTerms)
-    val participantPhenotypes = output.select("participant_id", "phenotype").as[(String, Seq[PHENOTYPE])].collect()
     val participantDiseases = output.select("participant_id", "diagnoses").as[(String, Seq[DISEASE])].collect()
 
-    val participantA_Ph = participantPhenotypes.filter(_._1 == "A").head
-    val participantB_Ph = participantPhenotypes.filter(_._1 == "B").head
     val participantA_D = participantDiseases.filter(_._1 == "A").head
     val participantB_D = participantDiseases.filter(_._1 == "B").head
 
-    participantA_Ph._2.map(p => (p.fhir_id, p.observed)) should contain theSameElementsAs Seq(("1p", true), ("2p", false), ("3p", false))
-    participantB_Ph._2.map(p => (p.fhir_id, p.observed)) should contain theSameElementsAs Nil
-
     participantA_D._2.map(p =>  p.diagnosis_id) should contain theSameElementsAs Seq("diag1", "diag2")
-//    participantB_D._2.map(p => p.diagnosis_id) shouldEqual Nil
+    participantB_D._2 shouldBe null
+  }
+
+  it should "group phenotypes by age_at_event_days" in {
   }
 
   "addParticipant" should "add participant to file" in {
