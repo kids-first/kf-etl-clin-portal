@@ -3,13 +3,11 @@ package bio.ferlab.fhir.etl.transformations
 import bio.ferlab.datalake.spark3.transformation.{Custom, Drop, Transformation}
 import bio.ferlab.fhir.etl._
 import bio.ferlab.fhir.etl.Utils.{codingClassify, extractAclFromList, extractHashes, extractStudyExternalId, extractStudyVersion, firstNonNull, ncitIdAnatomicalSite, retrieveIsControlledAccess, retrieveIsHarmonized, retrieveRepository, retrieveSize, uberonIdAnatomicalSite}
-import org.apache.spark.sql.functions.{col, collect_list, explode, expr, filter, regexp_extract, struct}
+import org.apache.spark.sql.functions.{col, collect_list, explode, filter, regexp_extract, struct}
 import org.apache.spark.sql.functions._
 
 object Transformations {
 
-  val URL_FILE_SIZE = "https://nih-ncpi.github.io/ncpi-fhir-ig/StructureDefinition/file-size"
-  val URL_HASHES = "https://nih-ncpi.github.io/ncpi-fhir-ig/StructureDefinition/hashes"
   val patternParticipantStudy = "[A-Z][a-z]+-(SD_[0-9A-Za-z]+)-([A-Z]{2}_[0-9A-Za-z]+)"
   val patternPractitionerRoleResearchStudy = "PractitionerRole\\/([0-9]+)"
   val participantSpecimen = "[A-Z][a-z]+/([0-9A-Za-z]+)"
@@ -195,7 +193,7 @@ object Transformations {
       .withColumn("file_format", firstNonNull(col("content")("format")("display")))
       .withColumn("file_name", firstNonNull(col("content")("attachment")("title")))
       .withColumn("genomic_file_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
-      .withColumn("hashes", extractHashes(filter(col("content")(1)("attachment")("extension"), c => c("url") === URL_HASHES)("valueCodeableConcept")))
+      .withColumn("hashes", extractHashes(col("content")(1)("attachment")("hashes")))
       // TODO instrument_models
       .withColumn("is_harmonized", retrieveIsHarmonized(col("content")(1)("attachment")("url")))
       // TODO is_paired_end
@@ -205,7 +203,7 @@ object Transformations {
       // TODO platforms
       // TODO reference_genome
       .withColumn("repository", retrieveRepository(col("content")("attachment")("url")(0)))
-      .withColumn("size", retrieveSize(filter(col("content")(1)("attachment")("extension"), c => c("url") === URL_FILE_SIZE)("valueDecimal")(0)))
+      .withColumn("size", retrieveSize(col("content")(1)("attachment")("fileSize")))
       .withColumn("urls", col("content")(1)("attachment")("url"))
       // TODO visible
       .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))

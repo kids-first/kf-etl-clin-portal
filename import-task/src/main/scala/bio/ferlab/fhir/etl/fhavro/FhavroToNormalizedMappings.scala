@@ -23,14 +23,9 @@ object FhavroToNormalizedMappings {
     )
   )
 
-
-  val source: String = scala.io.Source.fromFile("import-task/src/main/scala/bio/ferlab/fhir/etl/fhavro/kfdrc-documentreference.avsc").mkString
-  val asJson: JsValue = Json.parse(source)
-
   def mappings(implicit c: Configuration): List[(DatasetConf, DatasetConf, List[Transformation])] = c.sources.filter(s => s.format == Format.AVRO).map(s =>
     {
       val pattern(table) = s.id
-//      (s.copy(readoptions = Map("avroSchema" -> asJson.toString())), c.getDataset(s"normalized_$table"), defaultTransformations ++ extractionMappings(table))
       (s, c.getDataset(s"normalized_$table"), defaultTransformations ++ extractionMappings(table))
     }
   )
