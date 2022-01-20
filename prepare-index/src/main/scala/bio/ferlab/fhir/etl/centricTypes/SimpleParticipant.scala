@@ -37,7 +37,7 @@ class SimpleParticipant(batchId: String, loadType: String = "incremental")(impli
 
     val transformedParticipant =
       patientDF
-        .addDiagnosisPhenotypes(data("normalized_condition"))(allHpoTerms, allMondoTerms)
+        .addDiagnosisPhenotypes(data("normalized_condition_phenotype"), data("normalized_condition_disease"))(allHpoTerms, allMondoTerms)
     //        .addOutcomes(data("normalized_observation"))
         .addFamily(data("normalized_group"))
         .withColumnRenamed("gender", "sex")

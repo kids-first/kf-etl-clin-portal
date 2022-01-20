@@ -98,8 +98,8 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
 
   it should "map diseases to participants" in {
     val inputParticipants = Seq(
-      PARTICIPANT(participant_id = "A", fhir_id = "A"),
-      PARTICIPANT(participant_id = "B", fhir_id = "B")
+      PATIENT(participant_id = "A", fhir_id = "A"),
+      PATIENT(participant_id = "B", fhir_id = "B")
     ).toDF()
 
     val inputPhenotypes = Seq.empty[CONDITION_PHENOTYPE].toDF()
@@ -128,7 +128,7 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
 
   it should "generate observed_phenotypes and non_observed_phenotypes" in {
     val inputParticipants = Seq(
-      PARTICIPANT(participant_id = "A", fhir_id = "A")
+      PATIENT(participant_id = "A", fhir_id = "A")
     ).toDF()
 
     val inputPhenotypes = Seq(
@@ -169,7 +169,7 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
 
   it should "group diagnoses by age at event days" in {
     val inputParticipants = Seq(
-      PARTICIPANT(participant_id = "A", fhir_id = "A")
+      PATIENT(participant_id = "A", fhir_id = "A")
     ).toDF()
 
     val inputPhenotypes = Seq.empty[CONDITION_PHENOTYPE].toDF()
