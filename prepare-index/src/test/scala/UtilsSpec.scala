@@ -3,7 +3,6 @@ import bio.ferlab.fhir.etl.common.Utils._
 import model._
 import org.scalatest.{FlatSpec, Matchers}
 
-
 class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
 
   import spark.implicits._
@@ -15,7 +14,7 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
   "addStudy" should "add studies to participant" in {
 
 
-    val inputStudies = Seq(STUDY()).toDF()
+    val inputStudies = Seq(RESEARCHSTUDY()).toDF()
     val inputParticipants = Seq(PARTICIPANT()).toDF()
 
     val output = inputParticipants.addStudy(inputStudies)
@@ -72,8 +71,8 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
   }
 
   "addDiagnosisPhenotypes" should "group phenotypes by observed or non-observed" in {
-    val allHpoTerms = read("./prepare-index/src/test/resources/hpo_terms.json", "Json", Map(), None, None)
-    val allMondoTerms = read("./prepare-index/src/test/resources/mondo_terms.json", "Json", Map(), None, None)
+    val allHpoTerms = read("./src/test/resources/hpo_terms.json", "Json", Map(), None, None)
+    val allMondoTerms = read("./src/test/resources/mondo_terms.json", "Json", Map(), None, None)
 
     val inputParticipants = Seq(
       PARTICIPANT(participant_id = "A", fhir_id = "A"),
@@ -95,5 +94,30 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
 
     participantA._2.map(p => (p.fhir_id, p.observed)) shouldEqual Seq(("1", true), ("2", false), ("3", false))
     participantB._2.map(p => (p.fhir_id, p.observed)) shouldEqual Nil
+  }
+
+  "addParticipant" should "add participant to file" in {
+    val inputDocumentReference = Seq(
+      DOCUMENTREFERENCE(`participant_fhir_id` = "A", `fhir_id` = "1"),
+      DOCUMENTREFERENCE(`participant_fhir_id` = "B", `fhir_id` = "2"),
+      DOCUMENTREFERENCE(`participant_fhir_id` = "C", `fhir_id` = "3")
+    ).toDF()
+
+    val inputParticipant = Seq(
+      PARTICIPANT(`fhir_id` = "A", `participant_id` = "P_A"),
+      PARTICIPANT(`fhir_id` = "B", `participant_id` = "P_B")
+    ).toDF()
+
+    val output = inputDocumentReference.addParticipant(inputParticipant)
+
+    val fileWithParticipant = output.select("fhir_id", "participant").as[(String, Seq[PARTICIPANT])].collect()
+    val file1 = fileWithParticipant.filter(_._1 == "1").head
+    val file2 = fileWithParticipant.filter(_._1 == "2").head
+
+    file1._2.map(_.`participant_id`) shouldEqual Seq("P_A")
+    file2._2.map(_.`participant_id`) shouldEqual Seq("P_B")
+
+    // Ignore file without participant
+    fileWithParticipant.exists(_._1 == "3") shouldEqual false
   }
 }

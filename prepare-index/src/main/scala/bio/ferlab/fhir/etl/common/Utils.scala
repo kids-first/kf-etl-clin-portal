@@ -163,7 +163,7 @@ object Utils {
 
     def addParticipant(participantsDf: DataFrame): DataFrame = {
       val reformatParticipant: DataFrame = participantsDf
-        .withColumn("participant", struct(participantsDf.columns.map(col): _*))
+        .withColumn("participant", array(struct(participantsDf.columns.map(col): _*)))
         .withColumnRenamed("fhir_id", "participant_fhir_id")
         .select("participant_fhir_id", "participant")
 

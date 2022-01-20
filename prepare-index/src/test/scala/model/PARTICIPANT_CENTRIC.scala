@@ -8,11 +8,10 @@ case class PARTICIPANT_CENTRIC(`participant_id`: String = "PT_48DYT4PP",
                                `ethnicity`: String = "Not Reported",
                                `race`: String = "Not Reported",
                                `fhir_id`: String = ".",
-                               `gender`: String = "GRCh37",
+                               `sex`: String = "GRCh37",
                                `deceasedBoolean`: Boolean = false,
                                `deceasedDateTime`: Timestamp = Timestamp.valueOf("2020-12-17 13:14:26.581"),
-                               `study`: STUDY = STUDY(),
-                               `biospecimens`: Seq[BIOSPECIMEN] = null,
+                               `study`: RESEARCHSTUDY = RESEARCHSTUDY(),
                                `families_id`: Seq[String] = null,
                                `families`: Seq[FAMILY] = null
                             )

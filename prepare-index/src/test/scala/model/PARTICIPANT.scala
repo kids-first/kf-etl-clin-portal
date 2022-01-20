@@ -9,7 +9,7 @@ case class PARTICIPANT(
                         `ethnicity`: String = "Not Reported",
                         `race`: String = "Not Reported",
                         `fhir_id`: String = "38734",
-                        `gender`: String = "GRCh37",
+                        `sex`: String = "male",
                         `deceasedBoolean`: Boolean = false,
                         `deceasedDateTime`: Timestamp = Timestamp.valueOf("2020-12-17 13:14:26.581")
                       )
