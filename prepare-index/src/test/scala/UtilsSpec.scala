@@ -1,6 +1,8 @@
 import bio.ferlab.datalake.spark3.loader.GenericLoader.read
 import bio.ferlab.fhir.etl.common.Utils._
 import model._
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.functions.{col, explode, explode_outer}
 import org.scalatest.{FlatSpec, Matchers}
 
 class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
@@ -10,10 +12,10 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
   case class ConditionCoding(code: String, category: String)
 
   val SCHEMA_CONDITION_CODING = "array<struct<category:string,code:string>>"
+  val allHpoTerms: DataFrame = read("./prepare-index/src/test/resources/hpo_terms.json", "Json", Map(), None, None)
+  val allMondoTerms: DataFrame = read("./prepare-index/src/test/resources/mondo_terms.json", "Json", Map(), None, None)
 
   "addStudy" should "add studies to participant" in {
-
-
     val inputStudies = Seq(RESEARCHSTUDY()).toDF()
     val inputParticipants = Seq(PATIENT()).toDF()
 
@@ -23,7 +25,6 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
   }
 
   "addBiospecimen" should "add biospecimen to participant" in {
-
     val inputParticipants = Seq(
       PATIENT(participant_id = "A", fhir_id = "A"),
       PATIENT(participant_id = "B", fhir_id = "B")
@@ -71,8 +72,6 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
   }
 
   "addDiagnosisPhenotypes" should "group phenotypes by observed or non-observed" in {
-    val allHpoTerms = read("./prepare-index/src/test/resources/hpo_terms.json", "Json", Map(), None, None)
-    val allMondoTerms = read("./prepare-index/src/test/resources/mondo_terms.json", "Json", Map(), None, None)
 
     val inputParticipants = Seq(
       PATIENT(participant_id = "A", fhir_id = "A"),
@@ -98,9 +97,6 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
   }
 
   it should "map diseases to participants" in {
-    val allHpoTerms = read("./prepare-index/src/test/resources/hpo_terms.json", "Json", Map(), None, None)
-    val allMondoTerms = read("./prepare-index/src/test/resources/mondo_terms.json", "Json", Map(), None, None)
-
     val inputParticipants = Seq(
       PARTICIPANT(participant_id = "A", fhir_id = "A"),
       PARTICIPANT(participant_id = "B", fhir_id = "B")
@@ -115,16 +111,96 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val output = inputParticipants.addDiagnosisPhenotypes(inputPhenotypes, inputDiseases)(allHpoTerms, allMondoTerms)
-    val participantDiseases = output.select("participant_id", "diagnoses").as[(String, Seq[DISEASE])].collect()
 
-    val participantA_D = participantDiseases.filter(_._1 == "A").head
+    val participantDiseases =
+      output
+        .select("participant_id", "diagnoses")
+        .withColumn("diagnoses_exp", explode_outer(col("diagnoses")))
+        .select("participant_id", "diagnoses_exp.diagnosis_id")
+        .as[(String, String)].collect()
+
+    val participantA_D = participantDiseases.filter(_._1 == "A")
     val participantB_D = participantDiseases.filter(_._1 == "B").head
 
-    participantA_D._2.map(p =>  p.diagnosis_id) should contain theSameElementsAs Seq("diag1", "diag2")
+    participantA_D.map(_._2) should contain theSameElementsAs Seq("diag1", "diag2")
     participantB_D._2 shouldBe null
   }
 
-  it should "group phenotypes by age_at_event_days" in {
+  it should "generate observed_phenotypes and non_observed_phenotypes" in {
+    val inputParticipants = Seq(
+      PARTICIPANT(participant_id = "A", fhir_id = "A")
+    ).toDF()
+
+    val inputPhenotypes = Seq(
+      CONDITION_PHENOTYPE(
+        fhir_id = "1p",
+        participant_fhir_id = "A",
+        condition_coding = Seq(CONDITION_CODING(`category` = "HPO", `code` = "HP_0000234")),
+        observed = "positive"
+      ),
+      CONDITION_PHENOTYPE(
+        fhir_id = "2p",
+        participant_fhir_id = "A",
+        condition_coding = Seq(CONDITION_CODING(`category` = "HPO", `code` = "HP_0033127")),
+        observed = "not",
+        age_at_event = AGE_AT_EVENT(5)
+      ),
+      CONDITION_PHENOTYPE(
+        fhir_id = "2p",
+        participant_fhir_id = "A",
+        condition_coding = Seq(CONDITION_CODING(`category` = "HPO", `code` = "HP_0002086")),
+        age_at_event = AGE_AT_EVENT(10)
+      )
+    ).toDF()
+
+    val inputDiseases = Seq.empty[CONDITION_DISEASE].toDF()
+
+    val output =
+      inputParticipants
+        .addDiagnosisPhenotypes(inputPhenotypes, inputDiseases)(allHpoTerms, allMondoTerms)
+        .select("participant_id", "observed_phenotype", "non_observed_phenotype")
+        .as[(String, Seq[OBSERVABLE_TERM], Seq[OBSERVABLE_TERM])].collect()
+
+    val participantA_Ph = output.filter(_._1 == "A").head
+
+    participantA_Ph._2.filter(t => t.`name` === "Phenotypic abnormality (HP:0000118)").head.`age_at_event_days` shouldEqual Seq(0)
+    participantA_Ph._3.filter(t => t.`name` === "Phenotypic abnormality (HP:0000118)").head.`age_at_event_days` shouldEqual Seq(5, 10)
+  }
+
+  it should "group diagnoses by age at event days" in {
+    val inputParticipants = Seq(
+      PARTICIPANT(participant_id = "A", fhir_id = "A")
+    ).toDF()
+
+    val inputPhenotypes = Seq.empty[CONDITION_PHENOTYPE].toDF()
+
+    val inputDiseases = Seq(
+      CONDITION_DISEASE(
+        fhir_id = "1d",
+        diagnosis_id = "diag1",
+        participant_fhir_id = "A",
+        condition_coding = Seq(CONDITION_CODING(`category` = "MONDO", `code` = "MONDO_0002051")),
+        age_at_event = AGE_AT_EVENT(5),
+      ),
+      CONDITION_DISEASE(
+        fhir_id = "2d",
+        diagnosis_id = "diag2",
+        participant_fhir_id = "A",
+        condition_coding = Seq(CONDITION_CODING(`category` = "MONDO", `code` = "MONDO_0024458")),
+        age_at_event = AGE_AT_EVENT(10),
+      ),
+      CONDITION_DISEASE(fhir_id = "3d", diagnosis_id = "diag3", participant_fhir_id = "A")
+    ).toDF()
+
+    val output =
+      inputParticipants
+        .addDiagnosisPhenotypes(inputPhenotypes, inputDiseases)(allHpoTerms, allMondoTerms)
+        .select("participant_id", "mondo")
+        .as[(String, Seq[OBSERVABLE_TERM])].collect()
+
+    val participantA_Ph = output.filter(_._1 == "A").head
+
+    participantA_Ph._2.filter(t => t.`name` === "disease or disorder (MONDO:0000001)").head.`age_at_event_days` shouldEqual Seq(5,10)
   }
 
   "addParticipant" should "add participant to file" in {

@@ -9,7 +9,6 @@ case class DISEASE(
                         `mondo_id_diagnosis`: String = null,
                         `ncit_id_diagnosis`: String = null,
                         `mondo`: OBSERVABLE_TERM = null,
-//todo add age at event days
                       )
 
 
@@ -17,5 +16,6 @@ case class OBSERVABLE_TERM (
                              `name`: String = "HP:12345",
                              `parents`: Seq[String] = Seq.empty[String],
                              `is_tagged`: Boolean = false,
-                             `is_leaf`: Boolean = false
+                             `is_leaf`: Boolean = false,
+                             `age_at_event_days`: Seq[Int] = Seq.empty[Int]
                            )

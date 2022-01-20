@@ -8,10 +8,10 @@ import org.apache.spark.sql.functions._
 object Utils {
 
   val hpoPhenotype: UserDefinedFunction =
-    udf((code: String, observed: String, source_text: String) => observed.toLowerCase.trim match {
+    udf((code: String, observed: String, source_text: String, age_at_event_days: Int) => observed.toLowerCase.trim match {
       //  hpo_observed/hpo_non_observed/hpo_observed_text/hpo_non_observed_text/observed_bool
-      case "positive" => (s"$source_text ($code)", null, source_text, null, true)
-      case _ => (null, s"$source_text ($code)", null, source_text, false)
+      case "positive" => (s"$source_text ($code)", null, source_text, null, true, age_at_event_days)
+      case _ => (null, s"$source_text ($code)", null, source_text, false, age_at_event_days)
     })
 
   val observableTiteStandard: UserDefinedFunction =
@@ -73,17 +73,38 @@ object Utils {
               col("hpo_phenotype_not_observed"),
               col("hpo_phenotype_observed_text"),
               col("hpo_phenotype_not_observed_text"),
-              col("observed_bool") as "observed"
+              col("observed_bool") as "observed",
+              col("age_at_event_days")
             )) as "phenotype",
             collect_list(
-              when(col("observed") === "Positive", col("observable_with_ancestors"))
+              when(lower(col("observed")) === "positive", col("observable_with_ancestors"))
             ) as "observed_phenotype",
             collect_list(
-              when(col("observed") === "Negative", col("observable_with_ancestors"))
+              when(lower(col("observed")) =!= "positive" || col("observed").isNull, col("observable_with_ancestors"))
             ) as "non_observed_phenotype"
           )
 
-      val arrPhenotypeSchema = phenotypesWithHPOTerms.schema("phenotype").dataType
+      val phenotypesWithHPOTermsObsExploded =
+        phenotypesWithHPOTerms
+          .withColumn(s"observed_phenotype_exp", explode(col("observed_phenotype")))
+          .withColumn("observed_phenotype", explode(col("observed_phenotype_exp")))
+
+      val phenotypesWithHPOTermsNonObsExploded =
+        phenotypesWithHPOTerms
+          .withColumn(s"non_observed_phenotype_exp", explode(col("non_observed_phenotype")))
+          .withColumn("non_observed_phenotype", explode(col("non_observed_phenotype_exp")))
+
+
+      val observedPhenotypes = groupObservableTermsByAge(phenotypesWithHPOTermsObsExploded, "observed_phenotype")
+      val nonObservedPhenotypes = groupObservableTermsByAge(phenotypesWithHPOTermsNonObsExploded, "non_observed_phenotype")
+
+      val phenotypesWithHPOTermsGroupedByEvent =
+        phenotypesWithHPOTerms
+          .drop("observed_phenotype", "non_observed_phenotype")
+          .join(observedPhenotypes, Seq("participant_fhir_id"), "left_outer")
+          .join(nonObservedPhenotypes, Seq("participant_fhir_id"), "left_outer")
+
+      val arrPhenotypeSchema = phenotypesWithHPOTermsGroupedByEvent.schema("phenotype").dataType
 
       val diseases = addDiseases(diagnosesDF)
       val commonColumns = Seq("participant_fhir_id", "study_id")
@@ -96,21 +117,35 @@ object Utils {
           .drop("observable_with_ancestors", "study_id")
           .groupBy("participant_fhir_id")
           .agg(
-            collect_list(
+            collect_set(
               struct(
                 diseaseColumns.head,
-                diseaseColumns.tail :+ "mondo": _*
+                diseaseColumns.tail: _*
               )
             ) as "diagnoses",
+            collect_set(col("mondo")) as "mondo"
           )
 
+      val diseasesExplodedWithMondoTerms = diseasesWithMondoTerms
+        .withColumn("mondo", explode(col("mondo")))
+
+      val diseasesWithMondoTermsGrouped = {
+        groupObservableTermsByAge(diseasesExplodedWithMondoTerms, "mondo")
+      }
+
+      val diseasesWithReplacedMondoTerms =
+        diseasesWithMondoTerms
+          .drop("mondo")
+          .join(diseasesWithMondoTermsGrouped, Seq("participant_fhir_id"), "left_outer")
+
       df
-        .join(phenotypesWithHPOTerms, col("fhir_id") === col("participant_fhir_id"), "left_outer")
+        .join(phenotypesWithHPOTermsGroupedByEvent, col("fhir_id") === col("participant_fhir_id"), "left_outer")
         .withColumn("phenotype", when(col("phenotype").isNull, array().cast(arrPhenotypeSchema)).otherwise(col("phenotype")))
         .drop("participant_fhir_id")
-        .join(diseasesWithMondoTerms, col("fhir_id") === col("participant_fhir_id"), "left_outer")
+        .join(diseasesWithReplacedMondoTerms, col("fhir_id") === col("participant_fhir_id"), "left_outer")
         .drop("participant_fhir_id")
     }
+
     def addFiles(filesDf: DataFrame): DataFrame = {
       val columnsGroup = Seq("study_id", "participant_fhir_id")
       val columnsFile = filesDf.columns.filter(col => !columnsGroup.contains(col) )
