@@ -47,7 +47,13 @@ object Utils {
 
   val retrieveIsHarmonized: UserDefinedFunction = udf((s: Option[String]) => s.exists(_.contains("harmonized-data")))
 
-  val retrieveIsControlledAccess: UserDefinedFunction = udf((s: Option[String]) => s.exists(_.equals("R")))
+  val retrieveIsControlledAccess: UserDefinedFunction = udf((s: Option[String]) => {
+    if(s.exists(_.equals("R"))) {
+      "Controlled"
+    } else {
+      "Open"
+    }
+  })
 
   val retrieveRepository: UserDefinedFunction = udf((s: Option[String]) => {
     if(s.exists(_.contains(gen3Host))) {

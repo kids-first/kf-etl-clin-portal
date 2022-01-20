@@ -38,10 +38,17 @@ class StudyCentric (batchId: String, loadType: String = "incremental")(implicit 
     val countFamily = data("normalized_group").count()
 
     val transformedStudyDf = studyDF
+      .withColumn("study_code", lit("TODO"))
+      .withColumnRenamed("name", "study_name")
+      .withColumn("program", lit("TODO"))
+      .withColumn("type_of_omics", lit("TODO"))
+      .withColumn("experimental_strategy", lit("TODO"))
+      .withColumn("data_access", lit("TODO"))
       .withColumn("participant_count", lit(countPatient))
       .withColumn("file_count", lit(countFile))
       .withColumn("family_count", lit(countFamily))
       .withColumn("family_data", lit(countFamily > 0))
+      .drop("status", "attribution", "version", "investigator_id")
 
     transformedStudyDf.show(false)
     Map("es_index_study_centric" -> transformedStudyDf)

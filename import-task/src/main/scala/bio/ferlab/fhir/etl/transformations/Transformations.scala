@@ -186,13 +186,13 @@ object Transformations {
       .withColumn("acl", extractAclFromList(col("securityLabel")("text")))
       .withColumn("access_urls", col("content")("attachment")("url")(0))
       // TODO availability
-      .withColumn("controlled_access", retrieveIsControlledAccess(col("securityLabel")(0)("coding")(0)("code")))
+      .withColumn("access", retrieveIsControlledAccess(col("securityLabel")(0)("coding")(0)("code")))
       // TODO created_at
       .withColumn("data_type", col("type")("text"))
       .withColumn("external_id", col("content")(1)("attachment")("url"))
       .withColumn("file_format", firstNonNull(col("content")("format")("display")))
       .withColumn("file_name", firstNonNull(col("content")("attachment")("title")))
-      .withColumn("genomic_file_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
+      .withColumn("file_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
       .withColumn("hashes", extractHashes(col("content")(1)("attachment")("hashes")))
       // TODO instrument_models
       .withColumn("is_harmonized", retrieveIsHarmonized(col("content")(1)("attachment")("url")))
