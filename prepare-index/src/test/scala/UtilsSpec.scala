@@ -71,8 +71,8 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
   }
 
   "addDiagnosisPhenotypes" should "group phenotypes by observed or non-observed" in {
-    val allHpoTerms = read("./src/test/resources/hpo_terms.json", "Json", Map(), None, None)
-    val allMondoTerms = read("./src/test/resources/mondo_terms.json", "Json", Map(), None, None)
+    val allHpoTerms = read("./prepare-index/src/test/resources/hpo_terms.json", "Json", Map(), None, None)
+    val allMondoTerms = read("./prepare-index/src/test/resources/mondo_terms.json", "Json", Map(), None, None)
 
     val inputParticipants = Seq(
       PARTICIPANT(participant_id = "A", fhir_id = "A"),
