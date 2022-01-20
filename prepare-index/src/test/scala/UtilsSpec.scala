@@ -15,7 +15,7 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
 
 
     val inputStudies = Seq(RESEARCHSTUDY()).toDF()
-    val inputParticipants = Seq(PARTICIPANT()).toDF()
+    val inputParticipants = Seq(PATIENT()).toDF()
 
     val output = inputParticipants.addStudy(inputStudies)
 
@@ -25,8 +25,8 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
   "addBiospecimen" should "add biospecimen to participant" in {
 
     val inputParticipants = Seq(
-      PARTICIPANT(participant_id = "A", fhir_id = "A"),
-      PARTICIPANT(participant_id = "B", fhir_id = "B")
+      PATIENT(participant_id = "A", fhir_id = "A"),
+      PATIENT(participant_id = "B", fhir_id = "B")
     ).toDF()
 
     val inputBiospecimens = Seq(
@@ -47,9 +47,9 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
 
   "addFamily" should "add families to participant" in {
 
-    val participantWith1Family = PARTICIPANT(`fhir_id` = "11")
-    val participantWith2Families = PARTICIPANT(`fhir_id` = "22")
-    val participantWithNoFamily = PARTICIPANT(`fhir_id` = "33")
+    val participantWith1Family = PATIENT(`fhir_id` = "11")
+    val participantWith2Families = PATIENT(`fhir_id` = "22")
+    val participantWithNoFamily = PATIENT(`fhir_id` = "33")
 
     val family1 = FAMILY(`fhir_id` = "111", `family_id` = "FM_111", `family_members` = Seq(("11", false), ("22", false)), `family_members_id` = Seq("11", "22"))
     val family2 = FAMILY(`fhir_id` = "222", `family_id` = "FM_222", `family_members` = Seq(("22", false)), `family_members_id` = Seq("22"))
@@ -61,13 +61,13 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
 
     participantCentrics.count shouldEqual 3
 
-    val participantCentricWith1Family = participantCentrics.filter(p => p.getString(5).equals("11")).head
-    val participantCentricWith2Families = participantCentrics.filter(p => p.getString(5).equals("22")).head
-    val participantCentricWithNoFamily = participantCentrics.filter(p => p.getString(5).equals("33")).head
+    val participantCentricWith1Family = participantCentrics.as[PATIENT_WITH_FAMILY].collect().filter(p => p.`fhir_id`.equals("11")).head
+    val participantCentricWith2Families = participantCentrics.as[PATIENT_WITH_FAMILY].collect().filter(p => p.`fhir_id`.equals("22")).head
+    val participantCentricWithNoFamily = participantCentrics.as[PATIENT_WITH_FAMILY].collect().filter(p => p.`fhir_id`.equals("33")).head
 
-    participantCentricWith1Family.getSeq(9) shouldEqual Seq("FM_111")
-    participantCentricWith2Families.getSeq(9) shouldEqual Seq("FM_111", "FM_222")
-    participantCentricWithNoFamily.getSeq(9) shouldBe Seq.empty
+    participantCentricWith1Family.`families_id` shouldEqual Seq("FM_111")
+    participantCentricWith2Families.`families_id` shouldEqual Seq("FM_111", "FM_222")
+    participantCentricWithNoFamily.`families_id` shouldBe Seq.empty
   }
 
   "addDiagnosisPhenotypes" should "group phenotypes by observed or non-observed" in {
@@ -75,8 +75,8 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     val allMondoTerms = read("./prepare-index/src/test/resources/mondo_terms.json", "Json", Map(), None, None)
 
     val inputParticipants = Seq(
-      PARTICIPANT(participant_id = "A", fhir_id = "A"),
-      PARTICIPANT(participant_id = "B", fhir_id = "B")
+      PATIENT(participant_id = "A", fhir_id = "A"),
+      PATIENT(participant_id = "B", fhir_id = "B")
     ).toDF()
 
     val inputConditions = Seq(
@@ -104,13 +104,13 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val inputParticipant = Seq(
-      PARTICIPANT(`fhir_id` = "A", `participant_id` = "P_A"),
-      PARTICIPANT(`fhir_id` = "B", `participant_id` = "P_B")
+      PATIENT(`fhir_id` = "A", `participant_id` = "P_A"),
+      PATIENT(`fhir_id` = "B", `participant_id` = "P_B")
     ).toDF()
 
     val output = inputDocumentReference.addParticipant(inputParticipant)
 
-    val fileWithParticipant = output.select("fhir_id", "participant").as[(String, Seq[PARTICIPANT])].collect()
+    val fileWithParticipant = output.select("fhir_id", "participant").as[(String, Seq[PATIENT])].collect()
     val file1 = fileWithParticipant.filter(_._1 == "1").head
     val file2 = fileWithParticipant.filter(_._1 == "2").head
 
