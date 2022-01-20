@@ -7,6 +7,6 @@ case class RESEARCHSTUDY(
                   `attribution`: String = "phs002330.v1.p1",
                   `external_id`: String = "phs002330",
                   `version`: String = "v1.p1",
-                  `investigator_id`: String = null,
+                  `investigator_id`: String = "123456",
                   `study_id`: String = "SD_Z6MWD3H0"
                 )
