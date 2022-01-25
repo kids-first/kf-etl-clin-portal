@@ -1,19 +1,23 @@
 package bio.ferlab.fhir.etl
 
-import bio.ferlab.datalake.spark3.etl.{ETL, RawToNormalizedETL}
+import bio.ferlab.datalake.spark3.etl.v2.ETL
 import bio.ferlab.datalake.spark3.public.SparkApp
 import bio.ferlab.fhir.etl.fhavro.FhavroToNormalizedMappings
 
 object ImportTask extends SparkApp {
 
-  implicit val (conf, spark) = init()
+  println(s"ARGS: " + args.mkString("[", ", ", "]"))
+
+  val Array(_, _, releaseId, studyIds) = args
+
+  val studyList = studyIds.split(";").toList
+
+  implicit val (conf, _, spark) = init()
   spark.sparkContext.setLogLevel("WARN")
 
-  val jobs: List[ETL] =
-    FhavroToNormalizedMappings
-      .mappings
-      .map { case (src, dst, transformations) => new RawToNormalizedETL(src, dst, transformations) }
+  val jobs: List[ETL] = FhavroToNormalizedMappings
+    .mappings(releaseId)
+    .map { case (src, dst, transformations) => new ImportRawToNormalizedETL(src, dst, transformations, releaseId, studyList) }
 
-//    jobs.foreach(_.run().printSchema())
-  jobs.foreach(_.run().show(20, false))
+  jobs.foreach(_.run().map(_._2.show(20, false)))
 }

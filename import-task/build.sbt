@@ -11,7 +11,7 @@ val slf4jVersion = "1.7.32"
 
 libraryDependencies ++= Seq(
   "bio.ferlab" % "fhavro" % "0.0.10-SNAPSHOT",
-  "bio.ferlab" %% "datalake-spark31" % "0.1.7",
+  "bio.ferlab" %% "datalake-spark31" % "0.2.8",
   "org.apache.spark" %% "spark-sql" % "3.1.2",
   "org.apache.spark" %% "spark-hive" % "3.1.2",
   "org.apache.spark" %% "spark-avro" % "3.1.2",

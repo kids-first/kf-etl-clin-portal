@@ -2,7 +2,7 @@ package bio.ferlab.fhir.etl.transformations
 
 import bio.ferlab.datalake.spark3.transformation.{Custom, Drop, Transformation}
 import bio.ferlab.fhir.etl._
-import bio.ferlab.fhir.etl.Utils.{codingClassify, extractAclFromList, extractHashes, extractStudyExternalId, extractStudyVersion, firstNonNull, ncitIdAnatomicalSite, retrieveIsControlledAccess, retrieveIsHarmonized, retrieveRepository, retrieveSize, uberonIdAnatomicalSite}
+import bio.ferlab.fhir.etl.Utils._
 import org.apache.spark.sql.functions.{col, collect_list, explode, filter, regexp_extract, struct}
 import org.apache.spark.sql.functions._
 
@@ -15,7 +15,7 @@ object Transformations {
 
   val patientMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id","gender", "ethnicity", "identifier", "race")
+      .select("fhir_id", "release_id","gender", "ethnicity", "identifier", "race")
       // TODO affected_status
       // TODO alias_group
       // TODO created_at
@@ -33,7 +33,7 @@ object Transformations {
 
   val researchSubjectMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "identifier")
+      .select("fhir_id", "release_id", "identifier")
       .withColumn("external_id", col("identifier")(0)("value"))
       .withColumn("participant_id", regexp_extract(col("identifier")(2)("value"), patternParticipantStudy, 2))
       .withColumn("study_id", regexp_extract(col("identifier")(2)("value"), patternParticipantStudy, 1))
@@ -43,7 +43,7 @@ object Transformations {
 
   val specimenMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "type", "identifier", "collection", "subject", "status")
+      .select("fhir_id", "release_id", "type", "identifier", "collection", "subject", "status")
       // TODO age_at_event_days
       // TODO analyte_type
       .withColumn("composition", col("type")("text"))
@@ -77,7 +77,7 @@ object Transformations {
 
   val observationVitalStatusMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id","subject", "valueCodeableConcept", "identifier")
+      .select("fhir_id", "release_id","subject", "valueCodeableConcept", "identifier")
       .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
       .withColumn("vital_status", col("valueCodeableConcept")("text"))
       .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
@@ -90,7 +90,7 @@ object Transformations {
 
   val observationFamilyRelationshipMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "subject", "identifier", "focus", "valueCodeableConcept")
+      .select("fhir_id", "release_id", "subject", "identifier", "focus", "valueCodeableConcept")
       .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
       .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
       .withColumn("observation_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
@@ -108,7 +108,7 @@ object Transformations {
 
   val conditionDiseaseMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id","identifier", "code", "bodySite", "subject", "verificationStatus", "_recordedDate")
+      .select("fhir_id", "release_id","identifier", "code", "bodySite", "subject", "verificationStatus", "_recordedDate")
       .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
       .withColumn("diagnosis_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
       .withColumn("condition_coding", codingClassify(col("code")("coding")).cast("array<struct<category:string,code:string>>"))
@@ -129,7 +129,7 @@ object Transformations {
 
   val conditionPhenotypeMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id","identifier", "code", "subject", "verificationStatus", "_recordedDate")
+      .select("fhir_id", "release_id","identifier", "code", "subject", "verificationStatus", "_recordedDate")
       .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
       .withColumn("phenotype_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
       .withColumn("condition_coding", codingClassify(col("code")("coding")).cast("array<struct<category:string,code:string>>"))
@@ -149,7 +149,7 @@ object Transformations {
 
   val organizationMappings: List[Transformation] = List(
     Custom(_
-      .select( "fhir_id","identifier", "name")
+      .select( "fhir_id", "release_id","identifier", "name")
       .withColumn("organization_id", col("identifier")(0)("value"))
       .withColumn("institution", col("name"))
     ),
@@ -158,7 +158,7 @@ object Transformations {
 
   val researchstudyMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id","title", "identifier", "principalInvestigator", "status")
+      .select("fhir_id", "release_id","title", "identifier", "principalInvestigator", "status")
       .withColumn("attribution", filter(col("identifier"), c => c("system") === SYS_NCBI_URL)(0)("value"))
       // TODO created_at
       // TODO data_access_authority
@@ -182,7 +182,7 @@ object Transformations {
 
   val documentreferenceMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "securityLabel", "content", "type", "identifier", "subject")
+      .select("fhir_id", "release_id", "securityLabel", "content", "type", "identifier", "subject")
       .withColumn("acl", extractAclFromList(col("securityLabel")("text")))
       .withColumn("access_urls", col("content")("attachment")("url")(0))
       // TODO availability
@@ -221,7 +221,7 @@ object Transformations {
       .withColumn("exploded_member_entity", regexp_extract(col("exploded_member")("entity")("reference"), participantSpecimen,1))
       .withColumn("exploded_member_inactive", col("exploded_member")("inactive"))
       .withColumn("family_members", struct("exploded_member_entity", "exploded_member_inactive"))
-      .groupBy("fhir_id", "study_id", "family_id", "type")
+      .groupBy("fhir_id", "study_id", "family_id", "type", "release_id")
       .agg(
         collect_list("family_members") as "family_members",
         collect_list("exploded_member_entity") as "family_members_id"

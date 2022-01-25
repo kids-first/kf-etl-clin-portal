@@ -6,11 +6,6 @@ import bio.ferlab.datalake.commons.config._
 import bio.ferlab.datalake.commons.file.FileSystemType.S3
 
 object ConfigurationGenerator extends App {
-  //TODO check is args is empty
-
-  val studies = args.slice(1, args.length)
-  val release = args(0)
-
   val input = "kfdrc"
   val output = "output"
 
@@ -36,44 +31,50 @@ object ConfigurationGenerator extends App {
     "spark.hadoop.fs.s3a.impl" -> "org.apache.hadoop.fs.s3a.S3AFileSystem"
   )
 
-val sourceNames: Seq[(String, Option[String])] = Seq(
-      "observation" -> Some("family-relationship"),
-      "observation" -> Some("vital-status"),
-      "condition" -> Some("disease"),
-      "condition" -> Some("phenotype"),
-      "patient" -> None,
-      "group" -> None,
-      "documentreference" -> None,
-      "researchstudy" -> None,
-      "researchsubject" -> None,
-      "specimen" -> None,
-      "organization" -> None,
-)
+  val sourceNames: Seq[(String, Option[String], List[String])] = Seq(
+    ("observation", Some("family-relationship"), List("study_id", "release_id")),
+    ("observation", Some("vital-status"), List("study_id", "release_id")),
+    ("condition", Some("disease"), List("study_id", "release_id")),
+    ("condition", Some("phenotype"), List("study_id", "release_id")),
+    ("patient", None, List("study_id", "release_id")),
+    ("group", None, List("study_id", "release_id")),
+    ("documentreference", None, List("study_id", "release_id")),
+    ("researchstudy", None, List("study_id", "release_id")),
+    ("researchsubject", None, List("study_id", "release_id")),
+    ("specimen", None, List("study_id", "release_id")),
+    ("organization", None, List("release_id")),
+  )
 
   val sources = sourceNames.flatMap(sn => {
     val (profileDash, profileUnderscore) = sn._2 match {
       case Some(p) => (s"/$p", s"_$p")
       case None => ("", "")
     }
-    studies.flatMap(study => {
-      Seq(
-        DatasetConf(s"raw_${sn._1}$profileUnderscore", input, s"/raw/fhir/${sn._1}$profileDash/study=$study", AVRO, OverWrite),
-        DatasetConf(
-          s"normalized_${sn._1}$profileUnderscore",
-          output,
-          s"/normalized/fhir/${sn._1}${profileDash}/study=$study/release=$release",
-          PARQUET,
-          OverWrite,
-          TableConf("kfdrc", s"fhir_${sn._1}")
-        )
+    Seq(
+      DatasetConf(
+        id = s"raw_${sn._1}$profileUnderscore",
+        storageid = input,
+        path = s"/raw/fhir/${sn._1}$profileDash",
+        format = AVRO,
+        loadtype = OverWrite,
+        partitionby = sn._3
+      ),
+      DatasetConf(
+        id = s"normalized_${sn._1}$profileUnderscore",
+        storageid = output,
+        path = s"/normalized/fhir/${sn._1}$profileDash",
+        format = PARQUET,
+        loadtype = OverWrite,
+        table = Some(TableConf("kfdrc", s"fhir_${sn._1}")),
+        partitionby = sn._3
       )
-    })
+    )
   }).toList
 
   val local_conf = Configuration(
     storages = storage,
     sources = sources.map(ds => ds.copy(table = ds.table.map(t => TableConf(database, t.name)))),
-    args=args.toList,
+    args = args.toList,
     sparkconf = local_spark_conf
   )
 
