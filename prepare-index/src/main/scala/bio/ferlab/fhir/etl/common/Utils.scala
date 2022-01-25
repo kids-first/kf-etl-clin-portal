@@ -122,7 +122,7 @@ object Utils {
                 diseaseColumns.head,
                 diseaseColumns.tail: _*
               )
-            ) as "diagnoses",
+            ) as "diagnosis",
             collect_set(col("mondo")) as "mondo"
           )
 
@@ -176,8 +176,7 @@ object Utils {
 
       df.join(reformatFamily, expr("array_contains(family_members_id,fhir_id)"), "left_outer")
         .groupBy(groupCols.map(col): _*)
-        .agg(collect_list("family_id") as "families_id", collect_list("family") as "families")
-        .drop("family_members_id")
+        .agg(collect_list("family_id") as "families_id", collect_list(col("family").dropFields("family_members_id")) as "families")
     }
 
     def addParticipant(participantsDf: DataFrame): DataFrame = {

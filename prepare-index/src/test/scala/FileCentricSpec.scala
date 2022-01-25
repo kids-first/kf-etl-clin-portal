@@ -20,7 +20,7 @@ class FileCentricSpec extends FlatSpec with Matchers with WithSparkSession {
       "simple_participant" -> Seq(PATIENT(`fhir_id` = "1"), PATIENT(`fhir_id` = "2")).toDF(), // TODO Change me for SIMPLE_PARTICIPANT
     )
 
-    val output = new FileCentric("re_00001")(conf).transform(data)
+    val output = new FileCentric("re_000001")(conf).transform(data)
 
     output.keys should contain("es_index_file_centric")
 
@@ -42,7 +42,7 @@ class FileCentricSpec extends FlatSpec with Matchers with WithSparkSession {
       "simple_participant" -> Seq(PATIENT(`fhir_id` = "1")).toDF(), // TODO Change me for SIMPLE_PARTICIPANT
     )
 
-    val output = new FileCentric("re_00001")(conf).transform(data)
+    val output = new FileCentric("re_000001")(conf).transform(data)
 
     output.keys should contain("es_index_file_centric")
 

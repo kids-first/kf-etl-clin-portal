@@ -23,4 +23,5 @@ case class FILE_CENTRIC(
                          `data_category`: String = "TODO",
                          `study`: STUDY_CENTRIC = STUDY_CENTRIC(),
                          // TODO `participant`: SIMPLE_PARTICIPANT = SIMPLE_PARTICIPANT()
+                         `release_id`: String = "re_000001"
                        )
