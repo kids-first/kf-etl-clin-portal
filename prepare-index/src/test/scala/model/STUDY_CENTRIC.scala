@@ -13,9 +13,10 @@ case class STUDY_CENTRIC(
                           `program`: String = "TODO",
                           `type_of_omics`: Seq[String] = Seq("TODO"),
                           `experimental_strategy`: Seq[String] = Seq("TODO"),
-                          `data_access`: String = "TODO",
+                          `data_access`: Seq[String] = Seq("TODO"),
                           `participant_count`: Long = 0,
                           `file_count`: Long = 0,
                           `family_count`: Long = 0,
-                          `family_data`: Boolean = false
+                          `family_data`: Boolean = false,
+                          `release_id`: String = "re_000001"
                         )

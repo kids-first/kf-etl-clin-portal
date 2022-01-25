@@ -66,7 +66,7 @@ object Utils {
     }
   })
 
-  val retrieveSize: UserDefinedFunction = udf((d: Option[String]) => d.map(BigInt(_)))
+  val retrieveSize: UserDefinedFunction = udf((d: Option[String]) => d.map(BigInt(_).toLong))
 
   val extractStudyVersion: UserDefinedFunction = udf((s: Option[String]) => s.map(_.split('.').tail.mkString(".")))
 

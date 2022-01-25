@@ -1,6 +1,6 @@
 package bio.ferlab.fhir.etl.centricTypes
 
-import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf, StorageConf}
+import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.v2.ETL
 import bio.ferlab.datalake.spark3.loader.GenericLoader.read
 import org.apache.spark.sql.functions.lit
@@ -8,23 +8,21 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
 
-class StudyCentric (batchId: String, loadType: String = "incremental")(implicit configuration: Configuration) extends ETL {
+class StudyCentric(batchId: String, loadType: String = "incremental")(implicit configuration: Configuration) extends ETL {
 
   override val mainDestination: DatasetConf = conf.getDataset("es_index_study_centric")
   val normalized_researchstudy: DatasetConf = conf.getDataset("normalized_researchstudy")
   val normalized_documentreference: DatasetConf = conf.getDataset("normalized_documentreference")
   val normalized_patient: DatasetConf = conf.getDataset("normalized_patient")
   val normalized_group: DatasetConf = conf.getDataset("normalized_group")
-  val storageOutput: StorageConf = conf.getStorage("output")
-
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     Map(
-      "normalized_researchstudy" -> read(s"${storageOutput.path}${normalized_researchstudy.path}", "Parquet", Map(), None, None),
-      "normalized_documentreference" -> read(s"${storageOutput.path}${normalized_documentreference.path}", "Parquet", Map(), None, None),
-      "normalized_patient" -> read(s"${storageOutput.path}${normalized_patient.path}", "Parquet", Map(), None, None),
-      "normalized_group" -> read(s"${storageOutput.path}${normalized_group.path}", "Parquet", Map(), None, None),
+      "normalized_researchstudy" -> read(s"${normalized_researchstudy.location}", "Parquet", Map(), None, None),
+      "normalized_documentreference" -> read(s"${normalized_documentreference.location}", "Parquet", Map(), None, None),
+      "normalized_patient" -> read(s"${normalized_patient.location}", "Parquet", Map(), None, None),
+      "normalized_group" -> read(s"${normalized_group.location}", "Parquet", Map(), None, None),
     )
   }
 
@@ -39,6 +37,7 @@ class StudyCentric (batchId: String, loadType: String = "incremental")(implicit 
 
     val distinctOmics = Seq("TODO").toArray
     val distinctExperimentalStrategies = Seq("TODO").toArray
+    val distinctDataAccess = Seq("TODO").toArray
 
     val transformedStudyDf = studyDF
       .withColumn("study_code", lit("TODO"))
@@ -46,11 +45,12 @@ class StudyCentric (batchId: String, loadType: String = "incremental")(implicit 
       .withColumn("program", lit("TODO"))
       .withColumn("type_of_omics", lit(distinctOmics))
       .withColumn("experimental_strategy", lit(distinctExperimentalStrategies))
-      .withColumn("data_access", lit("TODO"))
+      .withColumn("data_access", lit(distinctDataAccess))
       .withColumn("participant_count", lit(countPatient))
       .withColumn("file_count", lit(countFile))
       .withColumn("family_count", lit(countFamily))
       .withColumn("family_data", lit(countFamily > 0))
+      .withColumn("release_id", lit(batchId))
 
     transformedStudyDf.show(false)
     Map("es_index_study_centric" -> transformedStudyDf)

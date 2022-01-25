@@ -18,7 +18,7 @@ class StudyCentricSpec extends FlatSpec with Matchers with WithSparkSession {
       "normalized_group" -> Seq(FAMILY(), FAMILY()).toDF()
     )
 
-    val output = new StudyCentric("re_00001")(conf).transform(data)
+    val output = new StudyCentric("re_000001")(conf).transform(data)
 
     output.keys should contain("es_index_study_centric")
 
@@ -35,7 +35,7 @@ class StudyCentricSpec extends FlatSpec with Matchers with WithSparkSession {
       "normalized_group" -> Seq[FAMILY]().toDF()
     )
 
-    val output = new StudyCentric("re_00001")(conf).transform(data)
+    val output = new StudyCentric("re_000001")(conf).transform(data)
 
     output.keys should contain("es_index_study_centric")
 
