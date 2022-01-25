@@ -4,12 +4,12 @@ import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.v2.ETL
 import bio.ferlab.datalake.spark3.loader.GenericLoader.read
 import bio.ferlab.fhir.etl.common.Utils._
-import org.apache.spark.sql.functions.lit
+import org.apache.spark.sql.functions.{col, lit}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
 
-class BiospecimenCentric(batchId: String, loadType: String = "incremental")(implicit configuration: Configuration) extends ETL {
+class BiospecimenCentric(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETL {
 
   override val mainDestination: DatasetConf = conf.getDataset("es_index_biospecimen_centric")
   val normalized_specimen: DatasetConf = conf.getDataset("normalized_specimen")
@@ -19,9 +19,18 @@ class BiospecimenCentric(batchId: String, loadType: String = "incremental")(impl
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     Map(
-      "normalized_specimen" -> read(s"${normalized_specimen.location}", "Parquet", Map(), None, None),
-      "simple_participant" -> read(s"${simple_participant.location}", "Parquet", Map(), None, None),
-      "es_index_study_centric" -> read(s"${es_index_study_centric.location}", "Parquet", Map(), None, None)
+      "normalized_specimen" ->
+        read(s"${normalized_specimen.location}", "Parquet", Map(), None, None)
+          .where(col("release_id") === releaseId)
+          .where(col("study_id").isin(studyIds:_*)),
+      "simple_participant" ->
+        read(s"${simple_participant.location}", "Parquet", Map(), None, None)
+          .where(col("release_id") === releaseId)
+          .where(col("study_id").isin(studyIds:_*)),
+      "es_index_study_centric" ->
+        read(s"${es_index_study_centric.location}", "Parquet", Map(), None, None)
+          .where(col("release_id") === releaseId)
+          .where(col("study_id").isin(studyIds:_*)),
     )
   }
 
@@ -34,7 +43,6 @@ class BiospecimenCentric(batchId: String, loadType: String = "incremental")(impl
       fileDF
         .addStudy(data("es_index_study_centric"))
         .addParticipant(data("simple_participant"))
-        .withColumn("release_id", lit(batchId))
     // TODO add file
 
     transformedBiospecimen.show(false)

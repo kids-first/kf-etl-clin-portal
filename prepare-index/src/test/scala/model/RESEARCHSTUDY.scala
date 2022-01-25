@@ -8,5 +8,6 @@ case class RESEARCHSTUDY(
                   `external_id`: String = "phs002330",
                   `version`: String = "v1.p1",
                   `investigator_id`: String = "123456",
-                  `study_id`: String = "SD_Z6MWD3H0"
+                  `study_id`: String = "SD_Z6MWD3H0",
+                  `release_id`: String = "re_000001"
                 )

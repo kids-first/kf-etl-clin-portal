@@ -13,5 +13,6 @@ case class BIOSPECIMEN(
                         `ncit_id_anatomical_site`: Boolean = false,
                         `uberon_id_anatomical_site`: String = null,
                         `volume_ul`: Long = 11,
-                        `volume_ul_unit`: String = null
+                        `volume_ul_unit`: String = null,
+                        `release_id`: String = "re_000001"
                       )

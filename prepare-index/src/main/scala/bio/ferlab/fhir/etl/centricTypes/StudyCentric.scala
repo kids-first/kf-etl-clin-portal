@@ -3,12 +3,12 @@ package bio.ferlab.fhir.etl.centricTypes
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.v2.ETL
 import bio.ferlab.datalake.spark3.loader.GenericLoader.read
-import org.apache.spark.sql.functions.lit
+import org.apache.spark.sql.functions.{col, lit}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
 
-class StudyCentric(batchId: String, loadType: String = "incremental")(implicit configuration: Configuration) extends ETL {
+class StudyCentric(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETL {
 
   override val mainDestination: DatasetConf = conf.getDataset("es_index_study_centric")
   val normalized_researchstudy: DatasetConf = conf.getDataset("normalized_researchstudy")
@@ -19,10 +19,22 @@ class StudyCentric(batchId: String, loadType: String = "incremental")(implicit c
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     Map(
-      "normalized_researchstudy" -> read(s"${normalized_researchstudy.location}", "Parquet", Map(), None, None),
-      "normalized_documentreference" -> read(s"${normalized_documentreference.location}", "Parquet", Map(), None, None),
-      "normalized_patient" -> read(s"${normalized_patient.location}", "Parquet", Map(), None, None),
-      "normalized_group" -> read(s"${normalized_group.location}", "Parquet", Map(), None, None),
+      "normalized_researchstudy" ->
+        read(s"${normalized_researchstudy.location}", "Parquet", Map(), None, None)
+          .where(col("release_id") === releaseId)
+          .where(col("study_id").isin(studyIds:_*)),
+      "normalized_documentreference" ->
+        read(s"${normalized_documentreference.location}", "Parquet", Map(), None, None)
+          .where(col("release_id") === releaseId)
+          .where(col("study_id").isin(studyIds:_*)),
+      "normalized_patient" ->
+        read(s"${normalized_patient.location}", "Parquet", Map(), None, None)
+          .where(col("release_id") === releaseId)
+          .where(col("study_id").isin(studyIds:_*)),
+      "normalized_group" ->
+        read(s"${normalized_group.location}", "Parquet", Map(), None, None)
+          .where(col("release_id") === releaseId)
+          .where(col("study_id").isin(studyIds:_*)),
     )
   }
 
@@ -50,7 +62,6 @@ class StudyCentric(batchId: String, loadType: String = "incremental")(implicit c
       .withColumn("file_count", lit(countFile))
       .withColumn("family_count", lit(countFamily))
       .withColumn("family_data", lit(countFamily > 0))
-      .withColumn("release_id", lit(batchId))
 
     transformedStudyDf.show(false)
     Map("es_index_study_centric" -> transformedStudyDf)
