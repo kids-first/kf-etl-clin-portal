@@ -9,7 +9,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
 
-class ParticipantCentric(batchId: String, loadType: String = "incremental")(implicit configuration: Configuration) extends ETL {
+class ParticipantCentric(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETL {
 
   override val mainDestination: DatasetConf = conf.getDataset("es_index_participant_centric")
   val simple_participant: DatasetConf = conf.getDataset("simple_participant")
@@ -19,9 +19,18 @@ class ParticipantCentric(batchId: String, loadType: String = "incremental")(impl
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     Map(
-      "simple_participant" -> read(s"${simple_participant.location}", "Parquet", Map(), None, None),
-      "es_index_study_centric" -> read(s"${es_index_study_centric.location}", "Parquet", Map(), None, None),
-      "normalized_documentreference" -> read(s"${normalized_documentreference.location}", "Parquet", Map(), None, None),
+      "simple_participant" ->
+        read(s"${simple_participant.location}", "Parquet", Map(), None, None)
+          .where(col("release_id") === releaseId)
+          .where(col("study_id").isin(studyIds:_*)),
+      "es_index_study_centric" ->
+        read(s"${es_index_study_centric.location}", "Parquet", Map(), None, None)
+          .where(col("release_id") === releaseId)
+          .where(col("study_id").isin(studyIds:_*)),
+      "normalized_documentreference" ->
+        read(s"${normalized_documentreference.location}", "Parquet", Map(), None, None)
+          .where(col("release_id") === releaseId)
+          .where(col("study_id").isin(studyIds:_*)),
     )
   }
 
@@ -35,7 +44,6 @@ class ParticipantCentric(batchId: String, loadType: String = "incremental")(impl
         .addStudy(data("es_index_study_centric"))
         .addFiles(data("normalized_documentreference")) // TODO add files with their biospecimen (filter by participant)
         .withColumn("study_external_id", col("study")("external_id"))
-        .withColumn("release_id", lit(batchId))
 
     transformedParticipant.show(false)
     Map("es_index_participant_centric" -> transformedParticipant)

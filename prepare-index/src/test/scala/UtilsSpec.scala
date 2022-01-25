@@ -114,9 +114,9 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
 
     val participantDiseases =
       output
-        .select("participant_id", "diagnoses")
-        .withColumn("diagnoses_exp", explode_outer(col("diagnoses")))
-        .select("participant_id", "diagnoses_exp.diagnosis_id")
+        .select("participant_id", "diagnosis")
+        .withColumn("diagnosis_exp", explode_outer(col("diagnosis")))
+        .select("participant_id", "diagnosis_exp.diagnosis_id")
         .as[(String, String)].collect()
 
     val participantA_D = participantDiseases.filter(_._1 == "A")
@@ -167,7 +167,7 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     participantA_Ph._3.filter(t => t.`name` === "Phenotypic abnormality (HP:0000118)").head.`age_at_event_days` shouldEqual Seq(5, 10)
   }
 
-  it should "group diagnoses by age at event days" in {
+  it should "group diagnosis by age at event days" in {
     val inputParticipants = Seq(
       PATIENT(participant_id = "A", fhir_id = "A")
     ).toDF()

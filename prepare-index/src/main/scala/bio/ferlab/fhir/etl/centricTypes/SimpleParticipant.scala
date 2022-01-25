@@ -4,20 +4,40 @@ import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.v2.ETL
 import bio.ferlab.datalake.spark3.loader.GenericLoader.read
 import bio.ferlab.fhir.etl.common.Utils._
-import org.apache.spark.sql.functions.lit
+import org.apache.spark.sql.functions.{col, lit}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
 
-class SimpleParticipant(batchId: String, loadType: String = "incremental")(implicit configuration: Configuration) extends ETL {
+class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETL {
 
   override val mainDestination: DatasetConf = conf.getDataset("simple_participant")
-  val filesExtract: Seq[DatasetConf] = conf.sources.filter(c => c.id.contains("normalized"))
+  val normalized_patient: DatasetConf = conf.getDataset("normalized_patient")
+  val normalized_condition_phenotype: DatasetConf = conf.getDataset("normalized_condition_phenotype")
+  val normalized_condition_disease: DatasetConf = conf.getDataset("normalized_condition_disease")
+  val normalized_group: DatasetConf = conf.getDataset("normalized_group")
   val hpoTermsConf: DatasetConf = conf.getDataset("hpo_terms")
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    filesExtract.map(f => f.id -> read(s"${f.location}", "Parquet", Map(), None, None)).toMap
+    Map(
+      "normalized_patient" ->
+        read(s"${normalized_patient.location}", "Parquet", Map(), None, None)
+          .where(col("release_id") === releaseId)
+          .where(col("study_id").isin(studyIds:_*)),
+      "normalized_condition_phenotype" ->
+        read(s"${normalized_condition_phenotype.location}", "Parquet", Map(), None, None)
+          .where(col("release_id") === releaseId)
+          .where(col("study_id").isin(studyIds:_*)),
+      "normalized_condition_disease" ->
+        read(s"${normalized_condition_disease.location}", "Parquet", Map(), None, None)
+          .where(col("release_id") === releaseId)
+          .where(col("study_id").isin(studyIds:_*)),
+      "normalized_group" ->
+        read(s"${normalized_group.location}", "Parquet", Map(), None, None)
+          .where(col("release_id") === releaseId)
+          .where(col("study_id").isin(studyIds:_*)),
+    )
   }
 
   override def transform(data: Map[String, DataFrame],
@@ -42,7 +62,6 @@ class SimpleParticipant(batchId: String, loadType: String = "incremental")(impli
         .withColumn("family_type", lit("TODO"))
         .withColumn("is_proband", lit(false)) // TODO
         .withColumn("age_at_data_collection", lit(111)) // TODO
-        .withColumn("release_id", lit(batchId))
 
     transformedParticipant.show(false)
     Map("simple_participant" -> transformedParticipant)
