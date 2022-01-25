@@ -1,3 +1,5 @@
+package bio.ferlab.fhir.etl
+
 import bio.ferlab.fhir.etl.model.Environment
 import org.scalatest.FunSuite
 

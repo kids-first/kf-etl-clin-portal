@@ -37,18 +37,24 @@ This is to simulate the dockerized application</b>
 
 ### Environment Variables (Mandatory)
 
-- `CONF`: The relative path where the configuration file is located at (Default: Resources folder in the packaged JAR, if not provided).
-- `ENV` : The environment to read the configuration from (Default: dev environment)
+- `ENV` : The environment to read the configuration from
 - `AWS_ACCESS_KEY` : The access key
 - `AWS_SECRET_KEY` : The secret key
 - `AWS_REGION`     : The region
 
-Example of a setup in DEV with Minio:
-- CONF=./src/main/resources/kfdrc;
-- ENV=DEV;
+Example of a setup in DEV with Minio for KidsFirst:
+- ENV=KFDRC-DEV;
 - AWS_REGION=us-east-1;
 - AWS_ACCESS_KEY=minioadmin;
 - AWS_SECRET_KEY=minioadmin;
+
+### Arguments (Mandatory)
+
+1st argument: release id
+
+2nd argument: study ids separated by `;`
+
+Example : `RE_000001 SD_Z6MWD3H0;SD_Y6PXD3F0`
 
 ### Launch the application?
 
@@ -73,13 +79,12 @@ To retrieve your own cookie:
 
 Open a terminal at the root of your project and simply execute the following command (or use your IDE to do so):
 ```
-sbt assembly
-docker build -t fhavro-export-etl .
+./build.sh
 ```
 
 ## Configuration and environment variables
 
-The configuration is defined in file [application-ENV.conf](src/main/resources/kfdrc/application-prod.conf).
+The configuration is defined in file [application-ENV.conf](src/main/resources/application-kfdrc-dev.conf).
 Some attributes can be overridden by environment variables. For instance :
 
 The configuration itself is loaded based on the environment. In order to switch environment, you need to provide the following environment variable:

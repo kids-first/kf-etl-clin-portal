@@ -46,12 +46,12 @@ object S3Utils {
     }
   }
 
-  def buildKey(fhirRequest: FhirRequest): String = {
+  def buildKey(fhirRequest: FhirRequest, releaseId: String, studyId: String): String = {
     val profilePath = fhirRequest.profile match {
       case Some(profile) => s"/${profile.split("/").last}"
       case None => ""
     }
 
-    s"raw/fhir/${fhirRequest.`type`.toLowerCase()}$profilePath/study=${fhirRequest.tag}/${fhirRequest.schema}.avro"
+    s"raw/fhir/${fhirRequest.`type`.toLowerCase()}$profilePath/study_id=$studyId/release_id=$releaseId/${fhirRequest.schema}.avro"
   }
 }
