@@ -5,7 +5,6 @@ import bio.ferlab.fhir.etl.config.{Config, FhirRequest}
 import bio.ferlab.fhir.etl.fhir.FhirUtils.buildFhirClient
 import bio.ferlab.fhir.etl.logging.LoggerUtils
 import bio.ferlab.fhir.etl.s3.S3Utils.{buildKey, buildS3Client, writeFile}
-import bio.ferlab.fhir.schema.repository.SchemaMode
 import ca.uhn.fhir.rest.client.impl.GenericClient
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
@@ -20,7 +19,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters._
 
-class FhavroExporter(config: Config) {
+class FhavroExporter(config: Config, releaseId: String, studyId: String) {
 
   val LOGGER: Logger = LoggerFactory.getLogger(getClass)
 
@@ -37,9 +36,9 @@ class FhavroExporter(config: Config) {
       .returnBundle(classOf[Bundle])
 
     val bundleEnriched = request.`type` match {
-      case "ResearchStudy" => bundle.where(ResearchStudy.IDENTIFIER.exactly().identifier(request.tag))
+      case "ResearchStudy" => bundle.where(ResearchStudy.IDENTIFIER.exactly().identifier(studyId))
       case "Organization" => bundle
-      case _ => bundle.withTag(null, request.tag)
+      case _ => bundle.withTag(null, studyId)
     }
 
     if (request.profile.isDefined) {
@@ -57,9 +56,9 @@ class FhavroExporter(config: Config) {
     resources.toList
   }
 
-  def uploadFiles(fhirRequest: FhirRequest, schemaPath: String, resources: List[DomainResource]): Unit = {
+  def uploadFiles(fhirRequest: FhirRequest, schemaPath: String, resources: List[DomainResource], releaseId: String, studyId: String): Unit = {
     LOGGER.info(s"Converting resource(s): ${fhirRequest.`type`}")
-    val key = buildKey(fhirRequest)
+    val key = buildKey(fhirRequest,releaseId, studyId)
     val file = convertResources(fhirRequest, schemaPath, resources)
     writeFile(config.awsConfig.bucketName, key, file)
     LOGGER.info(s"Uploaded ${fhirRequest.schema} successfully!")

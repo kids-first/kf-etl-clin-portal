@@ -1,3 +1,5 @@
+package bio.ferlab.fhir.etl
+
 import bio.ferlab.fhir.etl.config.FhirRequest
 import bio.ferlab.fhir.etl.minio.MinioServerSuite
 import bio.ferlab.fhir.etl.s3.S3Utils
@@ -39,7 +41,7 @@ class S3UtilsTest extends FlatSpec with MinioServerSuite with Matchers {
   }
 
   "buildKey" should "build a formatted key based on a request" in {
-    val fhirRequest = FhirRequest("Patient", "kfdrc-patient", "SD_ABC", None, None, None)
-    S3Utils.buildKey(fhirRequest) shouldBe s"raw/fhir/patient/study=SD_ABC/kfdrc-patient.avro"
+    val fhirRequest = FhirRequest("Patient", "kfdrc-patient", None, None, None)
+    S3Utils.buildKey(fhirRequest, "re_001", "SD_ABC") shouldBe s"raw/fhir/patient/study_id=SD_ABC/release_id=re_001/kfdrc-patient.avro"
   }
 }
