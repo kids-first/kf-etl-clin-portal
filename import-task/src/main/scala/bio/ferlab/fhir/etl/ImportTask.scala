@@ -18,6 +18,4 @@ object ImportTask extends SparkApp {
   val jobs: List[ETL] = FhavroToNormalizedMappings
     .mappings(releaseId)
     .map { case (src, dst, transformations) => new ImportRawToNormalizedETL(src, dst, transformations, releaseId, studyList) }
-
-  jobs.foreach(_.run().map(_._2.show(20, false)))
 }
