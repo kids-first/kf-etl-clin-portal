@@ -52,6 +52,6 @@ object S3Utils {
       case None => ""
     }
 
-    s"raw/fhir/${fhirRequest.`type`.toLowerCase()}$profilePath/study_id=$studyId/release_id=$releaseId/${fhirRequest.schema}.avro"
+    s"fhir/${fhirRequest.`type`.toLowerCase()}$profilePath/study_id=$studyId/release_id=$releaseId/${fhirRequest.schema}.avro"
   }
 }

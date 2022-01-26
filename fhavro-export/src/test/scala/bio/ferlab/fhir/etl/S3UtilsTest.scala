@@ -21,9 +21,9 @@ class S3UtilsTest extends FlatSpec with MinioServerSuite with Matchers {
         .key(path)
         .bucket(inputBucket)
         .build()
-//      val result = new String(s3Client.getObject(objectRequest).readAllBytes())
+      val result = new String(s3Client.getObject(objectRequest).readAllBytes())
 
-      "hello world!" shouldBe "hello world!"
+      result shouldBe "hello world!"
     }
   }
 
@@ -42,6 +42,6 @@ class S3UtilsTest extends FlatSpec with MinioServerSuite with Matchers {
 
   "buildKey" should "build a formatted key based on a request" in {
     val fhirRequest = FhirRequest("Patient", "kfdrc-patient", None, None, None)
-    S3Utils.buildKey(fhirRequest, "re_001", "SD_ABC") shouldBe s"raw/fhir/patient/study_id=SD_ABC/release_id=re_001/kfdrc-patient.avro"
+    S3Utils.buildKey(fhirRequest, "re_001", "SD_ABC") shouldBe s"fhir/patient/study_id=SD_ABC/release_id=re_001/kfdrc-patient.avro"
   }
 }

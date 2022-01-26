@@ -5,14 +5,14 @@ The Fhavro Export task exports data from a [FHIR](https://hapifhir.io/) server, 
 The format of the file(s) saved on Amazon S3 should be as followed:
 
 ```
-<bucket-name>/raw/fhir/<resource-name>/study=<study-name>/<schema-name>.avro
+raw/fhir/<resource-name>/study_id=<study-id>/release_id=<release-id>/<schema-name>.avro
 ```
 
 Where:
 
-- Bucket-name: Name of the bucket where the files should be written
 - Resource-name: Name of the FHIR v4.0.1 resources
-- Study-name: Name of the study
+- Study-id: ID of the study
+- Release-id: ID of the release  
 - Schema-name: Name of the Avro schema used to serialize the data
 
 ## How to?
@@ -91,7 +91,6 @@ The configuration itself is loaded based on the environment. In order to switch 
 
 ### AWS
 - `AWS_ENDPOINT` : The url of the object store.
-- `AWS_BUCKET_NAME`: Bucket where your Avro file will be serialized.
 
 ### FHIR
 - `FHIR_URL` : Fhir Server URL
