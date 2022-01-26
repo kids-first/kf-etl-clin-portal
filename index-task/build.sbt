@@ -20,12 +20,6 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.8" % Test
 )
 
-resolvers ++= Seq(
-  Resolver.sonatypeRepo("releases"),
-  "Sonatype OSS Releases" at "https://s01.oss.sonatype.org/content/repositories/snapshots/",
-  "aws-glue-etl-artifacts" at "https://aws-glue-etl-artifacts.s3.amazonaws.com/release/"
-)
-
 assembly / assemblyMergeStrategy:= {
   case PathList("META-INF", _*) => MergeStrategy.discard
   case _ => MergeStrategy.first

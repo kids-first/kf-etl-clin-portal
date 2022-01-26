@@ -101,7 +101,6 @@ import-task/metastore_db/
 import-task//spark-warehouse/
 import-task/.idea/
 **/target/
-**/project/
 
 # End of https://www.toptal.com/developers/gitignore/api/scala,intellij
 
