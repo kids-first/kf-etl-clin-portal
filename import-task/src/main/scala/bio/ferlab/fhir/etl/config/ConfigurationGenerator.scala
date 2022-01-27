@@ -6,14 +6,14 @@ import bio.ferlab.datalake.commons.config._
 import bio.ferlab.datalake.commons.file.FileSystemType.S3
 
 object ConfigurationGenerator extends App {
-  val input = "kfdrc"
-  val output = "output"
+  val raw = "raw"
+  val normalized = "normalized"
 
-  val database = "kfdrc"
+  val database = "normalized"
 
   val storage = List(
-    StorageConf(input, "s3a://kfdrc", S3),
-    StorageConf(output, "s3a://output", S3)
+    StorageConf(raw, "s3a://raw", S3),
+    StorageConf(normalized, "s3a://normalized", S3)
   )
 
   val local_spark_conf = Map(
@@ -53,19 +53,19 @@ object ConfigurationGenerator extends App {
     Seq(
       DatasetConf(
         id = s"raw_${sn._1}$profileUnderscore",
-        storageid = input,
-        path = s"/raw/fhir/${sn._1}$profileDash",
+        storageid = raw,
+        path = s"/fhir/${sn._1}$profileDash",
         format = AVRO,
         loadtype = OverWrite,
         partitionby = sn._3
       ),
       DatasetConf(
         id = s"normalized_${sn._1}$profileUnderscore",
-        storageid = output,
-        path = s"/normalized/fhir/${sn._1}$profileDash",
+        storageid = normalized,
+        path = s"/fhir/${sn._1}$profileDash",
         format = PARQUET,
         loadtype = OverWrite,
-        table = Some(TableConf("kfdrc", s"fhir_${sn._1}")),
+        table = Some(TableConf(database, s"fhir_${sn._1}")),
         partitionby = sn._3
       )
     )
@@ -78,5 +78,5 @@ object ConfigurationGenerator extends App {
     sparkconf = local_spark_conf
   )
 
-  ConfigurationWriter.writeTo("./import-task/src/main/resources/config/dev.conf", local_conf)
+  ConfigurationWriter.writeTo("src/main/resources/config/dev.conf", local_conf)
 }
