@@ -203,7 +203,32 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     participantA_Ph._2.filter(t => t.`name` === "disease or disorder (MONDO:0000001)").head.`age_at_event_days` shouldEqual Seq(5,10)
   }
 
-  "addParticipant" should "add participant to file" in {
+  "addParticipants" should "add participants list" in {
+    val inputDocumentReference = Seq(
+      DOCUMENTREFERENCE(`participant_fhir_id` = "A", `fhir_id` = "1"),
+      DOCUMENTREFERENCE(`participant_fhir_id` = "B", `fhir_id` = "2"),
+      DOCUMENTREFERENCE(`participant_fhir_id` = "C", `fhir_id` = "3")
+    ).toDF()
+
+    val inputParticipant = Seq(
+      PATIENT(`fhir_id` = "A", `participant_id` = "P_A"),
+      PATIENT(`fhir_id` = "B", `participant_id` = "P_B")
+    ).toDF()
+
+    val output = inputDocumentReference.addParticipants(inputParticipant)
+
+    val fileWithParticipant = output.select("fhir_id", "participants").as[(String, Seq[PATIENT])].collect()
+    val file1 = fileWithParticipant.filter(_._1 == "1").head
+    val file2 = fileWithParticipant.filter(_._1 == "2").head
+
+    file1._2.map(_.`participant_id`) shouldEqual Seq("P_A")
+    file2._2.map(_.`participant_id`) shouldEqual Seq("P_B")
+
+    // Ignore file without participant
+    fileWithParticipant.exists(_._1 == "3") shouldEqual false
+  }
+
+  "addParticipant" should "add participant - only one" in {
     val inputDocumentReference = Seq(
       DOCUMENTREFERENCE(`participant_fhir_id` = "A", `fhir_id` = "1"),
       DOCUMENTREFERENCE(`participant_fhir_id` = "B", `fhir_id` = "2"),
@@ -217,12 +242,12 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
 
     val output = inputDocumentReference.addParticipant(inputParticipant)
 
-    val fileWithParticipant = output.select("fhir_id", "participant").as[(String, Seq[PATIENT])].collect()
+    val fileWithParticipant = output.select("fhir_id", "participant").as[(String, PATIENT)].collect()
     val file1 = fileWithParticipant.filter(_._1 == "1").head
     val file2 = fileWithParticipant.filter(_._1 == "2").head
 
-    file1._2.map(_.`participant_id`) shouldEqual Seq("P_A")
-    file2._2.map(_.`participant_id`) shouldEqual Seq("P_B")
+    file1._2.`participant_id` shouldEqual "P_A"
+    file2._2.`participant_id` shouldEqual "P_B"
 
     // Ignore file without participant
     fileWithParticipant.exists(_._1 == "3") shouldEqual false

@@ -22,6 +22,6 @@ case class FILE_CENTRIC(
                          `experimental_strategy`: String = "TODO",
                          `data_category`: String = "TODO",
                          `study`: STUDY_CENTRIC = STUDY_CENTRIC(),
-                         // TODO `participant`: SIMPLE_PARTICIPANT = SIMPLE_PARTICIPANT()
+                         // TODO `participants`: Seq[SIMPLE_PARTICIPANT] = Seq(SIMPLE_PARTICIPANT())
                          `release_id`: String = "re_000001"
                        )
