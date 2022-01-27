@@ -2,7 +2,7 @@ import bio.ferlab.datalake.spark3.loader.GenericLoader.read
 import bio.ferlab.fhir.etl.common.Utils._
 import model._
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.functions.{col, explode, explode_outer}
+import org.apache.spark.sql.functions.{col, explode_outer}
 import org.scalatest.{FlatSpec, Matchers}
 
 class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
@@ -12,8 +12,8 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
   case class ConditionCoding(code: String, category: String)
 
   val SCHEMA_CONDITION_CODING = "array<struct<category:string,code:string>>"
-  val allHpoTerms: DataFrame = read("./src/test/resources/hpo_terms.json", "Json", Map(), None, None)
-  val allMondoTerms: DataFrame = read("./src/test/resources/mondo_terms.json", "Json", Map(), None, None)
+  val allHpoTerms: DataFrame = read(getClass.getResource("/hpo_terms.json").toString, "Json", Map(), None, None)
+  val allMondoTerms: DataFrame = read(getClass.getResource("/mondo_terms.json").toString, "Json", Map(), None, None)
 
   "addStudy" should "add studies to participant" in {
     val inputStudies = Seq(RESEARCHSTUDY()).toDF()
