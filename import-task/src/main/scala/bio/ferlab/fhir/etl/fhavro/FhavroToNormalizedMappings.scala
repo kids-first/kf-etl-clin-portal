@@ -4,7 +4,6 @@ import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf, Format}
 import bio.ferlab.datalake.spark3.transformation.{Custom, Transformation}
 import bio.ferlab.fhir.etl.transformations.Transformations.extractionMappings
 import org.apache.spark.sql.functions.{col, lit, regexp_extract}
-import play.api.libs.json.{JsValue, Json}
 
 import scala.util.matching.Regex
 

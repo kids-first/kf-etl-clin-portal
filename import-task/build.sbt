@@ -12,6 +12,7 @@ libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-client" % "3.2.0",
   "org.apache.hadoop" % "hadoop-aws" % "3.2.0",
   "io.delta" %% "delta-core" % "1.0.0",
+  "com.typesafe.play" %% "play-json" % "2.9.2",
 
   // Scala module 2.10.0 requires Jackson Databind version >= 2.10.0 and < 2.11.0
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.2",
