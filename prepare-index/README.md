@@ -1,13 +1,13 @@
 # Prepare Index Task
 
-## Environment Variables (Mandatory)
+## Environment Variables (Mandatory for local dev)
 
 - `AWS_ACCESS_KEY` : The access key
 - `AWS_SECRET_KEY` : The secret key
-- `AWS_REGION`     : The region
+- `AWS_ENDPOINT`   : Endpoint to S3
 
 Example of a setup with Minio:
-- AWS_REGION=us-east-1;
+- AWS_ENDPOINT=http://127.0.0.1:9000;
 - AWS_ACCESS_KEY=minioadmin;
 - AWS_SECRET_KEY=minioadmin;
 
