@@ -44,7 +44,7 @@ object IndexTask extends App {
 
   spark.sparkContext.setLogLevel("ERROR")
 
-  val templatePath = s"${conf.storages.find(_.id == "es_index").get.path}/templates/template_$jobType.json"
+  val templatePath = s"${conf.storages.find(_.id == "esindex").get.path}/templates/template_$jobType.json"
 
   implicit val esClient: ElasticSearchClient = new ElasticSearchClient(esNodes.split(',').head, None, None)
 
