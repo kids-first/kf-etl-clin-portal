@@ -12,6 +12,12 @@
         "access": {
           "type": "keyword"
         },
+        "access_urls" : {
+          "type": "keyword"
+        },
+        "acl" : {
+          "type": "keyword"
+        },
         "data_category": {
           "type": "keyword"
         },
@@ -21,11 +27,33 @@
         "experimental_strategy": {
           "type": "keyword"
         },
+        "external_id" : {
+          "type": "keyword"
+        },
+        "fhir_id" : {
+          "type": "keyword"
+        },
         "file_format": {
           "type": "keyword"
         },
         "file_id": {
           "type": "keyword"
+        },
+        "file_name" : {
+          "type": "keyword"
+        },
+        "hashes" : {
+          "properties" : {
+            "etag" : {
+              "type": "keyword"
+            },
+            "md5" : {
+              "type": "keyword"
+            }
+          }
+        },
+        "is_harmonized" : {
+          "type" : "boolean"
         },
         "participants": {
           "type": "nested",
@@ -68,7 +96,38 @@
             "diagnosis": {
               "type": "nested",
               "properties": {
-                "mondo_id_diagnosis": {
+                "age_at_event_days" : {
+                  "type" : "long"
+                },
+                "bodySite" : {
+                  "properties": {
+                    "coding": {
+                      "type": "keyword"
+                    },
+                    "text": {
+                      "type": "keyword"
+                    }
+                  }
+                },
+                "diagnosis_id" : {
+                  "type": "keyword"
+                },
+                "fhir_id" : {
+                  "type": "keyword"
+                },
+                "icd_id_diagnosis" : {
+                  "type": "keyword"
+                },
+                "mondo_id_diagnosis" : {
+                  "type": "keyword"
+                },
+                "release_id" : {
+                  "type": "keyword"
+                },
+                "source_text" : {
+                  "type": "keyword"
+                },
+                "source_text_tumor_location" : {
                   "type": "keyword"
                 }
               }
@@ -79,7 +138,47 @@
             "ethnicity": {
               "type": "keyword"
             },
+            "external_id" : {
+              "type": "keyword"
+            },
+            "families": {
+              "type": "nested",
+              "properties": {
+                "family_id": {
+                  "type": "keyword"
+                },
+                "family_members": {
+                  "type": "nested",
+                  "properties": {
+                    "exploded_member_entity": {
+                      "type": "keyword"
+                    },
+                    "exploded_member_inactive": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "fhir_id": {
+                  "type": "keyword"
+                },
+                "release_id" : {
+                  "type": "keyword"
+                },
+                "study_id": {
+                  "type": "keyword"
+                },
+                "type": {
+                  "type": "keyword"
+                }
+              }
+            },
+            "families_id" : {
+              "type": "keyword"
+            },
             "family_type": {
+              "type": "keyword"
+            },
+            "fhir_id" : {
               "type": "keyword"
             },
             "is_proband": {
@@ -88,18 +187,76 @@
             "karyotype": {
               "type": "keyword"
             },
+            "mondo" : {
+              "type": "nested",
+              "properties" : {
+                "age_at_event_days" : {
+                  "type" : "long"
+                },
+                "is_leaf" : {
+                  "type" : "boolean"
+                },
+                "is_tagged" : {
+                  "type" : "boolean"
+                },
+                "name" : {
+                  "type": "keyword"
+                },
+                "parents" : {
+                  "type": "keyword"
+                }
+              }
+            },
+            "observed_phenotype" : {
+              "type" : "nested",
+              "properties" : {
+                "age_at_event_days" : {
+                  "type" : "long"
+                },
+                "is_leaf" : {
+                  "type" : "boolean"
+                },
+                "is_tagged" : {
+                  "type" : "boolean"
+                },
+                "name" : {
+                  "type": "keyword"
+                },
+                "parents" : {
+                  "type": "keyword"
+                }
+              }
+            },
             "participant_id": {
               "type": "keyword"
             },
             "phenotype": {
               "type": "nested",
               "properties": {
+                "age_at_event_days" : {
+                  "type" : "long"
+                },
+                "fhir_id" : {
+                  "type": "keyword"
+                },
                 "hpo_id_phenotype": {
                   "type": "keyword"
+                },
+                "hpo_phenotype_observed" : {
+                  "type": "keyword"
+                },
+                "hpo_phenotype_observed_text" : {
+                  "type": "keyword"
+                },
+                "observed" : {
+                  "type" : "boolean"
                 }
               }
             },
             "race": {
+              "type": "keyword"
+            },
+            "release_id": {
               "type": "keyword"
             },
             "sex": {
@@ -113,13 +270,80 @@
             }
           }
         },
+        "participant_fhir_id" : {
+          "type": "keyword"
+        },
+        "release_id" : {
+          "type": "keyword"
+        },
+        "repository" : {
+          "type": "keyword"
+        },
         "size": {
           "type": "long"
+        },
+        "study": {
+          "properties" : {
+            "attribution" : {
+              "type": "keyword"
+            },
+            "data_access" : {
+              "type": "keyword"
+            },
+            "experimental_strategy" : {
+              "type": "keyword"
+            },
+            "external_id" : {
+              "type": "keyword"
+            },
+            "family_count" : {
+              "type" : "long"
+            },
+            "family_data" : {
+              "type" : "boolean"
+            },
+            "fhir_id" : {
+              "type": "keyword"
+            },
+            "file_count" : {
+              "type" : "long"
+            },
+            "participant_count" : {
+              "type" : "long"
+            },
+            "program" : {
+              "type": "keyword"
+            },
+            "release_id" : {
+              "type": "keyword"
+            },
+            "status" : {
+              "type": "keyword"
+            },
+            "study_code" : {
+              "type": "keyword"
+            },
+            "study_id" : {
+              "type": "keyword"
+            },
+            "study_name" : {
+              "type": "keyword"
+            },
+            "type_of_omics" : {
+              "type": "keyword"
+            },
+            "version" : {
+              "type": "keyword"
+            }
+          }
         },
         "study_id": {
           "type": "keyword"
         },
         "type_of_omics": {
+          "type": "keyword"
+        },
+        "urls" : {
           "type": "keyword"
         }
       }

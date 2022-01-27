@@ -43,7 +43,7 @@ class FileCentric(releaseId: String, studyIds: List[String])(implicit configurat
     val transformedFile =
       fileDF
         .addStudy(data("es_index_study_centric"))
-        .addParticipant(data("simple_participant")) // TODO add participant with their biospecimen (filter by file)
+        .addParticipants(data("simple_participant")) // TODO add participants with their biospecimen (filter by file)
         .withColumn("type_of_omics", lit("TODO"))
         .withColumn("experimental_strategy", lit("TODO"))
         .withColumn("data_category", lit("TODO"))

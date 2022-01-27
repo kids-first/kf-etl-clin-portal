@@ -181,9 +181,18 @@ object Utils {
 
     def addParticipant(participantsDf: DataFrame): DataFrame = {
       val reformatParticipant: DataFrame = participantsDf
-        .withColumn("participant", array(struct(participantsDf.columns.map(col): _*)))
+        .withColumn("participant", struct(participantsDf.columns.map(col): _*))
         .withColumnRenamed("fhir_id", "participant_fhir_id")
         .select("participant_fhir_id", "participant")
+
+      df.join(reformatParticipant, "participant_fhir_id")
+    }
+
+    def addParticipants(participantsDf: DataFrame): DataFrame = {
+      val reformatParticipant: DataFrame = participantsDf
+        .withColumn("participants", array(struct(participantsDf.columns.map(col): _*)))
+        .withColumnRenamed("fhir_id", "participant_fhir_id")
+        .select("participant_fhir_id", "participants")
 
       df.join(reformatParticipant, "participant_fhir_id")
     }
