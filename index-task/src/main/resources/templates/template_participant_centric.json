@@ -15,6 +15,12 @@
         "diagnosis": {
           "type": "nested",
           "properties": {
+            "affected_status" : {
+              "type" : "boolean"
+            },
+            "affected_status_text" : {
+              "type": "keyword"
+            },
             "age_at_event_days" : {
               "type" : "long"
             },
@@ -178,6 +184,9 @@
             "latest_did" : {
               "type": "keyword"
             },
+            "release_id" : {
+              "type": "keyword"
+            },
             "repository" : {
               "type": "keyword"
             },
@@ -237,6 +246,35 @@
               "type": "keyword"
             },
             "parents" : {
+              "type": "keyword"
+            }
+          }
+        },
+        "outcomes" : {
+          "properties" : {
+            "age_at_event_days" : {
+              "properties" : {
+                "from" : {
+                  "type": "keyword"
+                },
+                "units" : {
+                  "type": "keyword"
+                },
+                "value" : {
+                  "type" : "long"
+                }
+              }
+            },
+            "fhir_id" : {
+              "type": "keyword"
+            },
+            "observation_id" : {
+              "type": "keyword"
+            },
+            "participant_fhir_id" : {
+              "type": "keyword"
+            },
+            "vital_status" : {
               "type": "keyword"
             }
           }

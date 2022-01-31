@@ -10,6 +10,8 @@ case class CONDITION_DISEASE (
                       `source_text_tumor_location`: Seq[String] = Seq.empty[String],
 //                      `uberon_id_tumor_location`: String = null, //TODO check in importtask why this is a Seq[Seq[elements]]
                       `age_at_event`: AGE_AT_EVENT = AGE_AT_EVENT(),
+                      `affected_status`: Boolean = false,
+                      `affected_status_text`: String = null,
                      )
 
 

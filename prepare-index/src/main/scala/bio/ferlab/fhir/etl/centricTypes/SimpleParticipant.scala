@@ -13,6 +13,7 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
 
   override val mainDestination: DatasetConf = conf.getDataset("simple_participant")
   val normalized_patient: DatasetConf = conf.getDataset("normalized_patient")
+  val normalized_observation_vital_status: DatasetConf = conf.getDataset("normalized_observation_vital-status")
   val normalized_condition_phenotype: DatasetConf = conf.getDataset("normalized_condition_phenotype")
   val normalized_condition_disease: DatasetConf = conf.getDataset("normalized_condition_disease")
   val normalized_group: DatasetConf = conf.getDataset("normalized_group")
@@ -23,6 +24,10 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
     Map(
       "normalized_patient" ->
         read(s"${normalized_patient.location}", "Parquet", Map(), None, None)
+          .where(col("release_id") === releaseId)
+          .where(col("study_id").isin(studyIds:_*)),
+      normalized_observation_vital_status.id ->
+        read(s"${normalized_observation_vital_status.location}", "Parquet", Map(), None, None)
           .where(col("release_id") === releaseId)
           .where(col("study_id").isin(studyIds:_*)),
       "normalized_condition_phenotype" ->
@@ -54,7 +59,7 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
     val transformedParticipant =
       patientDF
         .addDiagnosisPhenotypes(data("normalized_condition_phenotype"), data("normalized_condition_disease"))(allHpoTerms, allMondoTerms)
-        //        .addOutcomes(data("normalized_observation"))
+        .addOutcomes(data(normalized_observation_vital_status.id))
         .addFamily(data("normalized_group"))
         .withColumnRenamed("gender", "sex")
         .withColumn("karyotype", lit("TODO"))

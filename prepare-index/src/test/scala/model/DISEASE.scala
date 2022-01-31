@@ -9,6 +9,8 @@ case class DISEASE(
                         `mondo_id_diagnosis`: String = null,
                         `ncit_id_diagnosis`: String = null,
                         `mondo`: OBSERVABLE_TERM = null,
+                        `affected_status`: Boolean = false,
+                        `affected_status_text`: String = null,
                       )
 
 

@@ -5,6 +5,7 @@ import bio.ferlab.fhir.etl._
 import bio.ferlab.fhir.etl.Utils._
 import org.apache.spark.sql.functions.{col, collect_list, explode, filter, regexp_extract, struct}
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.BooleanType
 
 object Transformations {
 
@@ -77,15 +78,19 @@ object Transformations {
 
   val observationVitalStatusMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "release_id","subject", "valueCodeableConcept", "identifier")
+      .select("fhir_id", "release_id","subject", "valueCodeableConcept", "identifier", "_effectiveDateTime")
       .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
       .withColumn("vital_status", col("valueCodeableConcept")("text"))
       .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
       .withColumn("observation_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
-      // TODO age_at_event_days
+      .withColumn("age_at_event_days", struct(
+        col("_effectiveDateTime")("effectiveDateTime")("offset")("value") as "value",
+        col("_effectiveDateTime")("effectiveDateTime")("offset")("unit") as "units",
+        filter(col("_effectiveDateTime")("effectiveDateTime")("event")("coding"), c => c("system") === "http://snomed.info/sct")(0)("display") as "from"
+      ))
       // TODO external_id
     ),
-    Drop("subject", "valueCodeableConcept", "identifier")
+    Drop("subject", "valueCodeableConcept", "identifier", "_effectiveDateTime")
   )
 
   val observationFamilyRelationshipMappings: List[Transformation] = List(
@@ -116,6 +121,8 @@ object Transformations {
       .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
       .withColumn("source_text_tumor_location", col("bodySite")("text"))
       .withColumn("uberon_id_tumor_location", col("bodySite")("coding"))
+      .withColumn("affected_status", col("verificationStatus")("text").cast(BooleanType))
+      .withColumn("affected_status_text", col("verificationStatus")("coding")("display")(0))
       .withColumn("age_at_event", struct(
         col("_recordedDate")("recordedDate")("offset")("value") as "value",
         col("_recordedDate")("recordedDate")("offset")("unit") as "units",

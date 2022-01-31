@@ -21,7 +21,7 @@ object Utils {
   implicit class DataFrameOperations(df: DataFrame) {
     def addStudy(studyDf: DataFrame): DataFrame = {
       val reformatStudy: DataFrame = studyDf
-        .withColumn("study", struct(studyDf.columns.map(col): _*))
+        .withColumn("study", struct(studyDf.columns.filter(!_.equals("release_id")).map(col): _*))
         .select("study_id", "study")
 
       df.join(reformatStudy, "study_id")
@@ -45,17 +45,16 @@ object Utils {
         .drop("participant_fhir_id")
     }
 
-
-    def addOutcomes(observationsDf: DataFrame): DataFrame = {
-      val reformatObservation: DataFrame = observationsDf
-        .withColumn("outcome", struct(observationsDf.columns.map(col): _*))
+    def addOutcomes(vitalStatusDf: DataFrame): DataFrame = {
+      val reformatObservation: DataFrame = vitalStatusDf
+        .withColumn("outcome", struct(vitalStatusDf.columns.map(col): _*))
         .select("participant_fhir_id", "outcome")
         .groupBy("participant_fhir_id")
         .agg(
-          collect_list(col("outcome")) as "outcomes")
+          collect_list(col("outcome").dropFields("study_id", "release_id")) as "outcomes")
 
       df
-        .join(reformatObservation, col("fhir_id") === col("participant_fhir_id"))
+        .join(reformatObservation, col("fhir_id") === col("participant_fhir_id"), "left_outer")
         .drop( "participant_fhir_id")
     }
 
@@ -144,6 +143,7 @@ object Utils {
         .drop("participant_fhir_id")
         .join(diseasesWithReplacedMondoTerms, col("fhir_id") === col("participant_fhir_id"), "left_outer")
         .drop("participant_fhir_id")
+
     }
 
     def addFiles(filesDf: DataFrame): DataFrame = {
@@ -176,7 +176,7 @@ object Utils {
 
       df.join(reformatFamily, expr("array_contains(family_members_id,fhir_id)"), "left_outer")
         .groupBy(groupCols.map(col): _*)
-        .agg(collect_list("family_id") as "families_id", collect_list(col("family").dropFields("family_members_id")) as "families")
+        .agg(collect_list("family_id") as "families_id", collect_list(col("family").dropFields("family_members_id", "release_id")) as "families")
     }
 
     def addParticipant(participantsDf: DataFrame): DataFrame = {

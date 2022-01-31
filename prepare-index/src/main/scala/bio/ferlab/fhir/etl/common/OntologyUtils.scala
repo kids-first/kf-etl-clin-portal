@@ -44,7 +44,7 @@ object OntologyUtils {
         first("ncit_id_diagnosis", ignoreNulls = true) as "ncit_id_diagnosis"
       )
       .withColumnRenamed("age_at_event", "age_at_event_days")
-      .drop("condition_coding")
+      .drop("condition_coding", "release_id")
   }
 
   def addPhenotypes(df: DataFrame): DataFrame= {
