@@ -21,7 +21,7 @@ case class FILE_CENTRIC(
                          `type_of_omics`: String = "TODO",
                          `experimental_strategy`: String = "TODO",
                          `data_category`: String = "TODO",
-                         `study`: STUDY_CENTRIC = STUDY_CENTRIC(),
+                         `study`: LIGHT_STUDY_CENTRIC = LIGHT_STUDY_CENTRIC(),
                          // TODO `participants`: Seq[SIMPLE_PARTICIPANT] = Seq(SIMPLE_PARTICIPANT())
                          `release_id`: String = "re_000001"
                        )
