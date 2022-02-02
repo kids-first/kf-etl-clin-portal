@@ -123,6 +123,27 @@ mutation updateStudyMappingDataAccess($inputDataAccess:ExtendedFieldMappingInput
     isArray
   }
 }
+
+mutation updateStudyMappingMondoParents($inputMondoParents:ExtendedFieldMappingInput!) {
+  updateExtendedMapping(projectId: "[NEW_PROJECT_ID]", graphqlField:"participant", field: "mondo.parents", extendedFieldMappingInput: $inputMondoParents) {
+    field
+    isArray
+  }
+}
+
+mutation updateStudyMappingObservedPhenotypeParents($inputObservedPhenotypeParents:ExtendedFieldMappingInput!) {
+  updateExtendedMapping(projectId: "[NEW_PROJECT_ID]", graphqlField:"participant", field: "observed_phenotype.parents", extendedFieldMappingInput: $inputObservedPhenotypeParents) {
+    field
+    isArray
+  }
+}
+
+mutation updateStudyMappingObservedPhenotypeAgeAtEventDays($inputObservedPhenotypeAgeAtEventDays:ExtendedFieldMappingInput!) {
+  updateExtendedMapping(projectId: "[NEW_PROJECT_ID]", graphqlField:"participant", field: "observed_phenotype.age_at_event_days", extendedFieldMappingInput: $inputObservedPhenotypeAgeAtEventDays) {
+    field
+    isArray
+  }
+}
 ```
 
 With these inputs (isArray true is the important part)
@@ -145,6 +166,27 @@ With these inputs (isArray true is the important part)
   },
   "inputDataAccess": {
     "displayName": "Data Access",
+    "active": false,
+    "isArray": true,
+    "primaryKey": false,
+    "quickSearchEnabled": false
+  },
+   "inputMondoParents": {
+    "displayName": "Mondo Parents",
+    "active": false,
+    "isArray": true,
+    "primaryKey": false,
+    "quickSearchEnabled": false
+  },
+  "inputObservedPhenotypeParents": {
+    "displayName": "Observed Phenotype Parents",
+    "active": false,
+    "isArray": true,
+    "primaryKey": false,
+    "quickSearchEnabled": false
+  },
+  "inputObservedPhenotypeAgeAtEventDays": {
+    "displayName": "Observed Phenotype Age At Event Days",
     "active": false,
     "isArray": true,
     "primaryKey": false,
