@@ -15,7 +15,7 @@ class StudyCentricSpec extends FlatSpec with Matchers with WithSparkSession {
       "normalized_researchstudy" -> Seq(RESEARCHSTUDY()).toDF(),
       "normalized_patient" -> Seq(PATIENT(), PATIENT()).toDF(),
       "normalized_documentreference_drs-document-reference" -> Seq(DOCUMENTREFERENCE(), DOCUMENTREFERENCE(), DOCUMENTREFERENCE()).toDF(),
-      "normalized_group" -> Seq(FAMILY(), FAMILY()).toDF()
+      "normalized_group" -> Seq(GROUP(), GROUP()).toDF()
     )
 
     val output = new StudyCentric("re_000001", List("SD_Z6MWD3H0"))(conf).transform(data)
@@ -32,7 +32,7 @@ class StudyCentricSpec extends FlatSpec with Matchers with WithSparkSession {
       "normalized_researchstudy" -> Seq(RESEARCHSTUDY()).toDF(),
       "normalized_patient" -> Seq(PATIENT(), PATIENT()).toDF(),
       "normalized_documentreference_drs-document-reference" -> Seq(DOCUMENTREFERENCE(), DOCUMENTREFERENCE(), DOCUMENTREFERENCE()).toDF(),
-      "normalized_group" -> Seq[FAMILY]().toDF()
+      "normalized_group" -> Seq[GROUP]().toDF()
     )
 
     val output = new StudyCentric("re_000001", List("SD_Z6MWD3H0"))(conf).transform(data)

@@ -17,7 +17,8 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
   val normalized_condition_phenotype: DatasetConf = conf.getDataset("normalized_condition_phenotype")
   val normalized_condition_disease: DatasetConf = conf.getDataset("normalized_condition_disease")
   val normalized_group: DatasetConf = conf.getDataset("normalized_group")
-  val hpoTermsConf: DatasetConf = conf.getDataset("hpo_terms")
+  val hpo_terms: DatasetConf = conf.getDataset("hpo_terms")
+  val mondo_terms: DatasetConf = conf.getDataset("mondo_terms")
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
@@ -25,23 +26,25 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
       normalized_patient.id ->
         read(s"${normalized_patient.location}", "Parquet", Map(), None, None)
           .where(col("release_id") === releaseId)
-          .where(col("study_id").isin(studyIds:_*)),
+          .where(col("study_id").isin(studyIds: _*)),
       normalized_observation_vital_status.id ->
         read(s"${normalized_observation_vital_status.location}", "Parquet", Map(), None, None)
           .where(col("release_id") === releaseId)
-          .where(col("study_id").isin(studyIds:_*)),
+          .where(col("study_id").isin(studyIds: _*)),
       normalized_condition_phenotype.id ->
         read(s"${normalized_condition_phenotype.location}", "Parquet", Map(), None, None)
           .where(col("release_id") === releaseId)
-          .where(col("study_id").isin(studyIds:_*)),
+          .where(col("study_id").isin(studyIds: _*)),
       normalized_condition_disease.id ->
         read(s"${normalized_condition_disease.location}", "Parquet", Map(), None, None)
           .where(col("release_id") === releaseId)
-          .where(col("study_id").isin(studyIds:_*)),
+          .where(col("study_id").isin(studyIds: _*)),
       normalized_group.id ->
         read(s"${normalized_group.location}", "Parquet", Map(), None, None)
           .where(col("release_id") === releaseId)
-          .where(col("study_id").isin(studyIds:_*)),
+          .where(col("study_id").isin(studyIds: _*)),
+      hpo_terms.id -> read(s"${hpo_terms.location}", "Json", Map(), None, None),
+      mondo_terms.id -> read(s"${mondo_terms.location}", "Json", Map(), None, None),
     )
   }
 
@@ -50,15 +53,12 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
                          currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     val patientDF = data(normalized_patient.id)
 
-    val hpoTermsConf = conf.sources.find(c => c.id == "hpo_terms").getOrElse(throw new RuntimeException("Hpo Terms Conf not found"))
-    val mondoTermsConf = conf.sources.find(c => c.id == "mondo_terms").getOrElse(throw new RuntimeException("Mondo Terms Conf not found"))
-
-    val allHpoTerms = read(s"${hpoTermsConf.location}", "Json", Map(), None, None)
-    val allMondoTerms = read(s"${mondoTermsConf.location}", "Json", Map(), None, None)
-
     val transformedParticipant =
       patientDF
-        .addDiagnosisPhenotypes(data(normalized_condition_phenotype.id), data(normalized_condition_disease.id))(allHpoTerms, allMondoTerms)
+        .addDiagnosisPhenotypes(
+          data(normalized_condition_phenotype.id),
+          data(normalized_condition_disease.id)
+        )(data(hpo_terms.id), data(mondo_terms.id))
         .addOutcomes(data(normalized_observation_vital_status.id))
         .addFamily(data(normalized_group.id))
         .withColumnRenamed("gender", "sex")

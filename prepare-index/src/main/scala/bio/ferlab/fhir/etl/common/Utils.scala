@@ -27,24 +27,6 @@ object Utils {
       df.join(reformatStudy, "study_id")
     }
 
-    def addBiospecimen(biospecimensDf: DataFrame): DataFrame = {
-      //todo - prior - add sequencing experiment to genomic files
-      //todo add genomic files to biospecimen
-      val reformatBiospecimen: DataFrame = biospecimensDf
-        .withColumn("biospecimen", struct(biospecimensDf.columns.map(col): _*))
-        .select("participant_fhir_id", "biospecimen")
-        .groupBy("participant_fhir_id")
-        .agg(
-          collect_list(col("biospecimen")) as "biospecimens")
-
-      val arrBioSchema = reformatBiospecimen.schema(1).dataType
-
-      df
-        .join(reformatBiospecimen, col("fhir_id") === col("participant_fhir_id"), "left_outer")
-        .withColumn("biospecimens", when(col("biospecimens").isNull, array().cast(arrBioSchema)).otherwise(col("biospecimens")))
-        .drop("participant_fhir_id")
-    }
-
     def addOutcomes(vitalStatusDf: DataFrame): DataFrame = {
       val reformatObservation: DataFrame = vitalStatusDf
         .withColumn("outcome", struct(vitalStatusDf.columns.map(col): _*))
@@ -55,6 +37,7 @@ object Utils {
 
       df
         .join(reformatObservation, col("fhir_id") === col("participant_fhir_id"), "left_outer")
+        .withColumn("outcomes", coalesce(col("outcomes"), array()))
         .drop("participant_fhir_id")
     }
 

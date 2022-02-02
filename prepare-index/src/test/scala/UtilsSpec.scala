@@ -24,51 +24,53 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     output.collect().sameElements(Seq(PARTICIPANT_CENTRIC()))
   }
 
-  "addBiospecimen" should "add biospecimen to participant" in {
-    val inputParticipants = Seq(
-      PATIENT(participant_id = "A", fhir_id = "A"),
-      PATIENT(participant_id = "B", fhir_id = "B")
+  "addOutcomes" should "add outcomes to participant" in {
+    val inputPatients = Seq(
+      PATIENT(`fhir_id` = "P1"),
+      PATIENT(`fhir_id` = "P2")
     ).toDF()
 
-    val inputBiospecimens = Seq(
-      BIOSPECIMEN(fhir_id = "1", participant_fhir_id = "A"),
-      BIOSPECIMEN(fhir_id = "2", participant_fhir_id = "A"),
-      BIOSPECIMEN(fhir_id = "3", participant_fhir_id = "C")
+    val inputObservationVitalStatus = Seq(
+      OBSERVATION_VITAL_STATUS(`fhir_id` = "O1", `participant_fhir_id` = "P1"),
+      OBSERVATION_VITAL_STATUS(`fhir_id` = "O3", `participant_fhir_id` = "P_NOT_THERE")
     ).toDF()
 
+    val output = inputPatients.addOutcomes(inputObservationVitalStatus)
 
-    val output = inputParticipants.addBiospecimen(inputBiospecimens)
-    val participantBio = output.select("participant_id", "biospecimens.fhir_id").map(r => r.getString(0) -> r.getSeq[String](1)).collect()
-    val participantA = participantBio.filter(_._1 == "A").head
-    val participantB = participantBio.filter(_._1 == "B").head
+    val patientWithOutcome = output.select("fhir_id", "outcomes").as[(String, Seq[OUTCOME])].collect()
 
-    participantA._2 shouldEqual Seq("1", "2")
-    participantB._2 shouldEqual Seq.empty[String]
+    val patient1 = patientWithOutcome.filter(_._1 == "P1").head
+    val patient2 = patientWithOutcome.filter(_._1 == "P2").head
+    patientWithOutcome.exists(_._1 == "P_NOT_THERE") shouldBe false
+
+    patient1._2.map(_.`fhir_id`) == Seq("O1")
+    patient2._2.isEmpty shouldBe true
   }
 
-  "addFamily" should "add families to participant" in {
+  "addFamily" should "add families to patients" in {
+    val inputPatients = Seq(
+      PATIENT(`fhir_id` = "11"),
+      PATIENT(`fhir_id` = "22"),
+      PATIENT(`fhir_id` = "33")
+    ).toDF()
 
-    val participantWith1Family = PATIENT(`fhir_id` = "11")
-    val participantWith2Families = PATIENT(`fhir_id` = "22")
-    val participantWithNoFamily = PATIENT(`fhir_id` = "33")
+    val inputFamilies = Seq(
+      GROUP(`fhir_id` = "111", `family_id` = "FM_111", `family_members` = Seq(("11", false), ("22", false)), `family_members_id` = Seq("11", "22")),
+      GROUP(`fhir_id` = "222", `family_id` = "FM_222", `family_members` = Seq(("22", false)), `family_members_id` = Seq("22"))
+    ).toDF()
 
-    val family1 = FAMILY(`fhir_id` = "111", `family_id` = "FM_111", `family_members` = Seq(("11", false), ("22", false)), `family_members_id` = Seq("11", "22"))
-    val family2 = FAMILY(`fhir_id` = "222", `family_id` = "FM_222", `family_members` = Seq(("22", false)), `family_members_id` = Seq("22"))
+    val output = inputPatients.addFamily(inputFamilies)
 
-    val inputFamilies = Seq(family1, family2).toDF()
-    val inputParticipants = Seq(participantWith1Family, participantWith2Families, participantWithNoFamily).toDF()
+    val patientWithFamilies = output.select("fhir_id", "families").as[(String, Seq[FAMILY])].collect()
 
-    val participantCentrics = inputParticipants.addFamily(inputFamilies)
+    val patient1 = patientWithFamilies.filter(_._1 == "11").head
+    patient1._2.map(_.`fhir_id`) == Seq("111")
 
-    participantCentrics.count shouldEqual 3
+    val patient2 = patientWithFamilies.filter(_._1 == "22").head
+    patient2._2.map(_.`fhir_id`) == Seq("111", "222")
 
-    val participantCentricWith1Family = participantCentrics.as[PATIENT_WITH_FAMILY].collect().filter(p => p.`fhir_id`.equals("11")).head
-    val participantCentricWith2Families = participantCentrics.as[PATIENT_WITH_FAMILY].collect().filter(p => p.`fhir_id`.equals("22")).head
-    val participantCentricWithNoFamily = participantCentrics.as[PATIENT_WITH_FAMILY].collect().filter(p => p.`fhir_id`.equals("33")).head
-
-    participantCentricWith1Family.`families_id` shouldEqual Seq("FM_111")
-    participantCentricWith2Families.`families_id` shouldEqual Seq("FM_111", "FM_222")
-    participantCentricWithNoFamily.`families_id` shouldBe Seq.empty
+    val patient3 = patientWithFamilies.filter(_._1 == "33").head
+    patient3._2.isEmpty shouldBe true
   }
 
   "addDiagnosisPhenotypes" should "group phenotypes by observed or non-observed" in {
@@ -211,13 +213,13 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val inputParticipant = Seq(
-      PATIENT(`fhir_id` = "A", `participant_id` = "P_A"),
-      PATIENT(`fhir_id` = "B", `participant_id` = "P_B")
+      SIMPLE_PARTICIPANT(`fhir_id` = "A", `participant_id` = "P_A"),
+      SIMPLE_PARTICIPANT(`fhir_id` = "B", `participant_id` = "P_B")
     ).toDF()
 
     val output = inputBiospecimen.addBiospecimenParticipant(inputParticipant)
 
-    val biospecimenWithParticipant = output.select("fhir_id", "participant").as[(String, PATIENT)].collect()
+    val biospecimenWithParticipant = output.select("fhir_id", "participant").as[(String, SIMPLE_PARTICIPANT)].collect()
     val biospecimen1 = biospecimenWithParticipant.filter(_._1 == "1").head
     val biospecimen2 = biospecimenWithParticipant.filter(_._1 == "2").head
 
@@ -246,11 +248,11 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     // F6, F7 and B_NOT_THERE1 are related to a missing participant (should be ignored)
 
     val inputParticipant = Seq(
-      PATIENT_WITH_FAMILY(`fhir_id` = "P1"),
-      PATIENT_WITH_FAMILY(`fhir_id` = "P2"),
-      PATIENT_WITH_FAMILY(`fhir_id` = "P3"),
-      PATIENT_WITH_FAMILY(`fhir_id` = "P4"),
-      PATIENT_WITH_FAMILY(`fhir_id` = "P5")
+      SIMPLE_PARTICIPANT(`fhir_id` = "P1"),
+      SIMPLE_PARTICIPANT(`fhir_id` = "P2"),
+      SIMPLE_PARTICIPANT(`fhir_id` = "P3"),
+      SIMPLE_PARTICIPANT(`fhir_id` = "P4"),
+      SIMPLE_PARTICIPANT(`fhir_id` = "P5")
     ).toDF()
 
     val inputBiospecimen = Seq(
@@ -354,11 +356,11 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     // F6, F7 and B_NOT_THERE1 are related to a missing participant
 
     val inputParticipant = Seq(
-      PATIENT_WITH_FAMILY(`fhir_id` = "P1"),
-      PATIENT_WITH_FAMILY(`fhir_id` = "P2"),
-      PATIENT_WITH_FAMILY(`fhir_id` = "P3"),
-      PATIENT_WITH_FAMILY(`fhir_id` = "P4"),
-      PATIENT_WITH_FAMILY(`fhir_id` = "P5")
+      SIMPLE_PARTICIPANT(`fhir_id` = "P1"),
+      SIMPLE_PARTICIPANT(`fhir_id` = "P2"),
+      SIMPLE_PARTICIPANT(`fhir_id` = "P3"),
+      SIMPLE_PARTICIPANT(`fhir_id` = "P4"),
+      SIMPLE_PARTICIPANT(`fhir_id` = "P5")
     ).toDF()
 
     val inputBiospecimen = Seq(

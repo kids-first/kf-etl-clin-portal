@@ -128,7 +128,7 @@ object Transformations {
       // TODO external_id
       // TODO diagnosis_category
     ),
-    Drop("identifier", "code", "subject", "verificationStatus", "_recordedDate")
+    Drop("identifier", "code", "subject", "verificationStatus", "_recordedDate", "bodySite")
   )
 
   val conditionPhenotypeMappings: List[Transformation] = List(
