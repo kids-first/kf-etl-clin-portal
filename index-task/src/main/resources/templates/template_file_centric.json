@@ -55,6 +55,9 @@
         "is_harmonized" : {
           "type" : "boolean"
         },
+        "participant_fhir_ids" : {
+          "type": "keyword"
+        },
         "participants": {
           "type": "nested",
           "properties": {
@@ -76,19 +79,43 @@
                 "biospecimen_type": {
                   "type": "keyword"
                 },
+                "composition" : {
+                  "type": "keyword"
+                },
                 "derived_sample_id": {
                   "type": "keyword"
                 },
                 "derived_sample_type": {
                   "type": "keyword"
                 },
+                "external_aliquot_id" : {
+                  "type": "keyword"
+                },
+                "fhir_id" : {
+                  "type": "keyword"
+                },
                 "ncit_id_tissue_type": {
+                  "type": "keyword"
+                },
+                "participant_fhir_id" : {
+                  "type": "keyword"
+                },
+                "release_id" : {
                   "type": "keyword"
                 },
                 "sample_id ": {
                   "type": "keyword"
                 },
                 "sample_type": {
+                  "type": "keyword"
+                },
+                "specimen_id" : {
+                  "type": "keyword"
+                },
+                "status" : {
+                  "type": "keyword"
+                },
+                "study_id" : {
                   "type": "keyword"
                 }
               }
@@ -144,6 +171,9 @@
             "families": {
               "type": "nested",
               "properties": {
+                "external_id" : {
+                  "type": "keyword"
+                },
                 "family_id": {
                   "type": "keyword"
                 },
@@ -270,9 +300,6 @@
             }
           }
         },
-        "participant_fhir_id" : {
-          "type": "keyword"
-        },
         "release_id" : {
           "type": "keyword"
         },
@@ -281,6 +308,12 @@
         },
         "size": {
           "type": "long"
+        },
+        "specimen_fhir_ids" : {
+          "type": "keyword"
+        },
+        "status" : {
+          "type": "keyword"
         },
         "study": {
           "properties" : {

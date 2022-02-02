@@ -10,6 +10,7 @@ import org.apache.spark.sql.types.BooleanType
 object Transformations {
 
   val patternParticipantStudy = "[A-Z][a-z]+-(SD_[0-9A-Za-z]+)-([A-Z]{2}_[0-9A-Za-z]+)"
+  val patternFamilyRelationship = "Observation-(PT_[0-9A-Za-z]+)-([A-Z][a-z]+)-(PT_[0-9A-Za-z]+)"
   val patternPractitionerRoleResearchStudy = "PractitionerRole\\/([0-9]+)"
   val participantSpecimen = "[A-Z][a-z]+/([0-9A-Za-z]+)"
   val conditionTypeR = "^https:\\/\\/[A-Za-z0-9-_.\\/]+\\/([A-Za-z0-9]+)"
@@ -17,17 +18,12 @@ object Transformations {
   val patientMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id", "release_id","gender", "ethnicity", "identifier", "race")
-      // TODO affected_status
-      // TODO alias_group
-      // TODO created_at
       .withColumn("ethnicity", col("ethnicity.text"))
-      .withColumn("external_id", col("identifier")(0)("value"))
+      .withColumn("external_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
       // TODO is_proband
-      .withColumn("participant_id", regexp_extract(col("identifier")(2)("value"), patternParticipantStudy, 2))
-      // TODO modified_at
+      .withColumn("participant_id", filter(col("identifier"), c => c("system") === s"${SYS_DATASERVICE_URL}participants/")(0)("value"))
       .withColumn("race", col("race.text"))
-      .withColumn("study_id", regexp_extract(col("identifier")(2)("value"), patternParticipantStudy, 1))
-      // TODO visible
+      .withColumn("study_id", regexp_extract(filter(col("identifier"), c => c("system") === URN_UNIQUE_ID)(0)("value"), patternParticipantStudy, 1))
     ),
     Drop("identifier")
   )
@@ -35,9 +31,9 @@ object Transformations {
   val researchSubjectMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id", "release_id", "identifier")
-      .withColumn("external_id", col("identifier")(0)("value"))
-      .withColumn("participant_id", regexp_extract(col("identifier")(2)("value"), patternParticipantStudy, 2))
-      .withColumn("study_id", regexp_extract(col("identifier")(2)("value"), patternParticipantStudy, 1))
+      .withColumn("external_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
+      .withColumn("participant_id", filter(col("identifier"), c => c("system") === s"${SYS_DATASERVICE_URL}participants/")(0)("value"))
+      .withColumn("study_id", regexp_extract(filter(col("identifier"), c => c("system") === URN_UNIQUE_ID)(0)("value"), patternParticipantStudy, 1))
     ),
     Drop("identifier")
   )
@@ -53,9 +49,9 @@ object Transformations {
       // TODO created_at
       // TODO duo_ids
       // TODO dbgap_consent_code
-      // TODO external_aliquot_id
       // TODO external_sample_id
-      .withColumn("specimen_id", col("identifier")(0)("value"))
+      .withColumn("specimen_id", filter(col("identifier"), c => c("system") === s"${SYS_DATASERVICE_URL}biospecimens/")(0)("value"))
+      .withColumn("external_aliquot_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
       .withColumn("method_of_sample_procurement", col("collection")("method")("coding"))
       // TODO modified_at
       .withColumn("ncit_id_anatomical_site", ncitIdAnatomicalSite(col("collection")("bodySite")("coding")))
@@ -71,7 +67,7 @@ object Transformations {
       .withColumn("volume_ul", col("collection")("quantity")("value"))
       .withColumn("volume_ul_unit", col("collection")("quantity")("unit"))
       // TODO visible
-      .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
+      .withColumn("study_id", regexp_extract(filter(col("identifier"), c => c("system") === URN_UNIQUE_ID)(0)("value"), patternParticipantStudy, 1))
     ),
     Drop("type", "identifier", "collection", "subject")
   )
@@ -95,12 +91,13 @@ object Transformations {
 
   val observationFamilyRelationshipMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "release_id", "subject", "identifier", "focus", "valueCodeableConcept")
-      .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
-      .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
-      .withColumn("observation_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
-      .withColumn("participant1_id", col("subject")("reference"))
-      .withColumn("participant2_id", col("focus")(0)("reference"))
+      .select("fhir_id", "release_id", "subject", "identifier", "focus", "valueCodeableConcept", "meta")
+      .withColumn("participant1_id", regexp_extract(filter(col("identifier"), c => c("system") === URN_UNIQUE_ID)(0)("value"), patternFamilyRelationship, 1))
+      .withColumn("participant2_id", regexp_extract(filter(col("identifier"), c => c("system") === URN_UNIQUE_ID)(0)("value"), patternFamilyRelationship, 3))
+      .withColumn("study_id", col("meta")("tag")(0)("code"))
+      .withColumn("observation_id", filter(col("identifier"), c => c("system") === s"${SYS_DATASERVICE_URL}family-relationships/")(0)("value"))
+      .withColumn("participant1_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
+      .withColumn("participant2_fhir_id", extractReferencesId(col("focus")("reference")))
       .withColumn(
         "participant1_to_participant_2_relationship",
         filter(col("valueCodeableConcept")("coding"), c => c("system") === ROLE_CODE_URL)(0)("display")
@@ -108,14 +105,14 @@ object Transformations {
       // TODO external_id
 
     ),
-    Drop("subject", "identifier", "focus", "valueCodeableConcept")
+    Drop("subject", "identifier", "focus", "valueCodeableConcept", "meta")
   )
 
   val conditionDiseaseMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id", "release_id","identifier", "code", "bodySite", "subject", "verificationStatus", "_recordedDate")
-      .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
-      .withColumn("diagnosis_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
+      .withColumn("study_id", regexp_extract(filter(col("identifier"), c => c("system") === URN_UNIQUE_ID)(0)("value"), patternParticipantStudy, 1))
+      .withColumn("diagnosis_id", filter(col("identifier"), c => c("system") === s"${SYS_DATASERVICE_URL}diagnoses/")(0)("value"))
       .withColumn("condition_coding", codingClassify(col("code")("coding")).cast("array<struct<category:string,code:string>>"))
       .withColumn("source_text", col("code")("text"))
       .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
@@ -137,8 +134,8 @@ object Transformations {
   val conditionPhenotypeMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id", "release_id","identifier", "code", "subject", "verificationStatus", "_recordedDate")
-      .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
-      .withColumn("phenotype_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
+      .withColumn("study_id", regexp_extract(filter(col("identifier"), c => c("system") === URN_UNIQUE_ID)(0)("value"), patternParticipantStudy, 1))
+      .withColumn("phenotype_id", filter(col("identifier"), c => c("system") === s"${SYS_DATASERVICE_URL}phenotypes/")(0)("value"))
       .withColumn("condition_coding", codingClassify(col("code")("coding")).cast("array<struct<category:string,code:string>>"))
       .withColumn("source_text", col("code")("text"))
       .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
@@ -157,7 +154,7 @@ object Transformations {
   val organizationMappings: List[Transformation] = List(
     Custom(_
       .select( "fhir_id", "release_id","identifier", "name")
-      .withColumn("organization_id", col("identifier")(0)("value"))
+      .withColumn("organization_id", filter(col("identifier"), c => c("system") === s"${SYS_DATASERVICE_URL}sequencing-centers/")(0)("value"))
       .withColumn("institution", col("name"))
     ),
     Drop("identifier", "name")
@@ -165,12 +162,10 @@ object Transformations {
 
   val researchstudyMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "release_id","title", "identifier", "principalInvestigator", "status")
+      .select("fhir_id", "keyword", "release_id","title", "identifier", "principalInvestigator", "status")
       .withColumn("attribution", filter(col("identifier"), c => c("system") === SYS_NCBI_URL)(0)("value"))
-      // TODO created_at
       // TODO data_access_authority
       .withColumn("external_id", extractStudyExternalId(filter(col("identifier"), c => c("system") === SYS_NCBI_URL)(0)("value")))
-      // TODO modified_at
       .withColumnRenamed("title", "name")
       .withColumn("version", extractStudyVersion(filter(col("identifier"), c => c("system") === SYS_NCBI_URL)(0)("value")))
       .withColumn(
@@ -178,57 +173,55 @@ object Transformations {
         regexp_extract(col("principalInvestigator")("reference"), patternPractitionerRoleResearchStudy, 1)
       )
       // TODO short_name
-      // TODO code
+      .withColumn("study_code", col("keyword")(1)("coding")(0)("code"))
       // TODO domain
-      // TODO program
-      // TODO visible
+      .withColumn("program", col("keyword")(0)("coding")(0)("code"))
       .withColumn("study_id", filter(col("identifier"), c => c("system") === s"${SYS_DATASERVICE_URL}studies/")(0)("value"))
     ),
-    Drop("title", "identifier", "principalInvestigator")
+    Drop("title", "identifier", "principalInvestigator", "keyword")
   )
 
   val documentreferenceMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "release_id", "securityLabel", "content", "type", "identifier", "subject")
+      .select("fhir_id", "release_id", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus")
       .withColumn("acl", extractAclFromList(col("securityLabel")("text")))
       .withColumn("access_urls", col("content")("attachment")("url")(0))
       // TODO availability
       .withColumn("access", retrieveIsControlledAccess(col("securityLabel")(0)("coding")(0)("code")))
-      // TODO created_at
       .withColumn("data_type", col("type")("text"))
       .withColumn("external_id", col("content")(1)("attachment")("url"))
       .withColumn("file_format", firstNonNull(col("content")("format")("display")))
       .withColumn("file_name", firstNonNull(col("content")("attachment")("title")))
-      .withColumn("file_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
+      .withColumn("file_id", filter(col("identifier"), c => c("system") === s"${SYS_DATASERVICE_URL}genomic-files/")(0)("value"))
       .withColumn("hashes", extractHashes(col("content")(1)("attachment")("hashes")))
       // TODO instrument_models
       .withColumn("is_harmonized", retrieveIsHarmonized(col("content")(1)("attachment")("url")))
       // TODO is_paired_end
       .withColumn("latest_did", split(col("content")("attachment")("url")(0), "\\/\\/")(2))
-      // TODO metadata
-      // TODO modified_at
       // TODO platforms
       // TODO reference_genome
       .withColumn("repository", retrieveRepository(col("content")("attachment")("url")(0)))
       .withColumn("size", retrieveSize(col("content")(1)("attachment")("fileSize")))
       .withColumn("urls", col("content")(1)("attachment")("url"))
-      // TODO visible
-      .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
-      .withColumn("participant_fhir_id", regexp_extract( col("subject")("reference"), participantSpecimen, 1))
+      .withColumn("study_id", regexp_extract(filter(col("identifier"), c => c("system") === URN_UNIQUE_ID)(0)("value"), patternParticipantStudy, 1))
+      .withColumn("participant_fhir_ids", array(regexp_extract( col("subject")("reference"), participantSpecimen, 1)))
+      .withColumn("specimen_fhir_ids", extractReferencesId(col("context")("related")("reference")))
+      .withColumnRenamed("docStatus", "status")
     ),
-    Drop("securityLabel", "content", "type", "identifier", "subject")
+    Drop("securityLabel", "content", "type", "identifier", "subject", "context")
   )
 
   val groupMappings: List[Transformation] = List(
     Custom(_
       .select("*")
-      .withColumn("study_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 1))
-      .withColumn("family_id", regexp_extract(col("identifier")(1)("value"), patternParticipantStudy, 2))
+      .withColumn("external_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
+      .withColumn("family_id", filter(col("identifier"), c => c("system") === s"${SYS_DATASERVICE_URL}families/")(0)("value"))
+      .withColumn("study_id", regexp_extract(filter(col("identifier"), c => c("system") === URN_UNIQUE_ID)(0)("value"), patternParticipantStudy, 1))
       .withColumn("exploded_member", explode(col("member")))
       .withColumn("exploded_member_entity", regexp_extract(col("exploded_member")("entity")("reference"), participantSpecimen,1))
       .withColumn("exploded_member_inactive", col("exploded_member")("inactive"))
       .withColumn("family_members", struct("exploded_member_entity", "exploded_member_inactive"))
-      .groupBy("fhir_id", "study_id", "family_id", "type", "release_id")
+      .groupBy("fhir_id", "study_id", "family_id", "external_id", "type", "release_id")
       .agg(
         collect_list("family_members") as "family_members",
         collect_list("exploded_member_entity") as "family_members_id"
@@ -247,7 +240,7 @@ object Transformations {
     "researchsubject" -> researchSubjectMappings,
     "researchstudy" -> researchstudyMappings,
     "group" -> groupMappings,
-    "documentreference" -> documentreferenceMappings,
+    "documentreference_drs-document-reference" -> documentreferenceMappings,
     "organization" -> organizationMappings,
   )
 

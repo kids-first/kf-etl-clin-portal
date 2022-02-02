@@ -30,6 +30,9 @@
         "derived_sample_type": {
           "type": "keyword"
         },
+        "external_aliquot_id" : {
+          "type": "keyword"
+        },
         "fhir_id" : {
           "type": "keyword"
         },
@@ -37,6 +40,12 @@
           "type": "nested",
           "properties": {
             "access": {
+              "type": "keyword"
+            },
+            "access_urls" : {
+              "type": "keyword"
+            },
+            "acl" : {
               "type": "keyword"
             },
             "data_category": {
@@ -48,19 +57,59 @@
             "experimental_strategy": {
               "type": "keyword"
             },
+            "external_id" : {
+              "type": "keyword"
+            },
+            "fhir_id" : {
+              "type": "keyword"
+            },
             "file_format": {
               "type": "keyword"
             },
             "file_id": {
               "type": "keyword"
             },
+            "file_name" : {
+              "type": "keyword"
+            },
+            "hashes" : {
+              "properties" : {
+                "etag" : {
+                  "type": "keyword"
+                },
+                "md5" : {
+                  "type": "keyword"
+                }
+              }
+            },
+            "is_harmonized" : {
+              "type" : "boolean"
+            },
+            "participant_fhir_ids" : {
+              "type": "keyword"
+            },
+            "release_id" : {
+              "type": "keyword"
+            },
+            "repository" : {
+              "type": "keyword"
+            },
             "size": {
               "type": "long"
+            },
+            "specimen_fhir_ids" : {
+              "type": "keyword"
+            },
+            "status" : {
+              "type": "keyword"
             },
             "study_id": {
               "type": "keyword"
             },
             "type_of_omics": {
+              "type": "keyword"
+            },
+            "urls" : {
               "type": "keyword"
             }
           }
@@ -124,6 +173,9 @@
             "families": {
               "type": "nested",
               "properties": {
+                "external_id" : {
+                  "type": "keyword"
+                },
                 "family_id": {
                   "type": "keyword"
                 },

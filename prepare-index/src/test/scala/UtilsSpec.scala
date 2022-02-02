@@ -200,14 +200,14 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
 
     val participantA_Ph = output.filter(_._1 == "A").head
 
-    participantA_Ph._2.filter(t => t.`name` === "disease or disorder (MONDO:0000001)").head.`age_at_event_days` shouldEqual Seq(5,10)
+    participantA_Ph._2.filter(t => t.`name` === "disease or disorder (MONDO:0000001)").head.`age_at_event_days` shouldEqual Seq(5, 10)
   }
 
-  "addParticipants" should "add participants list" in {
-    val inputDocumentReference = Seq(
-      DOCUMENTREFERENCE(`participant_fhir_id` = "A", `fhir_id` = "1"),
-      DOCUMENTREFERENCE(`participant_fhir_id` = "B", `fhir_id` = "2"),
-      DOCUMENTREFERENCE(`participant_fhir_id` = "C", `fhir_id` = "3")
+  "addBiospecimenParticipant" should "add participant - only one" in {
+    val inputBiospecimen = Seq(
+      BIOSPECIMEN(`participant_fhir_id` = "A", `fhir_id` = "1"),
+      BIOSPECIMEN(`participant_fhir_id` = "B", `fhir_id` = "2"),
+      BIOSPECIMEN(`participant_fhir_id` = "C", `fhir_id` = "3")
     ).toDF()
 
     val inputParticipant = Seq(
@@ -215,41 +215,270 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
       PATIENT(`fhir_id` = "B", `participant_id` = "P_B")
     ).toDF()
 
-    val output = inputDocumentReference.addParticipants(inputParticipant)
+    val output = inputBiospecimen.addBiospecimenParticipant(inputParticipant)
 
-    val fileWithParticipant = output.select("fhir_id", "participants").as[(String, Seq[PATIENT])].collect()
-    val file1 = fileWithParticipant.filter(_._1 == "1").head
-    val file2 = fileWithParticipant.filter(_._1 == "2").head
+    val biospecimenWithParticipant = output.select("fhir_id", "participant").as[(String, PATIENT)].collect()
+    val biospecimen1 = biospecimenWithParticipant.filter(_._1 == "1").head
+    val biospecimen2 = biospecimenWithParticipant.filter(_._1 == "2").head
 
-    file1._2.map(_.`participant_id`) shouldEqual Seq("P_A")
-    file2._2.map(_.`participant_id`) shouldEqual Seq("P_B")
+    biospecimen1._2.`participant_id` shouldEqual "P_A"
+    biospecimen2._2.`participant_id` shouldEqual "P_B"
 
-    // Ignore file without participant
-    fileWithParticipant.exists(_._1 == "3") shouldEqual false
+    // Ignore biospecimen without participant
+    biospecimenWithParticipant.exists(_._1 == "3") shouldEqual false
   }
 
-  "addParticipant" should "add participant - only one" in {
-    val inputDocumentReference = Seq(
-      DOCUMENTREFERENCE(`participant_fhir_id` = "A", `fhir_id` = "1"),
-      DOCUMENTREFERENCE(`participant_fhir_id` = "B", `fhir_id` = "2"),
-      DOCUMENTREFERENCE(`participant_fhir_id` = "C", `fhir_id` = "3")
-    ).toDF()
+  "addParticipantFilesWithBiospecimen" should "add files with their biospecimen for a specific participant" in {
+    // Input data
+
+    // F1 -> B11, B12, B21
+    // F2 -> B11, B13, B31, B32
+    // F3 -> B22
+    // F4 -> B33
+    // F5 -> No biospecimen
+
+    // P1 -> B11, B12, B13
+    // P2 -> B21, B22
+    // P3 -> B31, B32, B33
+    // P4 -> No biospecimen
+    // P5 -> No file
+
+    // F6, F7 and B_NOT_THERE1 are related to a missing participant (should be ignored)
 
     val inputParticipant = Seq(
-      PATIENT(`fhir_id` = "A", `participant_id` = "P_A"),
-      PATIENT(`fhir_id` = "B", `participant_id` = "P_B")
+      PATIENT_WITH_FAMILY(`fhir_id` = "P1"),
+      PATIENT_WITH_FAMILY(`fhir_id` = "P2"),
+      PATIENT_WITH_FAMILY(`fhir_id` = "P3"),
+      PATIENT_WITH_FAMILY(`fhir_id` = "P4"),
+      PATIENT_WITH_FAMILY(`fhir_id` = "P5")
     ).toDF()
 
-    val output = inputDocumentReference.addParticipant(inputParticipant)
+    val inputBiospecimen = Seq(
+      BIOSPECIMEN(`participant_fhir_id` = "P1", `fhir_id` = "B11"),
+      BIOSPECIMEN(`participant_fhir_id` = "P1", `fhir_id` = "B12"),
+      BIOSPECIMEN(`participant_fhir_id` = "P1", `fhir_id` = "B13"),
+      BIOSPECIMEN(`participant_fhir_id` = "P2", `fhir_id` = "B21"),
+      BIOSPECIMEN(`participant_fhir_id` = "P2", `fhir_id` = "B22"),
+      BIOSPECIMEN(`participant_fhir_id` = "P3", `fhir_id` = "B31"),
+      BIOSPECIMEN(`participant_fhir_id` = "P3", `fhir_id` = "B32"),
+      BIOSPECIMEN(`participant_fhir_id` = "P3", `fhir_id` = "B33"),
 
-    val fileWithParticipant = output.select("fhir_id", "participant").as[(String, PATIENT)].collect()
-    val file1 = fileWithParticipant.filter(_._1 == "1").head
-    val file2 = fileWithParticipant.filter(_._1 == "2").head
+      BIOSPECIMEN(`participant_fhir_id` = "P_NOT_THERE", `fhir_id` = "B_NOT_THERE1")
+    ).toDF()
 
-    file1._2.`participant_id` shouldEqual "P_A"
-    file2._2.`participant_id` shouldEqual "P_B"
+    val inputDocumentReference = Seq(
+      DOCUMENTREFERENCE(`participant_fhir_ids` = Seq("P1", "P2"), `fhir_id` = "F1", `specimen_fhir_ids` = Seq("B11", "B12", "B21")),
+      DOCUMENTREFERENCE(`participant_fhir_ids` = Seq("P1", "P3"), `fhir_id` = "F2", `specimen_fhir_ids` = Seq("B11", "B13", "B31", "B32")),
+      DOCUMENTREFERENCE(`participant_fhir_ids` = Seq("P2"), `fhir_id` = "F3", `specimen_fhir_ids` = Seq("B22")),
+      DOCUMENTREFERENCE(`participant_fhir_ids` = Seq("P3"), `fhir_id` = "F4", `specimen_fhir_ids` = Seq("B33")),
+      DOCUMENTREFERENCE(`participant_fhir_ids` = Seq("P2", "P3", "P4"), `fhir_id` = "F5", `specimen_fhir_ids` = Seq.empty),
 
-    // Ignore file without participant
-    fileWithParticipant.exists(_._1 == "3") shouldEqual false
+      DOCUMENTREFERENCE(`participant_fhir_ids` = Seq("P_NOT_THERE"), `fhir_id` = "F6", `specimen_fhir_ids` = Seq("B_NOT_THERE1")),
+      DOCUMENTREFERENCE(`participant_fhir_ids` = Seq("P_NOT_THERE"), `fhir_id` = "F7", `specimen_fhir_ids` = Seq.empty),
+    ).toDF()
+
+    val output = inputParticipant.addParticipantFilesWithBiospecimen(inputDocumentReference, inputBiospecimen)
+
+    val participantWithFileAndSpecimen = output.select("fhir_id", "files").as[(String, Seq[FILE_WITH_BIOSPECIMEN])].collect()
+
+    // Assertions
+    // P1 -> F1 -> B11 & B12
+    // P1 -> F2 -> B11 & B13
+    // P2 -> F1 -> B21
+    // P2 -> F3 -> B22
+    // P2 -> F5
+    // P3 -> F2 -> B31 & B32
+    // P3 -> F4 -> B33
+    // P3 -> F5
+    // P4 -> F5
+    // P5 -> No file
+    // P_NOT_THERE should not be there
+
+    val participant1 = participantWithFileAndSpecimen.filter(_._1 == "P1").head
+    val participant2 = participantWithFileAndSpecimen.filter(_._1 == "P2").head
+    val participant3 = participantWithFileAndSpecimen.filter(_._1 == "P3").head
+    val participant4 = participantWithFileAndSpecimen.filter(_._1 == "P4").head
+    val participant5 = participantWithFileAndSpecimen.filter(_._1 == "P5").head
+
+    participantWithFileAndSpecimen.exists(_._1 == "P_NOT_THERE") shouldBe false
+
+    participant1._2.map(_.`fhir_id`) == Seq("F1", "F2")
+    participant2._2.map(_.`fhir_id`) == Seq("F1", "F3", "F5")
+    participant3._2.map(_.`fhir_id`) == Seq("F2", "F4", "F5")
+    participant4._2.map(_.`fhir_id`) == Seq("F5")
+    participant5._2.isEmpty shouldBe true
+
+    val participantP1FileF1 = participant1._2.filter(_.`fhir_id` == "F1").head
+    participantP1FileF1.`biospecimens`.map(_.`fhir_id`) == Seq("B11")
+    participantP1FileF1.`biospecimens`.map(_.`fhir_id`) == Seq("B12")
+
+    val participantP1FileF2 = participant1._2.filter(_.`fhir_id` == "F2").head
+    participantP1FileF2.`biospecimens`.map(_.`fhir_id`) == Seq("B11")
+    participantP1FileF2.`biospecimens`.map(_.`fhir_id`) == Seq("B13")
+
+    val participantP2FileF1 = participant2._2.filter(_.`fhir_id` == "F1").head
+    participantP2FileF1.`biospecimens`.map(_.`fhir_id`) == Seq("B21")
+
+    val participantP2FileF3 = participant2._2.filter(_.`fhir_id` == "F3").head
+    participantP2FileF3.`biospecimens`.map(_.`fhir_id`) == Seq("B22")
+
+    val participantP2FileF5 = participant2._2.filter(_.`fhir_id` == "F5").head
+    participantP2FileF5.`biospecimens`.isEmpty shouldBe true
+
+    val participantP3FileF2 = participant3._2.filter(_.`fhir_id` == "F2").head
+    participantP3FileF2.`biospecimens`.map(_.`fhir_id`) == Seq("B31")
+    participantP3FileF2.`biospecimens`.map(_.`fhir_id`) == Seq("B32")
+
+    val participantP3FileF4 = participant3._2.filter(_.`fhir_id` == "F4").head
+    participantP3FileF4.`biospecimens`.map(_.`fhir_id`) == Seq("B33")
+
+    val participantP3FileF5 = participant3._2.filter(_.`fhir_id` == "F5").head
+    participantP3FileF5.`biospecimens`.isEmpty shouldBe true
   }
+
+  "addFileParticipantsWithBiospecimen" should "add participant with their biospecimen for a specific file" in {
+    // Input data
+
+    // F1 -> B11, B12, B21
+    // F2 -> B11, B13, B31, B32
+    // F3 -> B22
+    // F4 -> B33
+    // F5 -> No biospecimen (and no participant -> should be ignored)
+
+    // P1 -> B11, B12, B13
+    // P2 -> B21, B22
+    // P3 -> B31, B32, B33
+    // P4 -> No biospecimen but P4 -> F4
+    // P5 -> No file
+
+    // F6, F7 and B_NOT_THERE1 are related to a missing participant
+
+    val inputParticipant = Seq(
+      PATIENT_WITH_FAMILY(`fhir_id` = "P1"),
+      PATIENT_WITH_FAMILY(`fhir_id` = "P2"),
+      PATIENT_WITH_FAMILY(`fhir_id` = "P3"),
+      PATIENT_WITH_FAMILY(`fhir_id` = "P4"),
+      PATIENT_WITH_FAMILY(`fhir_id` = "P5")
+    ).toDF()
+
+    val inputBiospecimen = Seq(
+      BIOSPECIMEN(`participant_fhir_id` = "P1", `fhir_id` = "B11"),
+      BIOSPECIMEN(`participant_fhir_id` = "P1", `fhir_id` = "B12"),
+      BIOSPECIMEN(`participant_fhir_id` = "P1", `fhir_id` = "B13"),
+      BIOSPECIMEN(`participant_fhir_id` = "P2", `fhir_id` = "B21"),
+      BIOSPECIMEN(`participant_fhir_id` = "P2", `fhir_id` = "B22"),
+      BIOSPECIMEN(`participant_fhir_id` = "P3", `fhir_id` = "B31"),
+      BIOSPECIMEN(`participant_fhir_id` = "P3", `fhir_id` = "B32"),
+      BIOSPECIMEN(`participant_fhir_id` = "P3", `fhir_id` = "B33"),
+
+      BIOSPECIMEN(`participant_fhir_id` = "P_NOT_THERE", `fhir_id` = "B_NOT_THERE1")
+    ).toDF()
+
+    val inputDocumentReference = Seq(
+      DOCUMENTREFERENCE(`participant_fhir_ids` = Seq("P1", "P2"), `fhir_id` = "F1", `specimen_fhir_ids` = Seq("B11", "B12", "B21")),
+      DOCUMENTREFERENCE(`participant_fhir_ids` = Seq("P1", "P3"), `fhir_id` = "F2", `specimen_fhir_ids` = Seq("B11", "B13", "B31", "B32")),
+      DOCUMENTREFERENCE(`participant_fhir_ids` = Seq("P2"), `fhir_id` = "F3", `specimen_fhir_ids` = Seq("B22")),
+      DOCUMENTREFERENCE(`participant_fhir_ids` = Seq("P3", "P4"), `fhir_id` = "F4", `specimen_fhir_ids` = Seq("B33")),
+      DOCUMENTREFERENCE(`participant_fhir_ids` = Seq.empty, `fhir_id` = "F5", `specimen_fhir_ids` = Seq.empty),
+
+      DOCUMENTREFERENCE(`participant_fhir_ids` = Seq("P_NOT_THERE"), `fhir_id` = "F6", `specimen_fhir_ids` = Seq("B_NOT_THERE1")),
+      DOCUMENTREFERENCE(`participant_fhir_ids` = Seq("P_NOT_THERE"), `fhir_id` = "F7", `specimen_fhir_ids` = Seq.empty),
+    ).toDF()
+
+    val output = inputDocumentReference.addFileParticipantsWithBiospecimen(inputParticipant, inputBiospecimen)
+
+    val fileWithParticipantAndSpecimen = output.select("fhir_id", "participants").as[(String, Seq[PARTICIPANT_WITH_BIOSPECIMEN])].collect()
+
+    // Assertions
+    // F1 -> P1 -> B11 & B12
+    // F1 -> P2 -> B21
+    // F2 -> P1 -> B11 & B13
+    // F2 -> P3 -> B31 & B32
+    // F3 -> P2 -> B22
+    // F4 -> P3 -> B33
+    // F4 -> P4 -> No biospecimen
+    // F5, F6 and F7 should not be there
+
+    val file1 = fileWithParticipantAndSpecimen.filter(_._1 == "F1").head
+    val file2 = fileWithParticipantAndSpecimen.filter(_._1 == "F2").head
+    val file3 = fileWithParticipantAndSpecimen.filter(_._1 == "F3").head
+    val file4 = fileWithParticipantAndSpecimen.filter(_._1 == "F4").head
+
+    fileWithParticipantAndSpecimen.exists(_._1 == "F5") shouldBe false
+    fileWithParticipantAndSpecimen.exists(_._1 == "F6") shouldBe false
+    fileWithParticipantAndSpecimen.exists(_._1 == "F7") shouldBe false
+
+    file1._2.map(_.`fhir_id`) == Seq("P1", "P2")
+    file2._2.map(_.`fhir_id`) == Seq("P1", "P3")
+    file3._2.map(_.`fhir_id`) == Seq("P2")
+    file4._2.map(_.`fhir_id`) == Seq("P3", "P4")
+
+    val fileF1ParticipantP1 = file1._2.filter(_.`fhir_id` == "P1").head
+    fileF1ParticipantP1.`biospecimens`.map(_.`fhir_id`) == Seq("B11")
+    fileF1ParticipantP1.`biospecimens`.map(_.`fhir_id`) == Seq("B12")
+
+    val fileF1ParticipantP2 = file1._2.filter(_.`fhir_id` == "P2").head
+    fileF1ParticipantP2.`biospecimens`.map(_.`fhir_id`) == Seq("B21")
+
+    val fileF2ParticipantP1 = file2._2.filter(_.`fhir_id` == "P1").head
+    fileF2ParticipantP1.`biospecimens`.map(_.`fhir_id`) == Seq("B11")
+    fileF2ParticipantP1.`biospecimens`.map(_.`fhir_id`) == Seq("B13")
+
+    val fileF2ParticipantP3 = file2._2.filter(_.`fhir_id` == "P3").head
+    fileF2ParticipantP3.`biospecimens`.map(_.`fhir_id`) == Seq("B31")
+    fileF2ParticipantP3.`biospecimens`.map(_.`fhir_id`) == Seq("B32")
+
+    val fileF3ParticipantP2 = file3._2.filter(_.`fhir_id` == "P2").head
+    fileF3ParticipantP2.`biospecimens`.map(_.`fhir_id`) == Seq("B22")
+
+    val fileF4ParticipantP3 = file4._2.filter(_.`fhir_id` == "P3").head
+    fileF4ParticipantP3.`biospecimens`.map(_.`fhir_id`) == Seq("B33")
+
+    val fileF4ParticipantP4 = file4._2.filter(_.`fhir_id` == "P4").head
+    fileF4ParticipantP4.`biospecimens`.isEmpty shouldBe true
+  }
+
+  "addBiospecimenFiles" should "add files to biospecimem" in {
+    // Input data
+
+    // F1 -> B1
+    // F2 -> B1, B2
+    // F3 -> B_NOT_THERE (missing biospecimen, should be ignored)
+
+    // B3 is not linked to any file
+
+    val inputBiospecimen = Seq(
+      BIOSPECIMEN(`participant_fhir_id` = "P1", `fhir_id` = "B1"),
+      BIOSPECIMEN(`participant_fhir_id` = "P2", `fhir_id` = "B2"),
+      BIOSPECIMEN(`participant_fhir_id` = "P3", `fhir_id` = "B3"),
+    ).toDF()
+
+    val inputDocumentReference = Seq(
+      DOCUMENTREFERENCE(`participant_fhir_ids` = Seq("P1"), `fhir_id` = "F1", `specimen_fhir_ids` = Seq("B1")),
+      DOCUMENTREFERENCE(`participant_fhir_ids` = Seq("P1", "P2"), `fhir_id` = "F2", `specimen_fhir_ids` = Seq("B1", "B2")),
+      DOCUMENTREFERENCE(`participant_fhir_ids` = Seq("P3"), `fhir_id` = "F3", `specimen_fhir_ids` = Seq("B_NOT_THERE")),
+    ).toDF()
+
+    val output = inputBiospecimen.addBiospecimenFiles(inputDocumentReference)
+
+    val biospecimenWithFiles = output.select("fhir_id", "files").as[(String, Seq[DOCUMENTREFERENCE])].collect()
+
+    // Assertions
+    // B1 -> F1 & F2
+    // B2 -> F2
+    // B3 -> no file
+    // B_NOT_THERE is not in result
+
+    val biospecimen1 = biospecimenWithFiles.filter(_._1 == "B1").head
+    biospecimen1._2.map(_.`fhir_id`) == Seq("F1", "F2")
+
+    val biospecimen2 = biospecimenWithFiles.filter(_._1 == "B2").head
+    biospecimen2._2.map(_.`fhir_id`) == Seq("F2")
+
+    val biospecimen3 = biospecimenWithFiles.filter(_._1 == "B3").head
+    biospecimen3._2.isEmpty shouldBe true
+
+    biospecimenWithFiles.exists(_._1 == "B_NOT_THERE") shouldBe false
+  }
+
 }

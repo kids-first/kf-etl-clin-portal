@@ -15,4 +15,6 @@ package object etl {
   //Observation
   val ROLE_CODE_URL = "http://terminology.hl7.org/CodeSystem/v3-RoleCode"
 
+  val URN_UNIQUE_ID = "urn:kids-first:unique-string"
+
 }
