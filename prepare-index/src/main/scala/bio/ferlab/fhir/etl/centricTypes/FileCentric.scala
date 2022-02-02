@@ -12,7 +12,8 @@ import java.time.LocalDateTime
 class FileCentric(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETL {
 
   override val mainDestination: DatasetConf = conf.getDataset("es_index_file_centric")
-  val normalized_documentreference: DatasetConf = conf.getDataset("normalized_documentreference")
+  val normalized_documentreference_drs_document_reference: DatasetConf = conf.getDataset("normalized_documentreference_drs-document-reference")
+  val normalized_specimen: DatasetConf = conf.getDataset("normalized_specimen")
   val simple_participant: DatasetConf = conf.getDataset("simple_participant")
   val es_index_study_centric: DatasetConf = conf.getDataset("es_index_study_centric")
 
@@ -20,15 +21,19 @@ class FileCentric(releaseId: String, studyIds: List[String])(implicit configurat
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     Map(
-      "normalized_documentreference" ->
-        read(s"${normalized_documentreference.location}", "Parquet", Map(), None, None)
+      normalized_documentreference_drs_document_reference.id ->
+        read(s"${normalized_documentreference_drs_document_reference.location}", "Parquet", Map(), None, None)
           .where(col("release_id") === releaseId)
           .where(col("study_id").isin(studyIds:_*)),
-      "simple_participant" ->
+      normalized_specimen.id ->
+        read(s"${normalized_specimen.location}", "Parquet", Map(), None, None)
+          .where(col("release_id") === releaseId)
+          .where(col("study_id").isin(studyIds:_*)),
+      simple_participant.id ->
         read(s"${simple_participant.location}", "Parquet", Map(), None, None)
           .where(col("release_id") === releaseId)
           .where(col("study_id").isin(studyIds:_*)),
-      "es_index_study_centric" ->
+      es_index_study_centric.id ->
         read(s"${es_index_study_centric.location}", "Parquet", Map(), None, None)
           .where(col("release_id") === releaseId)
           .where(col("study_id").isin(studyIds:_*)),
@@ -38,25 +43,25 @@ class FileCentric(releaseId: String, studyIds: List[String])(implicit configurat
   override def transform(data: Map[String, DataFrame],
                          lastRunDateTime: LocalDateTime = minDateTime,
                          currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    val fileDF = data("normalized_documentreference")
+    val fileDF = data(normalized_documentreference_drs_document_reference.id)
 
     val transformedFile =
       fileDF
-        .addStudy(data("es_index_study_centric"))
-        .addParticipants(data("simple_participant")) // TODO add participants with their biospecimen (filter by file)
+        .addStudy(data(es_index_study_centric.id))
+        .addFileParticipantsWithBiospecimen(data(simple_participant.id), data(normalized_specimen.id))
         .withColumn("type_of_omics", lit("TODO"))
         .withColumn("experimental_strategy", lit("TODO"))
         .withColumn("data_category", lit("TODO"))
 
     transformedFile.show(false)
-    Map("es_index_file_centric" -> transformedFile)
+    Map(mainDestination.id -> transformedFile)
   }
 
   override def load(data: Map[String, DataFrame],
                     lastRunDateTime: LocalDateTime = minDateTime,
                     currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    println(s"COUNT: ${data("es_index_file_centric").count()}")
-    val dataToLoad = Map("es_index_file_centric" -> data("es_index_file_centric")
+    println(s"COUNT: ${data(mainDestination.id).count()}")
+    val dataToLoad = Map(mainDestination.id -> data(mainDestination.id)
       .sortWithinPartitions("fhir_id").toDF())
     super.load(dataToLoad)
   }

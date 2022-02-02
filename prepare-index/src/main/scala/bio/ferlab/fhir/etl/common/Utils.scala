@@ -55,7 +55,7 @@ object Utils {
 
       df
         .join(reformatObservation, col("fhir_id") === col("participant_fhir_id"), "left_outer")
-        .drop( "participant_fhir_id")
+        .drop("participant_fhir_id")
     }
 
     def addDiagnosisPhenotypes(phenotypeDF: DataFrame, diagnosesDF: DataFrame)(hpoTerms: DataFrame, mondoTerms: DataFrame): DataFrame = {
@@ -146,25 +146,108 @@ object Utils {
 
     }
 
-    def addFiles(filesDf: DataFrame): DataFrame = {
-      val columnsGroup = Seq("study_id", "participant_fhir_id")
-      val columnsFile = filesDf.columns.filter(col => !columnsGroup.contains(col) )
-      val filesPerParticipant =
+    def addParticipantFilesWithBiospecimen(filesDf: DataFrame, biospecimensDf: DataFrame): DataFrame = {
+      val biospecimenDfReformat = biospecimensDf
+        .withColumn("biospecimen", struct(biospecimensDf.columns.map(col): _*))
+        .withColumnRenamed("fhir_id", "specimen_fhir_id")
+        .withColumnRenamed("participant_fhir_id", "specimen_participant_fhir_id")
+        .select("specimen_fhir_id", "specimen_participant_fhir_id", "biospecimen")
+
+      val filesWithBiospecimenDf =
         filesDf
-          .groupBy(columnsGroup.head, columnsGroup.tail: _*)
-          .agg(
-            collect_list(
-              struct(
-                columnsFile.head,
-                columnsFile.tail: _*
-              )
-            ) as "files",
-          )
-          .drop("study_id")
+          .withColumn("participant_fhir_id", explode(col("participant_fhir_ids")))
+          .join(biospecimenDfReformat, array_contains(filesDf("specimen_fhir_ids"), biospecimenDfReformat("specimen_fhir_id")), "left_outer")
+          .drop("specimen_fhir_id", "specimen_participant_fhir_id")
+          .groupBy("fhir_id", "participant_fhir_id")
+          .agg(collect_list(col("biospecimen")) as "biospecimens", filesDf.columns.filter(!_.equals("fhir_id")).map(c => first(c).as(c)): _*)
+
+      val filesWithBiospecimenGroupedByParticipantIdDf =
+        filesWithBiospecimenDf
+          .withColumn("file", struct(filesWithBiospecimenDf.columns.filterNot(c => c.equals("participant_fhir_id")).map(col): _*))
+          .select("participant_fhir_id", "file")
+          .groupBy("participant_fhir_id")
+          .agg(collect_list(col("file")) as "files")
 
       df
-        .join(filesPerParticipant, col("fhir_id") === col("participant_fhir_id"), "left_outer")
+        .join(filesWithBiospecimenGroupedByParticipantIdDf, df("fhir_id") === filesWithBiospecimenGroupedByParticipantIdDf("participant_fhir_id"), "left_outer")
+        .withColumn("files", coalesce(col("files"), array()))
         .drop("participant_fhir_id")
+    }
+
+    def addFileParticipantsWithBiospecimen(participantDf: DataFrame, biospecimensDf: DataFrame): DataFrame = {
+
+      def buildMappingTable(): DataFrame = {
+        // Link file - biospecimen
+        val fileIdBiospecimenId = df
+          .withColumn("specimen_fhir_id", explode(col("specimen_fhir_ids")))
+          .withColumnRenamed("fhir_id", "file_fhir_id")
+          .select("file_fhir_id", "specimen_fhir_id")
+
+        // Link file - biospecimen - participant
+        val fileIdBiospecimenIdParticipantId = fileIdBiospecimenId
+          .join(biospecimensDf, fileIdBiospecimenId("specimen_fhir_id") === biospecimensDf("fhir_id"), "left_outer")
+          .select("file_fhir_id", "specimen_fhir_id", "participant_fhir_id")
+
+        // Link file - participant (useful for file without biospecimen)
+        val fileIdParticipantId = df
+          .withColumn("participant_fhir_id", explode(col("participant_fhir_ids")))
+          .withColumnRenamed("fhir_id", "file_fhir_id")
+          .select("file_fhir_id", "participant_fhir_id")
+
+          // Mapping table with: file - (biospecimen) - participant
+          fileIdParticipantId
+            .join(fileIdBiospecimenIdParticipantId, Seq("file_fhir_id", "participant_fhir_id"), "left_outer")
+      }
+
+      // Mapping table with: file - (biospecimen) - participant
+      val mappingTable =buildMappingTable()
+
+      val biospecimenReformat = biospecimensDf
+        .withColumn("biospecimen", struct(biospecimensDf.columns.map(col): _*))
+        .withColumnRenamed("fhir_id", "specimen_fhir_id")
+        .select("specimen_fhir_id", "biospecimen")
+
+      // |file_fhir_id|participant_fhir_id|biospecimens|
+      val mappingTableWithBiospecimens = mappingTable
+        .join(biospecimenReformat, mappingTable("specimen_fhir_id") === biospecimenReformat("specimen_fhir_id"), "left_outer")
+        .drop("specimen_fhir_ids", "specimen_fhir_id")
+        .groupBy("file_fhir_id","participant_fhir_id")
+        .agg(collect_list(col("biospecimen")) as "biospecimens")
+
+      // |file_fhir_id|participants|
+      val mappingTableWithParticipants = mappingTableWithBiospecimens
+        .join(participantDf, mappingTableWithBiospecimens("participant_fhir_id") === participantDf("fhir_id"))
+        .withColumn("participant", struct((participantDf.columns :+ "biospecimens").map(col): _*))
+        .select("file_fhir_id", "participant")
+        .groupBy("file_fhir_id")
+        .agg(collect_list(col("participant")) as "participants")
+
+      df
+        .join(mappingTableWithParticipants, df("fhir_id") === mappingTableWithParticipants("file_fhir_id"))
+        .drop("file_fhir_id")
+    }
+
+    def addBiospecimenFiles(filesDf: DataFrame): DataFrame = {
+      val reformatFile = filesDf
+        .withColumn("biospecimen_fhir_id", explode(col("specimen_fhir_ids")))
+        .withColumn("file", struct(filesDf.columns.map(col): _*))
+        .select("biospecimen_fhir_id", "file")
+        .groupBy("biospecimen_fhir_id")
+        .agg(collect_list(col("file")) as "files")
+
+      df
+        .join(reformatFile, df("fhir_id") === reformatFile("biospecimen_fhir_id"), "left_outer")
+        .withColumn("files", coalesce(col("files"), array()))
+        .drop("biospecimen_fhir_id")
+    }
+
+    def addBiospecimenParticipant(participantsDf: DataFrame): DataFrame = {
+      val reformatParticipant: DataFrame = participantsDf
+        .withColumn("participant", struct(participantsDf.columns.map(col): _*))
+        .withColumnRenamed("fhir_id", "participant_fhir_id")
+        .select("participant_fhir_id", "participant")
+
+      df.join(reformatParticipant, "participant_fhir_id")
     }
 
     def addFamily(familyDf: DataFrame): DataFrame = {
@@ -177,24 +260,6 @@ object Utils {
       df.join(reformatFamily, expr("array_contains(family_members_id,fhir_id)"), "left_outer")
         .groupBy(groupCols.map(col): _*)
         .agg(collect_list("family_id") as "families_id", collect_list(col("family").dropFields("family_members_id", "release_id")) as "families")
-    }
-
-    def addParticipant(participantsDf: DataFrame): DataFrame = {
-      val reformatParticipant: DataFrame = participantsDf
-        .withColumn("participant", struct(participantsDf.columns.map(col): _*))
-        .withColumnRenamed("fhir_id", "participant_fhir_id")
-        .select("participant_fhir_id", "participant")
-
-      df.join(reformatParticipant, "participant_fhir_id")
-    }
-
-    def addParticipants(participantsDf: DataFrame): DataFrame = {
-      val reformatParticipant: DataFrame = participantsDf
-        .withColumn("participants", array(struct(participantsDf.columns.map(col): _*)))
-        .withColumnRenamed("fhir_id", "participant_fhir_id")
-        .select("participant_fhir_id", "participants")
-
-      df.join(reformatParticipant, "participant_fhir_id")
     }
   }
 }

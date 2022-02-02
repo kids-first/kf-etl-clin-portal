@@ -1,7 +1,8 @@
 package bio.ferlab.fhir.etl
 
+import bio.ferlab.fhir.etl.transformations.Transformations.participantSpecimen
 import org.apache.spark.sql.expressions.UserDefinedFunction
-import org.apache.spark.sql.functions.udf
+import org.apache.spark.sql.functions.{col, regexp_extract, udf}
 
 object Utils {
 
@@ -22,6 +23,8 @@ object Utils {
 
   val extractAclFromList: UserDefinedFunction =
     udf((arr: Seq[String]) => arr.filter(e => (e matches actCodeR) || (e matches studyCodePattern)))
+
+  val extractReferencesId: UserDefinedFunction = udf((arr: Seq[String]) => arr.map(e  => e.split("/")(1)))
 
   val codingClassify: UserDefinedFunction =
     udf((arr: Seq[(String, String, String, String, String, String)]) => arr.map(r => (codingSystemClassify(r._2), r._4)))

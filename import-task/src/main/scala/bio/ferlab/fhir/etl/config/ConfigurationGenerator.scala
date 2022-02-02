@@ -60,7 +60,7 @@ object ConfigurationGenerator extends App {
     ("condition", Some("phenotype"), List("study_id", "release_id")),
     ("patient", None, List("study_id", "release_id")),
     ("group", None, List("study_id", "release_id")),
-    ("documentreference", None, List("study_id", "release_id")),
+    ("documentreference", Some("drs-document-reference"), List("study_id", "release_id")),
     ("researchstudy", None, List("study_id", "release_id")),
     ("researchsubject", None, List("study_id", "release_id")),
     ("specimen", None, List("study_id", "release_id")),

@@ -22,7 +22,7 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     Map(
-      "normalized_patient" ->
+      normalized_patient.id ->
         read(s"${normalized_patient.location}", "Parquet", Map(), None, None)
           .where(col("release_id") === releaseId)
           .where(col("study_id").isin(studyIds:_*)),
@@ -30,15 +30,15 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
         read(s"${normalized_observation_vital_status.location}", "Parquet", Map(), None, None)
           .where(col("release_id") === releaseId)
           .where(col("study_id").isin(studyIds:_*)),
-      "normalized_condition_phenotype" ->
+      normalized_condition_phenotype.id ->
         read(s"${normalized_condition_phenotype.location}", "Parquet", Map(), None, None)
           .where(col("release_id") === releaseId)
           .where(col("study_id").isin(studyIds:_*)),
-      "normalized_condition_disease" ->
+      normalized_condition_disease.id ->
         read(s"${normalized_condition_disease.location}", "Parquet", Map(), None, None)
           .where(col("release_id") === releaseId)
           .where(col("study_id").isin(studyIds:_*)),
-      "normalized_group" ->
+      normalized_group.id ->
         read(s"${normalized_group.location}", "Parquet", Map(), None, None)
           .where(col("release_id") === releaseId)
           .where(col("study_id").isin(studyIds:_*)),
@@ -48,7 +48,7 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
   override def transform(data: Map[String, DataFrame],
                          lastRunDateTime: LocalDateTime = minDateTime,
                          currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    val patientDF = data("normalized_patient")
+    val patientDF = data(normalized_patient.id)
 
     val hpoTermsConf = conf.sources.find(c => c.id == "hpo_terms").getOrElse(throw new RuntimeException("Hpo Terms Conf not found"))
     val mondoTermsConf = conf.sources.find(c => c.id == "mondo_terms").getOrElse(throw new RuntimeException("Mondo Terms Conf not found"))
@@ -58,9 +58,9 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
 
     val transformedParticipant =
       patientDF
-        .addDiagnosisPhenotypes(data("normalized_condition_phenotype"), data("normalized_condition_disease"))(allHpoTerms, allMondoTerms)
+        .addDiagnosisPhenotypes(data(normalized_condition_phenotype.id), data(normalized_condition_disease.id))(allHpoTerms, allMondoTerms)
         .addOutcomes(data(normalized_observation_vital_status.id))
-        .addFamily(data("normalized_group"))
+        .addFamily(data(normalized_group.id))
         .withColumnRenamed("gender", "sex")
         .withColumn("karyotype", lit("TODO"))
         .withColumn("down_syndrome_diagnosis", lit("TODO"))
@@ -69,14 +69,14 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
         .withColumn("age_at_data_collection", lit(111)) // TODO
 
     transformedParticipant.show(false)
-    Map("simple_participant" -> transformedParticipant)
+    Map(mainDestination.id -> transformedParticipant)
   }
 
   override def load(data: Map[String, DataFrame],
                     lastRunDateTime: LocalDateTime = minDateTime,
                     currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    println(s"COUNT: ${data("simple_participant").count()}")
-    val dataToLoad = Map("simple_participant" -> data("simple_participant")
+    println(s"COUNT: ${data(mainDestination.id).count()}")
+    val dataToLoad = Map(mainDestination.id -> data(mainDestination.id)
       .sortWithinPartitions("fhir_id").toDF())
     super.load(dataToLoad)
   }

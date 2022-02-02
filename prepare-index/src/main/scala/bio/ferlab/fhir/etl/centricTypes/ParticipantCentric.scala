@@ -14,21 +14,26 @@ class ParticipantCentric(releaseId: String, studyIds: List[String])(implicit con
   override val mainDestination: DatasetConf = conf.getDataset("es_index_participant_centric")
   val simple_participant: DatasetConf = conf.getDataset("simple_participant")
   val es_index_study_centric: DatasetConf = conf.getDataset("es_index_study_centric")
-  val normalized_documentreference: DatasetConf = conf.getDataset("normalized_documentreference")
+  val normalized_documentreference_drs_document_reference: DatasetConf = conf.getDataset("normalized_documentreference_drs-document-reference")
+  val normalized_specimen: DatasetConf = conf.getDataset("normalized_specimen")
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     Map(
-      "simple_participant" ->
+      simple_participant.id ->
         read(s"${simple_participant.location}", "Parquet", Map(), None, None)
           .where(col("release_id") === releaseId)
           .where(col("study_id").isin(studyIds:_*)),
-      "es_index_study_centric" ->
+      es_index_study_centric.id ->
         read(s"${es_index_study_centric.location}", "Parquet", Map(), None, None)
           .where(col("release_id") === releaseId)
           .where(col("study_id").isin(studyIds:_*)),
-      "normalized_documentreference" ->
-        read(s"${normalized_documentreference.location}", "Parquet", Map(), None, None)
+      normalized_documentreference_drs_document_reference.id ->
+        read(s"${normalized_documentreference_drs_document_reference.location}", "Parquet", Map(), None, None)
+          .where(col("release_id") === releaseId)
+          .where(col("study_id").isin(studyIds:_*)),
+      normalized_specimen.id ->
+        read(s"${normalized_specimen.location}", "Parquet", Map(), None, None)
           .where(col("release_id") === releaseId)
           .where(col("study_id").isin(studyIds:_*)),
     )
@@ -37,23 +42,23 @@ class ParticipantCentric(releaseId: String, studyIds: List[String])(implicit con
   override def transform(data: Map[String, DataFrame],
                          lastRunDateTime: LocalDateTime = minDateTime,
                          currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    val patientDF = data("simple_participant")
+    val patientDF = data(simple_participant.id)
 
     val transformedParticipant =
       patientDF
-        .addStudy(data("es_index_study_centric"))
-        .addFiles(data("normalized_documentreference")) // TODO add files with their biospecimen (filter by participant)
+        .addStudy(data(es_index_study_centric.id))
+        .addParticipantFilesWithBiospecimen(data(normalized_documentreference_drs_document_reference.id), data(normalized_specimen.id))
         .withColumn("study_external_id", col("study")("external_id"))
 
     transformedParticipant.show(false)
-    Map("es_index_participant_centric" -> transformedParticipant)
+    Map(mainDestination.id -> transformedParticipant)
   }
 
   override def load(data: Map[String, DataFrame],
                     lastRunDateTime: LocalDateTime = minDateTime,
                     currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    println(s"COUNT: ${data("es_index_participant_centric").count()}")
-    val dataToLoad = Map("es_index_participant_centric" -> data("es_index_participant_centric")
+    println(s"COUNT: ${data(mainDestination.id).count()}")
+    val dataToLoad = Map(mainDestination.id -> data(mainDestination.id)
       .sortWithinPartitions("fhir_id")
       .toDF())
     super.load(dataToLoad)

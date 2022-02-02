@@ -17,11 +17,11 @@ case class FILE_CENTRIC(
                          `size`: BigInt = BigInt.apply(2610321004L),
                          `urls`: String = "s3://kf-study-us-east-1-prd-sd-z6mwd3h0/harmonized-data/raw-gvcf/4db9adf4-94f7-4800-a360-49eda89dfb62.g.vcf.gz",
                          `study_id`: String = "SD_Z6MWD3H0",
-                         `participant_fhir_id`: String = "39167",
+                         `participant_fhir_ids`: Seq[String] = Seq.empty,
                          `type_of_omics`: String = "TODO",
                          `experimental_strategy`: String = "TODO",
                          `data_category`: String = "TODO",
                          `study`: LIGHT_STUDY_CENTRIC = LIGHT_STUDY_CENTRIC(),
-                         // TODO `participants`: Seq[SIMPLE_PARTICIPANT] = Seq(SIMPLE_PARTICIPANT())
-                         `release_id`: String = "re_000001"
+                         `release_id`: String = "re_000001",
+                         `participants`: Seq[PARTICIPANT_WITH_BIOSPECIMEN] = Seq.empty
                        )
