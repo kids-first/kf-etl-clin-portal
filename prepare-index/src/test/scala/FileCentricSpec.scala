@@ -1,6 +1,6 @@
 import bio.ferlab.datalake.commons.config.{Configuration, ConfigurationLoader}
 import bio.ferlab.fhir.etl.centricTypes.FileCentric
-import model.{BIOSPECIMEN, DOCUMENTREFERENCE, FILE_CENTRIC, PARTICIPANT_WITH_BIOSPECIMEN, PATIENT, PATIENT_WITH_FAMILY, STUDY_CENTRIC}
+import model._
 import org.apache.spark.sql.DataFrame
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -21,7 +21,7 @@ class FileCentricSpec extends FlatSpec with Matchers with WithSparkSession {
         BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2")
       ).toDF(),
       "es_index_study_centric" -> Seq(STUDY_CENTRIC()).toDF(),
-      "simple_participant" -> Seq(PATIENT_WITH_FAMILY(`fhir_id` = "1"), PATIENT_WITH_FAMILY(`fhir_id` = "2")).toDF(), // TODO Change me for SIMPLE_PARTICIPANT
+      "simple_participant" -> Seq(SIMPLE_PARTICIPANT(`fhir_id` = "1"), SIMPLE_PARTICIPANT(`fhir_id` = "2")).toDF(),
     )
 
     val output = new FileCentric("re_000001", List("SD_Z6MWD3H0"))(conf).transform(data)
@@ -53,7 +53,7 @@ class FileCentricSpec extends FlatSpec with Matchers with WithSparkSession {
         BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2")
       ).toDF(),
       "es_index_study_centric" -> Seq(STUDY_CENTRIC()).toDF(),
-      "simple_participant" -> Seq(PATIENT_WITH_FAMILY(`fhir_id` = "1")).toDF(), // TODO Change me for SIMPLE_PARTICIPANT
+      "simple_participant" -> Seq(SIMPLE_PARTICIPANT(`fhir_id` = "1")).toDF(),
     )
 
     val output = new FileCentric("re_000001", List("SD_Z6MWD3H0"))(conf).transform(data)
