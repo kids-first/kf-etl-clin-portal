@@ -1,8 +1,8 @@
 package bio.ferlab.fhir.etl
 
-import bio.ferlab.fhir.etl.transformations.Transformations.participantSpecimen
 import org.apache.spark.sql.expressions.UserDefinedFunction
-import org.apache.spark.sql.functions.{col, regexp_extract, udf}
+import org.apache.spark.sql.{Column, functions}
+import org.apache.spark.sql.functions.{col, filter, regexp_extract, udf}
 
 object Utils {
 
@@ -10,6 +10,8 @@ object Utils {
   val studyCodePattern = "^SD_[0-9A-Za-z]+"
   val gen3Host = "data.kidsfirstdrc.org"
   val dcfHost = "api.gdc.cancer.gov"
+  val patternUrnUniqueIdStudy = "[A-Z][a-z]+-(SD_[0-9A-Za-z]+)-([A-Z]{2}_[0-9A-Za-z]+)"
+
 
   private def codingSystemClassify(url: String) = {
     url match {
@@ -24,7 +26,13 @@ object Utils {
   val extractAclFromList: UserDefinedFunction =
     udf((arr: Seq[String]) => arr.filter(e => (e matches actCodeR) || (e matches studyCodePattern)))
 
-  val extractReferencesId: UserDefinedFunction = udf((arr: Seq[String]) => arr.map(e  => e.split("/")(1)))
+  val extractReferencesId = (column: Column) => functions.transform(column, c => functions.split(c, "/")(1))
+
+  val extractReferenceId = (column: Column) => functions.split(column, "/")(1)
+
+  val extractStudyId = () => regexp_extract(extractFirstForSystem(col("identifier"), URN_UNIQUE_ID)("value"), patternUrnUniqueIdStudy, 1)
+
+  val extractFirstForSystem = (column: Column, system: String) => filter(column, c => c("system") === system)(0)
 
   val codingClassify: UserDefinedFunction =
     udf((arr: Seq[(String, String, String, String, String, String)]) => arr.map(r => (codingSystemClassify(r._2), r._4)))
