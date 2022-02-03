@@ -71,7 +71,6 @@ class StudyCentric(releaseId: String, studyIds: List[String])(implicit configura
   override def load(data: Map[String, DataFrame],
                     lastRunDateTime: LocalDateTime = minDateTime,
                     currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    println(s"COUNT: ${data(mainDestination.id).count()}")
     super.load(data)
   }
 }

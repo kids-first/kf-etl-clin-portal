@@ -57,7 +57,6 @@ class ParticipantCentric(releaseId: String, studyIds: List[String])(implicit con
   override def load(data: Map[String, DataFrame],
                     lastRunDateTime: LocalDateTime = minDateTime,
                     currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    println(s"COUNT: ${data(mainDestination.id).count()}")
     val dataToLoad = Map(mainDestination.id -> data(mainDestination.id)
       .sortWithinPartitions("fhir_id")
       .toDF())
