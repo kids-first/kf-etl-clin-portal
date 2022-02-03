@@ -67,7 +67,11 @@ This should be fix in the future with Keycloak but for now this is what you have
 
 To retrieve your own cookie:
 
-1. Click [here](https://kf-api-fhir-service.kidsfirstdrc.org/$export?_type=Patient)
+1. Click 
+   
+   [here for KF FHIR](https://kf-api-fhir-service.kidsfirstdrc.org/$export?_type=Patient) 
+   
+   [here for Include FHIR](https://include-api-fhir-service-dev.includedcc.org/$export?_type=Patient)
 2. Open the developer window (by default its F12 on most browser)
 3. Search for a GET request which as the 400 BAD Request symbol
 4. Go into the Headers section
