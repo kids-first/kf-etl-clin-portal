@@ -7,7 +7,7 @@ case class CONDITION_DISEASE(
                               `source_text`: String = "Acute lymphoblastic leukemia",
                               `participant_fhir_id`: String = "38722",
                               `source_text_tumor_location`: Seq[String] = Seq.empty[String],
-                              `uberon_id_tumor_location`: Seq[Seq[CODING]] = Seq.empty,
+                              `uberon_id_tumor_location`: Seq[String] = Seq.empty,
                               `affected_status`: Boolean = false,
                               `affected_status_text`: String = null,
                               `age_at_event`: AGE_AT_EVENT = AGE_AT_EVENT(),

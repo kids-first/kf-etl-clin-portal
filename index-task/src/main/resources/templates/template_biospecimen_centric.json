@@ -125,18 +125,14 @@
             "diagnosis": {
               "type": "nested",
               "properties": {
+                "affected_status" : {
+                  "type" : "boolean"
+                },
+                "affected_status_text" : {
+                  "type": "keyword"
+                },
                 "age_at_event_days" : {
                   "type" : "long"
-                },
-                "bodySite" : {
-                  "properties": {
-                    "coding": {
-                      "type": "keyword"
-                    },
-                    "text": {
-                      "type": "keyword"
-                    }
-                  }
                 },
                 "diagnosis_id" : {
                   "type": "keyword"
@@ -150,13 +146,16 @@
                 "mondo_id_diagnosis" : {
                   "type": "keyword"
                 },
-                "release_id" : {
+                "ncit_id_diagnosis": {
                   "type": "keyword"
                 },
                 "source_text" : {
                   "type": "keyword"
                 },
                 "source_text_tumor_location" : {
+                  "type": "keyword"
+                },
+                "uberon_id_tumor_location" : {
                   "type": "keyword"
                 }
               }
