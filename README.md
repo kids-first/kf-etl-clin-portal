@@ -56,13 +56,19 @@ DELETE _index_template/template_[study | participant | file | biospecimen]_centr
 
 11. Make sure data is correctly loaded in ES, also check mapping for the 4 new indices, there should not be any `"type": "text"`.
 
-12. Switch aliases to add the new indices and remove the old ones
+12. Run Publish task for study (see its README for args)
 
-13. Run arranger (not the wrapper) locally 
+13. Run Publish task for participant (see its README for args)
 
-14. Open a browser on this endpoint `/admin/graphql`
+14. Run Publish task for file (see its README for args)
 
-15. Create a new project
+15. Run Publish task for biospecimen (see its README for args)
+
+16. Run arranger (not the wrapper) locally 
+
+17. Open a browser on this endpoint `/admin/graphql`
+
+18. Create a new project
 
 ```
 mutation newProject {
@@ -74,7 +80,7 @@ mutation newProject {
 }
 ```
 
-16. Create new indices
+19. Create new indices
 
 ```
 mutation newIndexStudy {
@@ -102,7 +108,7 @@ mutation newIndexBiospecimen {
 }
 ```
 
-17. Fix mapping
+20. Fix mapping
 
 ```
 mutation updateStudyMappingTypeOfOmics($inputTypeOfOmics:ExtendedFieldMappingInput!) {
@@ -197,6 +203,6 @@ With these inputs (isArray true is the important part)
 }
 ```
 
-18. Restart Arranger 
+21. Restart Arranger 
 
-19. Update portal `REACT_APP_ARRANGER_PROJECT_ID = [NEW_PROJECT_ID]` in Netlify and Retry last deploy
+22. Update portal `REACT_APP_ARRANGER_PROJECT_ID = [NEW_PROJECT_ID]` in Netlify and Retry last deploy
