@@ -114,7 +114,7 @@ object Transformations {
       .withColumn("source_text", col("code")("text"))
       .withColumn("participant_fhir_id", extractReferenceId( col("subject")("reference")))
       .withColumn("source_text_tumor_location", col("bodySite")("text"))
-      .withColumn("uberon_id_tumor_location", col("bodySite")("coding")) // TODO fix me !
+      .withColumn("uberon_id_tumor_location", flatten(transform(col("bodySite")("coding"), c => c("display"))))
       .withColumn("affected_status", col("verificationStatus")("text").cast(BooleanType))
       .withColumn("affected_status_text", col("verificationStatus")("coding")("display")(0))
       .withColumn("age_at_event", struct(
