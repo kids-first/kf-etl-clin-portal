@@ -20,7 +20,7 @@ object Publisher {
     if (response.getStatusLine.getStatusCode == 200) {
       val responseBody = EntityUtils.toString(response.getEntity, "UTF-8")
       val aliasIndices = parse(responseBody).values.asInstanceOf[Map[String, Any]]
-      return aliasIndices.keys.toList.filter(s => s.startsWith(s"${alias}_${studyId.toLowerCase}")).headOption
+      return aliasIndices.keys.toList.find(s => s.startsWith(s"${alias}_${studyId.toLowerCase}"))
     }
     None
   }
@@ -28,10 +28,7 @@ object Publisher {
   def publish(alias: String,
               currentIndex: String,
               previousIndex: Option[String] = None)(implicit esClient: ElasticSearchClient): Unit = {
-    Try(esClient.setAlias(add = List(currentIndex), remove = List(), alias))
-      .foreach(_ => println(s"$currentIndex added to $alias"))
-    Try(esClient.setAlias(add = List(), remove = previousIndex.toList, alias))
-      .foreach(_ => println(s"${previousIndex.toList.mkString} removed from $alias"))
+    esClient.setAlias(add = List(currentIndex), remove = previousIndex.toList, alias)
   }
 
 }
