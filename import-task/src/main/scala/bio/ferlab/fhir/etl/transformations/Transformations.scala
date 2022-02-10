@@ -8,19 +8,17 @@ import org.apache.spark.sql.types.BooleanType
 
 object Transformations {
 
-  val patternFamilyRelationship = "Observation-(PT_[0-9A-Za-z]+)-([A-Z][a-z]+)-(PT_[0-9A-Za-z]+)"
   val patternPractitionerRoleResearchStudy = "PractitionerRole\\/([0-9]+)"
   val conditionTypeR = "^https:\\/\\/[A-Za-z0-9-_.\\/]+\\/([A-Za-z0-9]+)"
 
   val patientMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "release_id","gender", "ethnicity", "identifier", "race")
+      .select("fhir_id", "study_id", "release_id","gender", "ethnicity", "identifier", "race")
       .withColumn("ethnicity", col("ethnicity.text"))
       .withColumn("external_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
       // TODO is_proband
-      .withColumn("participant_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}participants/")("value"))
+      .withColumn("participant_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
       .withColumn("race", col("race.text"))
-      .withColumn("study_id", extractStudyId())
     ),
     Drop("identifier")
   )
@@ -29,7 +27,7 @@ object Transformations {
     Custom(_
       .select("fhir_id", "release_id", "identifier")
       .withColumn("external_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
-      .withColumn("participant_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}participants/")("value"))
+//      .withColumn("participant_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}participants/")("value"))
       .withColumn("study_id", extractStudyId())
     ),
     Drop("identifier")
@@ -47,7 +45,7 @@ object Transformations {
       // TODO duo_ids
       // TODO dbgap_consent_code
       // TODO external_sample_id
-      .withColumn("specimen_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}biospecimens/")("value"))
+//      .withColumn("specimen_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}biospecimens/")("value"))
       .withColumn("external_aliquot_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
       .withColumn("method_of_sample_procurement", col("collection")("method")("coding"))
       // TODO modified_at
@@ -75,11 +73,11 @@ object Transformations {
       .withColumn("participant_fhir_id", extractReferenceId( col("subject")("reference")))
       .withColumn("vital_status", col("valueCodeableConcept")("text"))
       .withColumn("study_id", extractStudyId())
-      .withColumn("observation_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}outcomes/")("value"))
+//      .withColumn("observation_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}outcomes/")("value"))
       .withColumn("age_at_event_days", struct(
         col("_effectiveDateTime")("effectiveDateTime")("offset")("value") as "value",
         col("_effectiveDateTime")("effectiveDateTime")("offset")("unit") as "units",
-        extractFirstForSystem(col("_effectiveDateTime")("effectiveDateTime")("event")("coding"), "http://snomed.info/sct")("display") as "from"
+        extractFirstForSystem(col("_effectiveDateTime")("effectiveDateTime")("event")("coding"), Seq("http://snomed.info/sct"))("display") as "from"
       ))
       // TODO external_id
     ),
@@ -89,27 +87,23 @@ object Transformations {
   val observationFamilyRelationshipMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id", "release_id", "subject", "identifier", "focus", "valueCodeableConcept", "meta")
-      .withColumn("participant1_id", regexp_extract(extractFirstForSystem(col("identifier"), URN_UNIQUE_ID)("value"), patternFamilyRelationship, 1))
-      .withColumn("participant2_id", regexp_extract(extractFirstForSystem(col("identifier"), URN_UNIQUE_ID)("value"), patternFamilyRelationship, 3))
       .withColumn("study_id", col("meta")("tag")(0)("code"))
-      .withColumn("observation_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}family-relationships/")("value"))
+      .withColumn("observation_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
       .withColumn("participant1_fhir_id", extractReferenceId( col("subject")("reference")))
-      .withColumn("participant2_fhir_id", extractReferencesId(col("focus")("reference")))
+      .withColumn("participant2_fhir_id", extractReferencesId(col("focus")("reference"))(0))
       .withColumn(
         "participant1_to_participant_2_relationship",
         extractFirstForSystem(col("valueCodeableConcept")("coding"), ROLE_CODE_URL)("display")
       )
       // TODO external_id
-
     ),
     Drop("subject", "identifier", "focus", "valueCodeableConcept", "meta")
   )
 
   val conditionDiseaseMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "release_id","identifier", "code", "bodySite", "subject", "verificationStatus", "_recordedDate")
-      .withColumn("study_id", extractStudyId())
-      .withColumn("diagnosis_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}diagnoses/")("value"))
+      .select("fhir_id","study_id", "release_id","identifier", "code", "bodySite", "subject", "verificationStatus", "_recordedDate")
+      .withColumn("diagnosis_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
       .withColumn("condition_coding", codingClassify(col("code")("coding")).cast("array<struct<category:string,code:string>>"))
       .withColumn("source_text", col("code")("text"))
       .withColumn("participant_fhir_id", extractReferenceId( col("subject")("reference")))
@@ -120,7 +114,7 @@ object Transformations {
       .withColumn("age_at_event", struct(
         col("_recordedDate")("recordedDate")("offset")("value") as "value",
         col("_recordedDate")("recordedDate")("offset")("unit") as "units",
-        extractFirstForSystem(col("_recordedDate")("recordedDate")("event")("coding"), "http://snomed.info/sct")("display") as "from"
+        extractFirstForSystem(col("_recordedDate")("recordedDate")("event")("coding"), Seq("http://snomed.info/sct"))("display") as "from"
       ))
       // TODO external_id
       // TODO diagnosis_category
@@ -130,9 +124,8 @@ object Transformations {
 
   val conditionPhenotypeMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "release_id","identifier", "code", "subject", "verificationStatus", "_recordedDate")
-      .withColumn("study_id", extractStudyId())
-      .withColumn("phenotype_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}phenotypes/")("value"))
+      .select("fhir_id", "study_id", "release_id","identifier", "code", "subject", "verificationStatus", "_recordedDate")
+      .withColumn("phenotype_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
       .withColumn("condition_coding", codingClassify(col("code")("coding")).cast("array<struct<category:string,code:string>>"))
       .withColumn("source_text", col("code")("text"))
       .withColumn("participant_fhir_id", extractReferenceId( col("subject")("reference")))
@@ -140,7 +133,8 @@ object Transformations {
       .withColumn("age_at_event", struct(
         col("_recordedDate")("recordedDate")("offset")("value") as "value",
         col("_recordedDate")("recordedDate")("offset")("unit") as "units",
-        extractFirstForSystem(col("_recordedDate")("recordedDate")("event")("coding"), "http://snomed.info/sct")("display") as "from"
+        //todo same for include?
+        extractFirstForSystem(col("_recordedDate")("recordedDate")("event")("coding"), Seq("http://snomed.info/sct"))("display") as "from"
       ))
       // TODO snomed_id_phenotype
       // TODO external_id
@@ -151,7 +145,7 @@ object Transformations {
   val organizationMappings: List[Transformation] = List(
     Custom(_
       .select( "fhir_id", "release_id","identifier", "name")
-      .withColumn("organization_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}sequencing-centers/")("value"))
+//      .withColumn("organization_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}sequencing-centers/")("value"))
       .withColumn("institution", col("name"))
     ),
     Drop("identifier", "name")
@@ -160,11 +154,11 @@ object Transformations {
   val researchstudyMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id", "keyword", "release_id","title", "identifier", "principalInvestigator", "status")
-      .withColumn("attribution", extractFirstForSystem(col("identifier"), SYS_NCBI_URL)("value"))
+//      .withColumn("attribution", extractFirstForSystem(col("identifier"), SYS_NCBI_URL)("value"))
       // TODO data_access_authority
-      .withColumn("external_id", extractStudyExternalId(extractFirstForSystem(col("identifier"), SYS_NCBI_URL)("value")))
+//      .withColumn("external_id", extractStudyExternalId(extractFirstForSystem(col("identifier"), SYS_NCBI_URL)("value")))
       .withColumnRenamed("title", "name")
-      .withColumn("version", extractStudyVersion(extractFirstForSystem(col("identifier"), SYS_NCBI_URL)("value")))
+//      .withColumn("version", extractStudyVersion(extractFirstForSystem(col("identifier"), SYS_NCBI_URL)("value")))
       .withColumn(
         "investigator_id",
         regexp_extract(col("principalInvestigator")("reference"), patternPractitionerRoleResearchStudy, 1)
@@ -173,14 +167,14 @@ object Transformations {
       .withColumn("study_code", col("keyword")(1)("coding")(0)("code"))
       // TODO domain
       .withColumn("program", col("keyword")(0)("coding")(0)("code"))
-      .withColumn("study_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}studies/")("value"))
+//      .withColumn("study_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}studies/")("value"))
     ),
     Drop("title", "identifier", "principalInvestigator", "keyword")
   )
 
   val documentreferenceMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "release_id", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus")
+      .select("fhir_id","study_id", "release_id", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus")
       .withColumn("acl", extractAclFromList(col("securityLabel")("text")))
       .withColumn("access_urls", col("content")("attachment")("url")(0))
       // TODO availability
@@ -189,7 +183,7 @@ object Transformations {
       .withColumn("external_id", col("content")(1)("attachment")("url"))
       .withColumn("file_format", firstNonNull(col("content")("format")("display")))
       .withColumn("file_name", firstNonNull(col("content")("attachment")("title")))
-      .withColumn("file_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}genomic-files/")("value"))
+      .withColumn("file_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
       .withColumn("hashes", extractHashes(col("content")(1)("attachment")("hashes")))
       // TODO instrument_models
       .withColumn("is_harmonized", retrieveIsHarmonized(col("content")(1)("attachment")("url")))
@@ -200,7 +194,6 @@ object Transformations {
       .withColumn("repository", retrieveRepository(col("content")("attachment")("url")(0)))
       .withColumn("size", retrieveSize(col("content")(1)("attachment")("fileSize")))
       .withColumn("urls", col("content")(1)("attachment")("url"))
-      .withColumn("study_id", extractStudyId())
       .withColumn("participant_fhir_ids", array(extractReferenceId( col("subject")("reference"))))
       .withColumn("specimen_fhir_ids", extractReferencesId(col("context")("related")("reference")))
       .withColumnRenamed("docStatus", "status")
@@ -212,7 +205,7 @@ object Transformations {
     Custom(_
       .select("*")
       .withColumn("external_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
-      .withColumn("family_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}families/")("value"))
+//      .withColumn("family_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}families/")("value"))
       .withColumn("study_id", extractStudyId())
       .withColumn("exploded_member", explode(col("member")))
       .withColumn("exploded_member_entity", extractReferenceId(col("exploded_member")("entity")("reference")))

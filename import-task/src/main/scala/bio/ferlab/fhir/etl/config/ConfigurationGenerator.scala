@@ -54,17 +54,17 @@ object ConfigurationGenerator extends App {
   )
 
   val sourceNames: Seq[(String, Option[String], List[String])] = Seq(
-    ("observation", Some("family-relationship"), List("study_id", "release_id")),
-    ("observation", Some("vital-status"), List("study_id", "release_id")),
-    ("condition", Some("disease"), List("study_id", "release_id")),
-    ("condition", Some("phenotype"), List("study_id", "release_id")),
-    ("patient", None, List("study_id", "release_id")),
-    ("group", None, List("study_id", "release_id")),
-    ("documentreference", Some("drs-document-reference"), List("study_id", "release_id")),
-    ("researchstudy", None, List("study_id", "release_id")),
+//    ("observation", Some("family-relationship"), List("study_id", "release_id")),
+//    ("observation", Some("vital-status"), List("study_id", "release_id")),
+//    ("condition", Some("disease"), List("study_id", "release_id")),
+//    ("condition", Some("phenotype"), List("study_id", "release_id")),
+//    ("patient", None, List("study_id", "release_id")),
+//    ("group", None, List("study_id", "release_id")),
+//    ("documentreference", Some("drs-document-reference"), List("study_id", "release_id")),
+    ("researchstudy", None, List("study_id", "release_id")), //TODO
     ("researchsubject", None, List("study_id", "release_id")),
-    ("specimen", None, List("study_id", "release_id")),
-    ("organization", None, List("release_id")),
+//    ("specimen", None, List("study_id", "release_id")),
+//    ("organization", None, List("release_id")),
   )
 
   val sources = sourceNames.flatMap(sn => {
@@ -114,7 +114,7 @@ object ConfigurationGenerator extends App {
     sparkconf = spark_conf
   )
 
-  ConfigurationWriter.writeTo("src/main/resources/config/dev.conf", local_conf)
-  ConfigurationWriter.writeTo("src/main/resources/config/qa.conf", qa_conf)
-  ConfigurationWriter.writeTo("src/main/resources/config/prd.conf", prd_conf)
+  ConfigurationWriter.writeTo("import-task/src/main/resources/config/dev.conf", local_conf)
+  ConfigurationWriter.writeTo("import-task/src/main/resources/config/qa.conf", qa_conf)
+  ConfigurationWriter.writeTo("import-task/src/main/resources/config/prd.conf", prd_conf)
 }
