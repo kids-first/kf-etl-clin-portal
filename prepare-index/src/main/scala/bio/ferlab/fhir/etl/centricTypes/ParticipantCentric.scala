@@ -2,6 +2,7 @@ package bio.ferlab.fhir.etl.centricTypes
 
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.v2.ETL
+import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
 import bio.ferlab.datalake.spark3.loader.GenericLoader.read
 import bio.ferlab.fhir.etl.common.Utils._
 import org.apache.spark.sql.functions.{col, explode, lit}
@@ -14,34 +15,16 @@ class ParticipantCentric(releaseId: String, studyIds: List[String])(implicit con
   override val mainDestination: DatasetConf = conf.getDataset("es_index_participant_centric")
   val es_index_study_centric: DatasetConf = conf.getDataset("es_index_study_centric")
   val simple_participant: DatasetConf = conf.getDataset("simple_participant")
-  val normalized_documentreference_drs_document_reference: DatasetConf = conf.getDataset("normalized_documentreference_drs-document-reference")
+  val normalized_drs_document_reference: DatasetConf = conf.getDataset("normalized_drs_document_reference")
   val normalized_specimen: DatasetConf = conf.getDataset("normalized_specimen")
   val normalized_task: DatasetConf = conf.getDataset("normalized_task")
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    Map(
-      simple_participant.id ->
-        read(s"${simple_participant.location}", "Parquet", Map(), None, None)
-          .where(col("release_id") === releaseId)
-          .where(col("study_id").isin(studyIds:_*)),
-      es_index_study_centric.id ->
-        read(s"${es_index_study_centric.location}", "Parquet", Map(), None, None)
-          .where(col("release_id") === releaseId)
-          .where(col("study_id").isin(studyIds:_*)),
-      normalized_documentreference_drs_document_reference.id ->
-        read(s"${normalized_documentreference_drs_document_reference.location}", "Parquet", Map(), None, None)
-          .where(col("release_id") === releaseId)
-          .where(col("study_id").isin(studyIds:_*)),
-      normalized_specimen.id ->
-        read(s"${normalized_specimen.location}", "Parquet", Map(), None, None)
-          .where(col("release_id") === releaseId)
-          .where(col("study_id").isin(studyIds:_*)),
-      normalized_task.id ->
-        read(s"${normalized_task.location}", "Parquet", Map(), None, None)
-          .where(col("release_id") === releaseId)
-          .where(col("study_id").isin(studyIds:_*)),
-    )
+    Seq(simple_participant, es_index_study_centric, normalized_drs_document_reference, normalized_specimen, normalized_task)
+      .map(ds => ds.id -> ds.read.where(col("release_id") === releaseId)
+                            .where(col("study_id").isin(studyIds: _*))
+      ).toMap
   }
 
   override def transform(data: Map[String, DataFrame],
@@ -51,10 +34,9 @@ class ParticipantCentric(releaseId: String, studyIds: List[String])(implicit con
 
     val transformedParticipant =
       patientDF
-        .addStudy(data(es_index_study_centric.id))
         .withColumn("study_external_id", col("study")("external_id"))
         .addParticipantFilesWithBiospecimen(
-          data(normalized_documentreference_drs_document_reference.id),
+          data(normalized_drs_document_reference.id),
           data(normalized_specimen.id),
           data(normalized_task.id)
         )

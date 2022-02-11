@@ -2,11 +2,15 @@ package bio.ferlab.fhir.etl
 
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.v2.RawToNormalizedETL
+import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
+import bio.ferlab.datalake.spark3.loader.LoadResolver
 import bio.ferlab.datalake.spark3.transformation.Transformation
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
+import scala.collection.immutable
+import scala.util.Try
 
 class ImportRawToNormalizedETL (override val source: DatasetConf,
                                 override val mainDestination: DatasetConf,
@@ -18,11 +22,23 @@ class ImportRawToNormalizedETL (override val source: DatasetConf,
   override def extract(lastRunDateTime: LocalDateTime,
                        currentRunDateTime: LocalDateTime)(implicit spark: SparkSession): Map[String, DataFrame] = {
     log.info(s"extracting: ${source.location}")
-    Map(source.id -> spark.read.format(source.format.sparkFormat)
-      .options(source.readoptions).load(source.location)
+    Map(source.id -> source.read
       .where(col("release_id") === releaseId)
       .where(col("study_id").isin(studyIds:_*))
     )
+  }
+
+  override def load(data: Map[String, DataFrame],
+           lastRunDateTime: LocalDateTime = minDateTime,
+           currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
+    data.map { case (dsid, df) =>
+      val ds = conf.getDataset(dsid)
+      LoadResolver
+        .write(spark, conf)(ds.format -> ds.loadtype)
+        .apply(ds, df)
+      dsid -> ds.read
+    }
+
   }
 
 }

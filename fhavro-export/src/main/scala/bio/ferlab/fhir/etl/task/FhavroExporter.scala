@@ -1,11 +1,10 @@
 package bio.ferlab.fhir.etl.task
 
 import bio.ferlab.fhir.Fhavro
-import bio.ferlab.fhir.etl.config.{Config, FhirRequest}
-import bio.ferlab.fhir.etl.fhir.FhirUtils.buildFhirClient
+import bio.ferlab.fhir.etl.config.FhirRequest
 import bio.ferlab.fhir.etl.logging.LoggerUtils
-import bio.ferlab.fhir.etl.s3.S3Utils.{buildKey, buildS3Client, writeFile}
-import ca.uhn.fhir.rest.client.impl.GenericClient
+import bio.ferlab.fhir.etl.s3.S3Utils.{buildKey, writeFile}
+import ca.uhn.fhir.rest.client.api.IGenericClient
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
 import org.hl7.fhir.r4.model.{Bundle, DomainResource, ResearchStudy}
@@ -19,13 +18,9 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters._
 
-class FhavroExporter(config: Config, releaseId: String, studyId: String) {
+class FhavroExporter(bucketName:String, releaseId: String, studyId: String)(implicit val s3Client: S3Client, val fhirClient: IGenericClient) {
 
   val LOGGER: Logger = LoggerFactory.getLogger(getClass)
-
-  implicit val s3Client: S3Client = buildS3Client(config.awsConfig)
-
-  implicit val fhirClient: GenericClient = buildFhirClient(config);
 
   def requestExportFor(request: FhirRequest): List[DomainResource] = {
     LOGGER.info(s"Requesting Export for ${request.`type`}")
@@ -56,15 +51,15 @@ class FhavroExporter(config: Config, releaseId: String, studyId: String) {
     resources.toList
   }
 
-  def uploadFiles(fhirRequest: FhirRequest, schemaPath: String, resources: List[DomainResource], releaseId: String, studyId: String): Unit = {
+  def uploadFiles(fhirRequest: FhirRequest, resources: List[DomainResource]): Unit = {
     LOGGER.info(s"Converting resource(s): ${fhirRequest.`type`}")
     val key = buildKey(fhirRequest,releaseId, studyId)
-    val file = convertResources(fhirRequest, schemaPath, resources)
-    writeFile(config.awsConfig.bucketName, key, file)
+    val file = convertResources(fhirRequest, resources)
+    writeFile(bucketName, key, file)
     LOGGER.info(s"Uploaded ${fhirRequest.schema} successfully!")
   }
 
-  def convertResources(fhirRequest: FhirRequest, schemaPath: String, resources: List[DomainResource]): File = {
+  def convertResources(fhirRequest: FhirRequest, resources: List[DomainResource]): File = {
     val resourceName = fhirRequest.`type`.toLowerCase
 
     LOGGER.info(s"--- Loading schema: ${fhirRequest.schema}")

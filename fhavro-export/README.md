@@ -35,26 +35,15 @@ Password: minioadmin
 <b>Note: The credentials needs to be defined as an environment variable when launching the app.
 This is to simulate the dockerized application</b>
 
-### Environment Variables (Mandatory)
-
-- `ENV` : The environment to read the configuration from
-- `AWS_ACCESS_KEY` : The access key
-- `AWS_SECRET_KEY` : The secret key
-- `AWS_REGION`     : The region
-
-Example of a setup in DEV with Minio for KidsFirst:
-- ENV=KFDRC-DEV;
-- AWS_REGION=us-east-1;
-- AWS_ACCESS_KEY=minioadmin;
-- AWS_SECRET_KEY=minioadmin;
-
 ### Arguments (Mandatory)
 
 1st argument: release id
 
 2nd argument: study ids separated by `;`
 
-Example : `RE_000001 SD_Z6MWD3H0;SD_Y6PXD3F0`
+3rd argument: environment
+
+Example : `RE_000001 SD_Z6MWD3H0;SD_Y6PXD3F0 include-qa`
 
 ### Launch the application?
 

@@ -2,6 +2,7 @@ package bio.ferlab.fhir.etl.centricTypes
 
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.v2.ETL
+import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
 import bio.ferlab.datalake.spark3.loader.GenericLoader.read
 import org.apache.spark.sql.functions.{array, coalesce, col, lit}
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -12,30 +13,17 @@ class StudyCentric(releaseId: String, studyIds: List[String])(implicit configura
 
   override val mainDestination: DatasetConf = conf.getDataset("es_index_study_centric")
   val normalized_researchstudy: DatasetConf = conf.getDataset("normalized_researchstudy")
-  val normalized_documentreference_drs_document_reference: DatasetConf = conf.getDataset("normalized_documentreference_drs-document-reference")
+  val normalized_drs_document_reference: DatasetConf = conf.getDataset("normalized_drs_document_reference")
   val normalized_patient: DatasetConf = conf.getDataset("normalized_patient")
   val normalized_group: DatasetConf = conf.getDataset("normalized_group")
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    Map(
-      normalized_researchstudy.id ->
-        read(s"${normalized_researchstudy.location}", "Parquet", Map(), None, None)
-          .where(col("release_id") === releaseId)
-          .where(col("study_id").isin(studyIds:_*)),
-      normalized_documentreference_drs_document_reference.id ->
-        read(s"${normalized_documentreference_drs_document_reference.location}", "Parquet", Map(), None, None)
-          .where(col("release_id") === releaseId)
-          .where(col("study_id").isin(studyIds:_*)),
-      normalized_patient.id ->
-        read(s"${normalized_patient.location}", "Parquet", Map(), None, None)
-          .where(col("release_id") === releaseId)
-          .where(col("study_id").isin(studyIds:_*)),
-      normalized_group.id ->
-        read(s"${normalized_group.location}", "Parquet", Map(), None, None)
-          .where(col("release_id") === releaseId)
-          .where(col("study_id").isin(studyIds:_*)),
-    )
+    Seq(normalized_researchstudy, normalized_drs_document_reference, normalized_patient, normalized_group)
+      .map(ds => ds.id -> ds.read.where(col("release_id") === releaseId)
+        .where(col("study_id").isin(studyIds: _*))
+      ).toMap
+
   }
 
   override def transform(data: Map[String, DataFrame],
@@ -44,7 +32,7 @@ class StudyCentric(releaseId: String, studyIds: List[String])(implicit configura
     val studyDF = data(normalized_researchstudy.id)
 
     val countPatientDf = data(normalized_patient.id).groupBy("study_id").count().withColumnRenamed("count", "participant_count")
-    val countFileDf = data(normalized_documentreference_drs_document_reference.id).groupBy("study_id").count().withColumnRenamed("count", "file_count")
+    val countFileDf = data(normalized_drs_document_reference.id).groupBy("study_id").count().withColumnRenamed("count", "file_count")
     val countFamilyDf = data(normalized_group.id).groupBy("study_id").count().withColumnRenamed("count", "family_count")
 
     val distinctOmics = Seq("TODO").toArray
