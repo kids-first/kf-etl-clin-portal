@@ -3,15 +3,12 @@ package bio.ferlab.fhir.etl
 import bio.ferlab.datalake.spark3.etl.v2.ETL
 import bio.ferlab.datalake.spark3.public.SparkApp
 import bio.ferlab.fhir.etl.fhavro.FhavroToNormalizedMappings
-import org.apache.spark.sql.functions.col
 
 object ImportTask extends SparkApp {
 
   println(s"ARGS: " + args.mkString("[", ", ", "]"))
 
   val Array(_, _, releaseId, studyIds) = args
-
-  lazy val expReleaseId = releaseId
 
   val studyList = studyIds.split(";").toList
 

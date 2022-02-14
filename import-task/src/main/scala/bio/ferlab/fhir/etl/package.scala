@@ -8,9 +8,7 @@ package object etl {
 
   //ResearchStudy
 
-
-  val SYS_NCBI_URL = "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id="
-
+  val SYS_NCBI_URL = "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin"
 
   //Patient
   val SYS_DATASERVICE_URL = Seq(s"$SYSTEM_URL_KF/participants", s"$SYSTEM_URL_INCLUDE/patient")

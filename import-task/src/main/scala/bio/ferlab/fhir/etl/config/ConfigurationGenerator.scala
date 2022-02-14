@@ -54,17 +54,17 @@ object ConfigurationGenerator extends App {
   )
 
   val sourceNames: Seq[(String, Option[String], List[String])] = Seq(
-//    ("observation", Some("family-relationship"), List("study_id", "release_id")),
-//    ("observation", Some("vital-status"), List("study_id", "release_id")),
-//    ("condition", Some("disease"), List("study_id", "release_id")),
-//    ("condition", Some("phenotype"), List("study_id", "release_id")),
-//    ("patient", None, List("study_id", "release_id")),
-//    ("group", None, List("study_id", "release_id")),
-//    ("documentreference", Some("drs-document-reference"), List("study_id", "release_id")),
-    ("researchstudy", None, List("study_id", "release_id")), //TODO
+    ("observation", Some("family-relationship"), List("study_id", "release_id")),
+    ("observation", Some("vital-status"), List("study_id", "release_id")),
+    ("condition", Some("disease"), List("study_id", "release_id")),
+    ("condition", Some("phenotype"), List("study_id", "release_id")),
+    ("patient", None, List("study_id", "release_id")),
+    ("group", None, List("study_id", "release_id")),
+    ("documentreference", Some("drs-document-reference"), List("study_id", "release_id")),
+    ("researchstudy", None, List("study_id", "release_id")),
     ("researchsubject", None, List("study_id", "release_id")),
-//    ("specimen", None, List("study_id", "release_id")),
-//    ("organization", None, List("release_id")),
+    ("specimen", None, List("study_id", "release_id")),
+    ("organization", None, List("release_id")),
   )
 
   val sources = sourceNames.flatMap(sn => {

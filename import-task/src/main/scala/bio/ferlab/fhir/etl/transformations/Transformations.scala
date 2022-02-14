@@ -25,17 +25,16 @@ object Transformations {
 
   val researchSubjectMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "release_id", "identifier")
+      .select("fhir_id", "release_id", "identifier", "study_id")
       .withColumn("external_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
-//      .withColumn("participant_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}participants/")("value"))
-      .withColumn("study_id", extractStudyId())
+      .withColumn("participant_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
     ),
     Drop("identifier")
   )
 
   val specimenMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "release_id", "type", "identifier", "collection", "subject", "status")
+      .select("fhir_id", "release_id", "study_id", "type", "identifier", "collection", "subject", "status")
       // TODO age_at_event_days
       // TODO analyte_type
       .withColumn("composition", col("type")("text"))
@@ -45,7 +44,7 @@ object Transformations {
       // TODO duo_ids
       // TODO dbgap_consent_code
       // TODO external_sample_id
-//      .withColumn("specimen_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}biospecimens/")("value"))
+      .withColumn("specimen_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
       .withColumn("external_aliquot_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
       .withColumn("method_of_sample_procurement", col("collection")("method")("coding"))
       // TODO modified_at
@@ -62,7 +61,6 @@ object Transformations {
       .withColumn("volume_ul", col("collection")("quantity")("value"))
       .withColumn("volume_ul_unit", col("collection")("quantity")("unit"))
       // TODO visible
-      .withColumn("study_id", extractStudyId())
     ),
     Drop("type", "identifier", "collection", "subject")
   )
@@ -73,7 +71,7 @@ object Transformations {
       .withColumn("participant_fhir_id", extractReferenceId( col("subject")("reference")))
       .withColumn("vital_status", col("valueCodeableConcept")("text"))
       .withColumn("study_id", extractStudyId())
-//      .withColumn("observation_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}outcomes/")("value"))
+      .withColumn("observation_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
       .withColumn("age_at_event_days", struct(
         col("_effectiveDateTime")("effectiveDateTime")("offset")("value") as "value",
         col("_effectiveDateTime")("effectiveDateTime")("offset")("unit") as "units",
@@ -144,8 +142,8 @@ object Transformations {
 
   val organizationMappings: List[Transformation] = List(
     Custom(_
-      .select( "fhir_id", "release_id","identifier", "name")
-//      .withColumn("organization_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}sequencing-centers/")("value"))
+      .select( "fhir_id", "release_id", "study_id","identifier", "name")
+      .withColumn("organization_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
       .withColumn("institution", col("name"))
     ),
     Drop("identifier", "name")
@@ -153,12 +151,12 @@ object Transformations {
 
   val researchstudyMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "keyword", "release_id","title", "identifier", "principalInvestigator", "status")
-//      .withColumn("attribution", extractFirstForSystem(col("identifier"), SYS_NCBI_URL)("value"))
+      .select("fhir_id", "keyword", "release_id", "study_id","title", "identifier", "principalInvestigator", "status")
+      .withColumn("attribution", extractFirstForSystem(col("identifier"), Seq(SYS_NCBI_URL))("value"))
       // TODO data_access_authority
-//      .withColumn("external_id", extractStudyExternalId(extractFirstForSystem(col("identifier"), SYS_NCBI_URL)("value")))
+      .withColumn("external_id", extractStudyExternalId(extractFirstForSystem(col("identifier"), Seq(SYS_NCBI_URL))("value")))
       .withColumnRenamed("title", "name")
-//      .withColumn("version", extractStudyVersion(extractFirstForSystem(col("identifier"), SYS_NCBI_URL)("value")))
+      .withColumn("version", extractStudyVersion(extractFirstForSystem(col("identifier"), Seq(SYS_NCBI_URL))("value")))
       .withColumn(
         "investigator_id",
         regexp_extract(col("principalInvestigator")("reference"), patternPractitionerRoleResearchStudy, 1)
@@ -167,7 +165,6 @@ object Transformations {
       .withColumn("study_code", col("keyword")(1)("coding")(0)("code"))
       // TODO domain
       .withColumn("program", col("keyword")(0)("coding")(0)("code"))
-//      .withColumn("study_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}studies/")("value"))
     ),
     Drop("title", "identifier", "principalInvestigator", "keyword")
   )
@@ -175,7 +172,7 @@ object Transformations {
   val documentreferenceMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id","study_id", "release_id", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus")
-      .withColumn("acl", extractAclFromList(col("securityLabel")("text")))
+      .withColumn("acl", extractAclFromList(col("securityLabel")("text"), col("study_id")))
       .withColumn("access_urls", col("content")("attachment")("url")(0))
       // TODO availability
       .withColumn("access", retrieveIsControlledAccess(col("securityLabel")(0)("coding")(0)("code")))
@@ -205,8 +202,7 @@ object Transformations {
     Custom(_
       .select("*")
       .withColumn("external_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
-//      .withColumn("family_id", extractFirstForSystem(col("identifier"), s"${SYS_DATASERVICE_URL}families/")("value"))
-      .withColumn("study_id", extractStudyId())
+      .withColumn("family_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
       .withColumn("exploded_member", explode(col("member")))
       .withColumn("exploded_member_entity", extractReferenceId(col("exploded_member")("entity")("reference")))
       .withColumn("exploded_member_inactive", col("exploded_member")("inactive"))
