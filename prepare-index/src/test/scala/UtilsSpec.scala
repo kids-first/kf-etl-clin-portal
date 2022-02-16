@@ -59,7 +59,11 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
       GROUP(`fhir_id` = "222", `family_id` = "FM_222", `family_members` = Seq(("22", false)), `family_members_id` = Seq("22"))
     ).toDF()
 
-    val output = inputPatients.addFamily(inputFamilies)
+    val inputFamilyRelationship = Seq(
+      FAMILY_RELATIONSHIP()
+    ).toDF() //TODO fix this test
+
+    val output = inputPatients.addFamily(inputFamilies, inputFamilyRelationship)
 
     val patientWithFamilies = output.select("fhir_id", "families").as[(String, Seq[FAMILY])].collect()
 
