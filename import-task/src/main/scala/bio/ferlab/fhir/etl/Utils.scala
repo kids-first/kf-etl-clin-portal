@@ -1,13 +1,14 @@
 package bio.ferlab.fhir.etl
 
+//import bio.ferlab.fhir.etl.ImportTask.expReleaseId
 import org.apache.spark.sql.expressions.UserDefinedFunction
-import org.apache.spark.sql.{Column, functions}
 import org.apache.spark.sql.functions.{col, filter, regexp_extract, udf}
+import org.apache.spark.sql.{Column, functions}
 
 object Utils {
 
   val actCodeR = "^phs[0-9.a-z]+"
-  val studyCodePattern = "^SD_[0-9A-Za-z]+"
+  val extractSystemUrl = "^(http[s]?:\\/\\/[A-Za-z0-9-.\\/]+)\\/[A-za-z0-9-?.]+[a-z\\/=]{1}$"
   val gen3Host = "data.kidsfirstdrc.org"
   val dcfHost = "api.gdc.cancer.gov"
   val patternUrnUniqueIdStudy = "[A-Z][a-z]+-(SD_[0-9A-Za-z]+)-([A-Z]{2}_[0-9A-Za-z]+)"
@@ -24,15 +25,16 @@ object Utils {
   }
 
   val extractAclFromList: UserDefinedFunction =
-    udf((arr: Seq[String]) => arr.filter(e => (e matches actCodeR) || (e matches studyCodePattern)))
+    udf((arr: Seq[String], studyId: String) => arr.filter(e => (e matches actCodeR) || (e == studyId) ))
 
-  val extractReferencesId = (column: Column) => functions.transform(column, c => functions.split(c, "/")(1))
+  val extractReferencesId: Column => Column = (column: Column) => functions.transform(column, c => functions.split(c, "/")(1))
 
-  val extractReferenceId = (column: Column) => functions.split(column, "/")(1)
+  val extractReferenceId: Column => Column = (column: Column) => functions.split(column, "/")(1)
 
-  val extractStudyId = () => regexp_extract(extractFirstForSystem(col("identifier"), URN_UNIQUE_ID)("value"), patternUrnUniqueIdStudy, 1)
+  val extractStudyId: () => Column = () => regexp_extract(extractFirstForSystem(col("identifier"), Seq(URN_UNIQUE_ID))("value"), patternUrnUniqueIdStudy, 1)
 
-  val extractFirstForSystem = (column: Column, system: String) => filter(column, c => c("system") === system)(0)
+  val extractFirstForSystem = (column: Column, system: Seq[String]) => filter(column, c => regexp_extract(c("system"), extractSystemUrl, 1).isin(system: _*))(0)
+
 
   val codingClassify: UserDefinedFunction =
     udf((arr: Seq[(String, String, String, String, String, String)]) => arr.map(r => (codingSystemClassify(r._2), r._4)))

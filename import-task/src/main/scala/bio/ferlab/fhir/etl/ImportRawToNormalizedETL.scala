@@ -21,7 +21,8 @@ class ImportRawToNormalizedETL (override val source: DatasetConf,
     Map(source.id -> spark.read.format(source.format.sparkFormat)
       .options(source.readoptions).load(source.location)
       .where(col("release_id") === releaseId)
-      .where(col("study_id").isin(studyIds:_*)))
+      .where(col("study_id").isin(studyIds:_*))
+    )
   }
 
 }

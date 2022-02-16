@@ -114,7 +114,7 @@ object ConfigurationGenerator extends App {
     sparkconf = spark_conf
   )
 
-  ConfigurationWriter.writeTo("src/main/resources/config/dev.conf", local_conf)
-  ConfigurationWriter.writeTo("src/main/resources/config/qa.conf", qa_conf)
-  ConfigurationWriter.writeTo("src/main/resources/config/prd.conf", prd_conf)
+  ConfigurationWriter.writeTo("import-task/src/main/resources/config/dev.conf", local_conf)
+  ConfigurationWriter.writeTo("import-task/src/main/resources/config/qa.conf", qa_conf)
+  ConfigurationWriter.writeTo("import-task/src/main/resources/config/prd.conf", prd_conf)
 }
