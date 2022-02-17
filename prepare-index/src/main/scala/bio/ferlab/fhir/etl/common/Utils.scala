@@ -242,7 +242,7 @@ object Utils {
     }
 
     def addFamily(familyDf: DataFrame, familyRelationshipDf: DataFrame): DataFrame = {
-      val familyRelationshipCols = Seq("family_fhir_id", "family_id", "type", "family_members", "family_members_id")
+      val familyRelationshipCols = Seq("family_id", "type", "family_members", "family_members_id")
 
       val cleanFamilyRelationshipDf = familyRelationshipDf
         .drop("study_id", "release_id", "fhir_id")
@@ -254,7 +254,7 @@ object Utils {
         .withColumnRenamed("family_members_id_exp", "participant1_fhir_id")
         .withColumnRenamed("fhir_id", "family_fhir_id")
 
-      val cols = df.columns ++ familyRelationshipCols
+      val cols = df.columns ++ familyRelationshipCols :+ "family_fhir_id"
 
       df.join(reformatFamily, col("fhir_id") === col("participant2_fhir_id"), "left_outer")
         .drop("participant2_fhir_id")
@@ -271,11 +271,15 @@ object Utils {
         )
         .withColumn("family", when(col("family_fhir_id").isNotNull,
           struct(
-            familyRelationshipCols :+ "family_relations" map col : _*
+            col("family_fhir_id") as "fhir_id",
+            col("family_id"),
+            col("type"),
+            col("family_members_id"),
+            col("family_relations")
           )
         ))
         .withColumn("family_type", getFamilyType(col("family_relations"), col("family_members_id")))
-        .drop(familyRelationshipCols :+ "family_relations": _*)
+        .drop(familyRelationshipCols :+ "family_relations" :+ "family_fhir_id": _*)
     }
   }
 }

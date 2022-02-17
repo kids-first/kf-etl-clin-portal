@@ -48,7 +48,8 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
               `participant_fhir_ids` = Seq("1"),
               `specimen_fhir_ids` = Seq.empty,
               `biospecimens` = Seq.empty
-            ))),
+            ))
+        ),
         PARTICIPANT_CENTRIC(
           `fhir_id` = "2",
           `files` = Seq(
