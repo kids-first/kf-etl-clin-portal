@@ -15,11 +15,10 @@ case class PARTICIPANT_WITH_BIOSPECIMEN(
                                          `diagnosis`: Seq[DIAGNOSIS] = Seq.empty,
                                          `mondo`: Seq[PHENOTYPE_MONDO] = Seq.empty,
                                          `outcomes`: Seq[OUTCOME] = Seq.empty,
-                                         `families_id`: Seq[String] = Seq.empty,
-                                         `families`: Seq[FAMILY] = Seq.empty,
+                                         `family`: FAMILY = null,
+                                         `family_type`: String = "probant_only",
                                          `karyotype`: String = "TODO",
                                          `down_syndrome_diagnosis`: String = "TODO",
-                                         `family_type`: String = "TODO",
                                          `is_proband`: Boolean = false, // TODO
                                          `age_at_data_collection`: Int = 111, // TODO
                                          `biospecimens`: Seq[BIOSPECIMEN] = Seq.empty

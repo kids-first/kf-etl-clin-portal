@@ -51,26 +51,35 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     val inputPatients = Seq(
       PATIENT(`fhir_id` = "11"),
       PATIENT(`fhir_id` = "22"),
-      PATIENT(`fhir_id` = "33")
+      PATIENT(`fhir_id` = "33"),
+      PATIENT(`fhir_id` = "44")
+
     ).toDF()
 
     val inputFamilies = Seq(
-      GROUP(`fhir_id` = "111", `family_id` = "FM_111", `family_members` = Seq(("11", false), ("22", false)), `family_members_id` = Seq("11", "22")),
-      GROUP(`fhir_id` = "222", `family_id` = "FM_222", `family_members` = Seq(("22", false)), `family_members_id` = Seq("22"))
+      GROUP(`fhir_id` = "111", `family_id` = "FM_111", `family_members` = Seq(("11", false), ("22", false), ("33", false)), `family_members_id` = Seq("11", "22", "33")),
+      GROUP(`fhir_id` = "222", `family_id` = "FM_222", `family_members` = Seq(("44", false)), `family_members_id` = Seq("44"))
     ).toDF()
 
-    val output = inputPatients.addFamily(inputFamilies)
+    val inputFamilyRelationship = Seq(
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "22", `participant2_fhir_id` = "33", `participant1_to_participant_2_relationship` = "father"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "11", `participant2_fhir_id` = "33", `participant1_to_participant_2_relationship` = "mother"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "33", `participant2_fhir_id` = "11", `participant1_to_participant_2_relationship` = "son"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "33", `participant2_fhir_id` = "22", `participant1_to_participant_2_relationship` = "son"),
+    ).toDF()
 
-    val patientWithFamilies = output.select("fhir_id", "families").as[(String, Seq[FAMILY])].collect()
-
-    val patient1 = patientWithFamilies.filter(_._1 == "11").head
-    patient1._2.map(_.`fhir_id`) == Seq("111")
-
-    val patient2 = patientWithFamilies.filter(_._1 == "22").head
-    patient2._2.map(_.`fhir_id`) == Seq("111", "222")
+    val output = inputPatients.addFamily(inputFamilies, inputFamilyRelationship)
+    output.show(false)
+    val patientWithFamilies = output.select("fhir_id", "family").as[(String, FAMILY)].collect()
 
     val patient3 = patientWithFamilies.filter(_._1 == "33").head
-    patient3._2.isEmpty shouldBe true
+    patient3._2.family_relations.map(_.`relation`) shouldBe Seq("mother", "father")
+
+    val patient1 = patientWithFamilies.filter(_._1 == "11").head
+    patient1._2.family_relations.map(_.`relation`) shouldBe Seq("son")
+
+    val patient4 = patientWithFamilies.filter(_._1 == "44").head
+    patient4._2 shouldBe null
   }
 
   "addDiagnosisPhenotypes" should "group phenotypes by observed or non-observed" in {

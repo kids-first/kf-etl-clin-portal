@@ -16,11 +16,6 @@ object PrepareIndex extends SparkApp {
 
   jobName match {
     case "study_centric" => new StudyCentric(releaseId, studyList).run()
-    case "file_centric" => {
-      new StudyCentric(releaseId, studyList).run()
-      new SimpleParticipant(releaseId, studyList).run()
-      new FileCentric(releaseId, studyList).run()
-    }
     case "participant_centric" => {
       new StudyCentric(releaseId, studyList).run()
       new SimpleParticipant(releaseId, studyList).run()

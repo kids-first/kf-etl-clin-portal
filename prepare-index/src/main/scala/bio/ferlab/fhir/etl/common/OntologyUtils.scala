@@ -1,6 +1,6 @@
 package bio.ferlab.fhir.etl.common
 
-import bio.ferlab.fhir.etl.common.Utils.{hpoPhenotype, observableTiteStandard}
+import bio.ferlab.fhir.etl.common.Utils.{hpoPhenotype, observableTitleStandard}
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions._
@@ -31,7 +31,7 @@ object OntologyUtils {
       )
       .withColumn("mondo_id_diagnosis",
         when(col("exploded_condition_coding")("category") === "MONDO",
-          observableTiteStandard(col("exploded_condition_coding")("code")))
+          observableTitleStandard(col("exploded_condition_coding")("code")))
       )
       .withColumn("ncit_id_diagnosis",
         when(col("exploded_condition_coding")("category") === "NCIT",
@@ -66,7 +66,7 @@ object OntologyUtils {
       .withColumn("hpo_phenotype_observed_text", col("phenotype_code_text")("_3"))
       .withColumn("hpo_phenotype_not_observed_text", col("phenotype_code_text")("_4"))
       .withColumn("observed_bool", col("phenotype_code_text")("_5"))
-      .withColumn("observable_term", observableTiteStandard(col("condition_coding")(0)("code")))
+      .withColumn("observable_term", observableTitleStandard(col("condition_coding")(0)("code")))
       .withColumn("age_at_event_days", col("phenotype_code_text")("_6"))
   }
 

@@ -14,8 +14,16 @@ object Utils {
       case _ => (null, s"$source_text ($code)", null, source_text, false, age_at_event_days)
     })
 
-  val observableTiteStandard: UserDefinedFunction =
+  val observableTitleStandard: UserDefinedFunction =
     udf((term: String) => term.trim.replace("_", ":"))
+
+  val getFamilyType: UserDefinedFunction =
+    udf((arr: Seq[(String, String)], members: Seq[String]) => arr.map(_._2) match {
+      case l if l.contains("mother") && l.contains("father") => if (members.length > 3) "trio+" else "trio"
+      case l if l.contains("mother") || l.contains("father") => if (members.length > 2) "duo+" else "duo"
+      case l if l.isEmpty => "proband-only"
+      case _ => "other"
+    })
 
 
   implicit class DataFrameOperations(df: DataFrame) {
@@ -233,16 +241,45 @@ object Utils {
       df.join(reformatParticipant, "participant_fhir_id")
     }
 
-    def addFamily(familyDf: DataFrame): DataFrame = {
-      val reformatFamily: DataFrame = familyDf
-        .withColumn("family", struct(familyDf.columns.map(col): _*))
-        .select("family_members_id", "family_id", "family")
+    def addFamily(familyDf: DataFrame, familyRelationshipDf: DataFrame): DataFrame = {
+      val familyRelationshipCols = Seq("family_id", "type", "family_members", "family_members_id")
 
-      val groupCols = df.columns.diff(Seq("family_id", "family"))
+      val cleanFamilyRelationshipDf = familyRelationshipDf
+        .drop("study_id", "release_id", "fhir_id")
 
-      df.join(reformatFamily, expr("array_contains(family_members_id,fhir_id)"), "left_outer")
-        .groupBy(groupCols.map(col): _*)
-        .agg(collect_list("family_id") as "families_id", collect_list(col("family").dropFields("family_members_id", "release_id")) as "families")
+      val reformatFamily = familyDf
+        .withColumn(s"family_members_id_exp", explode(col("family_members_id")))
+        .join(cleanFamilyRelationshipDf, col("participant1_fhir_id") === col("family_members_id_exp"), "left_outer")
+        .drop("observation_id", "participant1_fhir_id", "fam_relationship_fhir_id", "study_id", "release_id", "external_id")
+        .withColumnRenamed("family_members_id_exp", "participant1_fhir_id")
+        .withColumnRenamed("fhir_id", "family_fhir_id")
+
+      val cols = df.columns ++ familyRelationshipCols :+ "family_fhir_id"
+
+      df.join(reformatFamily, col("fhir_id") === col("participant2_fhir_id"), "left_outer")
+        .drop("participant2_fhir_id")
+        .groupBy(cols.map(col): _*)
+        .agg(
+          collect_list(
+            when(col("participant1_fhir_id").isNotNull,
+              struct(
+                col("participant1_fhir_id") as "related_participant_id",
+                col("participant1_to_participant_2_relationship") as "relation"
+              )
+            )
+          ) as "family_relations"
+        )
+        .withColumn("family", when(col("family_fhir_id").isNotNull,
+          struct(
+            col("family_fhir_id") as "fhir_id",
+            col("family_id"),
+            col("type"),
+            col("family_members_id"),
+            col("family_relations")
+          )
+        ))
+        .withColumn("family_type", getFamilyType(col("family_relations"), col("family_members_id")))
+        .drop(familyRelationshipCols :+ "family_relations" :+ "family_fhir_id": _*)
     }
   }
 }

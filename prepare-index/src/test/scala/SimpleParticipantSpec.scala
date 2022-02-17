@@ -15,11 +15,18 @@ class SimpleParticipantSpec extends FlatSpec with Matchers with WithSparkSession
     val data: Map[String, DataFrame] = Map(
       "normalized_patient" -> Seq(
         PATIENT(`fhir_id` = "P1"),
-        PATIENT(`fhir_id` = "P2")
+        PATIENT(`fhir_id` = "P2"),
+        PATIENT(`fhir_id` = "P3")
       ).toDF(),
       "normalized_observation_vital-status" -> Seq(
         OBSERVATION_VITAL_STATUS(`fhir_id` = "O1", `participant_fhir_id` = "P1"),
         OBSERVATION_VITAL_STATUS(`fhir_id` = "O2", `participant_fhir_id` = "P2")
+      ).toDF(),
+      "normalized_observation_family-relationship" -> Seq(
+        OBSERVATION_FAMILY_RELATIONSHIP(`fhir_id` = "O1", `participant1_fhir_id` = "P1", `participant2_fhir_id` = "P3"),
+        OBSERVATION_FAMILY_RELATIONSHIP(`fhir_id` = "O2", `participant1_fhir_id` = "P2", `participant2_fhir_id` = "P3", `participant1_to_participant_2_relationship` = "father"),
+        OBSERVATION_FAMILY_RELATIONSHIP(`fhir_id` = "O2", `participant1_fhir_id` = "P3", `participant2_fhir_id` = "P1", `participant1_to_participant_2_relationship` = "son"),
+        OBSERVATION_FAMILY_RELATIONSHIP(`fhir_id` = "O2", `participant1_fhir_id` = "P3", `participant2_fhir_id` = "P2", `participant1_to_participant_2_relationship` = "son")
       ).toDF(),
       "normalized_condition_phenotype" -> Seq(
         CONDITION_PHENOTYPE(`fhir_id` = "CP1", `participant_fhir_id` = "P1", condition_coding = Seq(CONDITION_CODING(`category` = "HPO", `code` = "HP_0001631")), observed = "positive"),
@@ -30,8 +37,7 @@ class SimpleParticipantSpec extends FlatSpec with Matchers with WithSparkSession
         CONDITION_DISEASE(`fhir_id` = "CD2", `participant_fhir_id` = "P2", condition_coding = Seq(CONDITION_CODING(`category` = "ICD", `code` = "Q90.9"))),
       ).toDF(),
       "normalized_group" -> Seq(
-        GROUP(`fhir_id` = "G1", `family_members` = Seq(("P1", false)), `family_members_id` = Seq("P1")),
-        GROUP(`fhir_id` = "G2", `family_members` = Seq(("P2", false)), `family_members_id` = Seq("P2"))
+        GROUP(`fhir_id` = "G1", `family_members` = Seq(("P1", false), ("P2", false), ("P3", false)), `family_members_id` = Seq("P1", "P2", "P3")),
       ).toDF(),
       "hpo_terms" -> read(getClass.getResource("/hpo_terms.json").toString, "Json", Map(), None, None),
       "mondo_terms" -> read(getClass.getResource("/mondo_terms.json").toString, "Json", Map(), None, None)
@@ -63,8 +69,8 @@ class SimpleParticipantSpec extends FlatSpec with Matchers with WithSparkSession
           `mondo` = null,
           `diagnosis` = Seq(DIAGNOSIS(`fhir_id` = "CD1", `icd_id_diagnosis` = "Q90.9")),
           `outcomes` = Seq(OUTCOME(`fhir_id` = "O1", `participant_fhir_id` = "P1")),
-          `families` = Seq(FAMILY(`fhir_id` = "G1", `family_members` = Seq(("P1", false)))),
-          `families_id` = Seq(FAMILY().`family_id`)
+          `family` = FAMILY(`fhir_id` = "G1", `family_members_id`= Seq("P1", "P2", "P3"), `family_relations` = Seq(FAMILY_RELATIONS("P3", "son"))),
+          `family_type` = "other"
         ),
         SIMPLE_PARTICIPANT(
           `fhir_id` = "P2",
@@ -74,8 +80,19 @@ class SimpleParticipantSpec extends FlatSpec with Matchers with WithSparkSession
           `mondo` = null,
           `diagnosis` = Seq(DIAGNOSIS(`fhir_id` = "CD2", `icd_id_diagnosis` = "Q90.9")),
           `outcomes` = Seq(OUTCOME(`fhir_id` = "O2", `participant_fhir_id` = "P2")),
-          `families` = Seq(FAMILY(`fhir_id` = "G2", `family_members` = Seq(("P2", false)))),
-          `families_id` = Seq(FAMILY().`family_id`)
+          `family` = FAMILY(`fhir_id` = "G1", `family_members_id`= Seq("P1", "P2", "P3"), `family_relations` = Seq(FAMILY_RELATIONS("P3", "son"))),
+          `family_type` = "other"
+        ),
+        SIMPLE_PARTICIPANT(
+          `fhir_id` = "P3",
+          `phenotype` = Nil,
+          `observed_phenotype` = null,
+          `non_observed_phenotype` = null,
+          `mondo` = null,
+          `diagnosis` = null,
+          `outcomes` = Nil,
+          `family` = FAMILY(`fhir_id` = "G1", `family_members_id`= Seq("P1", "P2", "P3"), `family_relations` = Seq(FAMILY_RELATIONS("P2", "father"), FAMILY_RELATIONS("P1", "mother"))),
+          `family_type` = "trio"
         ),
       )
   }
