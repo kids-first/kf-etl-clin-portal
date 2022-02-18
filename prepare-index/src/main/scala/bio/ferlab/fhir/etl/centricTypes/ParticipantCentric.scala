@@ -13,7 +13,6 @@ class ParticipantCentric(releaseId: String, studyIds: List[String])(implicit con
 
   override val mainDestination: DatasetConf = conf.getDataset("es_index_participant_centric")
   val simple_participant: DatasetConf = conf.getDataset("simple_participant")
-  val es_index_study_centric: DatasetConf = conf.getDataset("es_index_study_centric")
   val normalized_documentreference_drs_document_reference: DatasetConf = conf.getDataset("normalized_documentreference_drs-document-reference")
   val normalized_specimen: DatasetConf = conf.getDataset("normalized_specimen")
 
@@ -22,10 +21,6 @@ class ParticipantCentric(releaseId: String, studyIds: List[String])(implicit con
     Map(
       simple_participant.id ->
         read(s"${simple_participant.location}", "Parquet", Map(), None, None)
-          .where(col("release_id") === releaseId)
-          .where(col("study_id").isin(studyIds:_*)),
-      es_index_study_centric.id ->
-        read(s"${es_index_study_centric.location}", "Parquet", Map(), None, None)
           .where(col("release_id") === releaseId)
           .where(col("study_id").isin(studyIds:_*)),
       normalized_documentreference_drs_document_reference.id ->
@@ -46,9 +41,7 @@ class ParticipantCentric(releaseId: String, studyIds: List[String])(implicit con
 
     val transformedParticipant =
       patientDF
-        .addStudy(data(es_index_study_centric.id))
         .addParticipantFilesWithBiospecimen(data(normalized_documentreference_drs_document_reference.id), data(normalized_specimen.id))
-        .withColumn("study_external_id", col("study")("external_id"))
 
     transformedParticipant.show(false)
     Map(mainDestination.id -> transformedParticipant)
