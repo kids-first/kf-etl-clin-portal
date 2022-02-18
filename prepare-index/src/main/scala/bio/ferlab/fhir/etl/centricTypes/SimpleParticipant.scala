@@ -12,6 +12,7 @@ import java.time.LocalDateTime
 class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETL {
 
   override val mainDestination: DatasetConf = conf.getDataset("simple_participant")
+  val es_index_study_centric: DatasetConf = conf.getDataset("es_index_study_centric")
   val normalized_patient: DatasetConf = conf.getDataset("normalized_patient")
   val normalized_observation_vital_status: DatasetConf = conf.getDataset("normalized_observation_vital-status")
   val normalized_observation_family_relationship: DatasetConf = conf.getDataset("normalized_observation_family-relationship")
@@ -24,6 +25,10 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     Map(
+      es_index_study_centric.id ->
+        read(s"${es_index_study_centric.location}", "Parquet", Map(), None, None)
+          .where(col("release_id") === releaseId)
+          .where(col("study_id").isin(studyIds:_*)),
       normalized_patient.id ->
         read(s"${normalized_patient.location}", "Parquet", Map(), None, None)
           .where(col("release_id") === releaseId)
@@ -60,6 +65,7 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
 
     val transformedParticipant =
       patientDF
+        .addStudy(data(es_index_study_centric.id))
         .addDiagnosisPhenotypes(
           data(normalized_condition_phenotype.id),
           data(normalized_condition_disease.id)
@@ -71,6 +77,7 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
         .withColumn("down_syndrome_diagnosis", lit("TODO"))
         .withColumn("is_proband", lit(false)) // TODO
         .withColumn("age_at_data_collection", lit(111)) // TODO
+        .withColumn("study_external_id", col("study")("external_id"))
         .drop("outcomes") //FIXME
 
     transformedParticipant.show(false)

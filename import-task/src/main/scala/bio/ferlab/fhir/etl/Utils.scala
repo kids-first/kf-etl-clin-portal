@@ -12,6 +12,8 @@ object Utils {
   val gen3Host = "data.kidsfirstdrc.org"
   val dcfHost = "api.gdc.cancer.gov"
   val patternUrnUniqueIdStudy = "[A-Z][a-z]+-(SD_[0-9A-Za-z]+)-([A-Z]{2}_[0-9A-Za-z]+)"
+  val documentReferenceExtract = "^DocumentReference\\/([0-9]+)$"
+  val specimenExtract = "^Specimen\\/([0-9]+)$"
 
 
   private def codingSystemClassify(url: String) = {

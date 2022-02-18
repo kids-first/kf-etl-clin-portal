@@ -65,6 +65,7 @@ object ConfigurationGenerator extends App {
     ("researchsubject", None, List("study_id", "release_id")),
     ("specimen", None, List("study_id", "release_id")),
     ("organization", None, List("release_id")),
+    ("task", None, List("study_id", "release_id")),
   )
 
   val sources = sourceNames.flatMap(sn => {

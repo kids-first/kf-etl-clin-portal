@@ -68,6 +68,7 @@ class FhavroExporter(config: Config, releaseId: String, studyId: String) {
     val resourceName = fhirRequest.`type`.toLowerCase
 
     LOGGER.info(s"--- Loading schema: ${fhirRequest.schema}")
+    println(fhirRequest.schema)
     val schema = Fhavro.loadSchemaFromResources(s"schema/${fhirRequest.schema}.avsc")
 
     LOGGER.info(s"--- Converting $resourceName to GenericRecord(s)")
