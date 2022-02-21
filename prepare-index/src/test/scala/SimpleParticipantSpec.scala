@@ -39,6 +39,7 @@ class SimpleParticipantSpec extends FlatSpec with Matchers with WithSparkSession
       "normalized_group" -> Seq(
         GROUP(`fhir_id` = "G1", `family_members` = Seq(("P1", false), ("P2", false), ("P3", false)), `family_members_id` = Seq("P1", "P2", "P3")),
       ).toDF(),
+      "es_index_study_centric" -> Seq(STUDY_CENTRIC()).toDF(),
       "hpo_terms" -> read(getClass.getResource("/hpo_terms.json").toString, "Json", Map(), None, None),
       "mondo_terms" -> read(getClass.getResource("/mondo_terms.json").toString, "Json", Map(), None, None)
     )

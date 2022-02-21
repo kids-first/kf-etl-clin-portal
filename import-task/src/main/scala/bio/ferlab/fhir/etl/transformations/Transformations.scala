@@ -167,8 +167,8 @@ object Transformations {
       )
       .withColumn(
         "experiment_strategy", transform(
-          filter(col("input"), c => c("type")("text") === "experiment_strategy"), c => c("valueString") //TODO is this an array???
-        )
+          filter(col("input"), c => c("type")("text") === "experiment_strategy"), c => c("valueString")
+        )(0)
       )
       .withColumn(
         "instrument_model", transform(

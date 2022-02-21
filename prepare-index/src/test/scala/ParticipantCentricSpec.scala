@@ -24,6 +24,9 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
         BIOSPECIMEN(`fhir_id` = "111", `participant_fhir_id` = "1"),
         BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2")
       ).toDF(),
+      "normalized_task" -> Seq(
+        SEQUENCING_EXPERIMENT(),
+      ).toDF(),
       "es_index_study_centric" -> Seq(STUDY_CENTRIC()).toDF(),
     )
 

@@ -69,7 +69,6 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val output = inputPatients.addFamily(inputFamilies, inputFamilyRelationship)
-    output.show(false)
     val patientWithFamilies = output.select("fhir_id", "family").as[(String, FAMILY)].collect()
 
     val patient3 = patientWithFamilies.filter(_._1 == "33").head
@@ -288,7 +287,11 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
       DOCUMENTREFERENCE(`participant_fhir_ids` = Seq("P_NOT_THERE"), `fhir_id` = "F7", `specimen_fhir_ids` = Seq.empty),
     ).toDF()
 
-    val output = inputParticipant.addParticipantFilesWithBiospecimen(inputDocumentReference, inputBiospecimen)
+    val inputSequencingExperiments = Seq(
+      SEQUENCING_EXPERIMENT() //TODO
+    ).toDF()
+
+    val output = inputParticipant.addParticipantFilesWithBiospecimen(inputDocumentReference, inputBiospecimen, inputSequencingExperiments)
 
     val participantWithFileAndSpecimen = output.select("fhir_id", "files").as[(String, Seq[FILE_WITH_BIOSPECIMEN])].collect()
 
