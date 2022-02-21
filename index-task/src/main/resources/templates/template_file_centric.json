@@ -315,6 +315,7 @@
           "type": "keyword"
         },
         "study": {
+          "type": "nested",
           "properties" : {
             "attribution" : {
               "type": "keyword"

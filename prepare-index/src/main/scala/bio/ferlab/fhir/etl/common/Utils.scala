@@ -137,18 +137,40 @@ object Utils {
 
     }
 
-    def addParticipantFilesWithBiospecimen(filesDf: DataFrame, biospecimensDf: DataFrame): DataFrame = {
+    def addParticipantFilesWithBiospecimen(filesDf: DataFrame, biospecimensDf: DataFrame, sequencingExperimentDf: DataFrame): DataFrame = {
+      val sequencingExperimentCols = Seq("fhir_id", "sequencing_experiment_id", "experiment_strategy",
+        "instrument_model", "library_name", "library_strand", "platform")
+
+      val sequencingExperimentReformat = sequencingExperimentDf
+        .withColumnRenamed("task_id", "sequencing_experiment_id")
+        .withColumn("biospecimen_fhir_id", explode(col("document_reference_fhir_ids")))
+        .withColumn("sequencing_experiment", struct(
+          sequencingExperimentCols map col: _*
+        ))
+        .drop(sequencingExperimentCols ++
+          Seq("document_reference_fhir_ids", "biospecimen_fhir_ids", "study_id", "release_id") : _*)
+        .groupBy("biospecimen_fhir_id")
+        .agg(
+          collect_list(
+            col("sequencing_experiment")
+          ) as "sequencing_experiments"
+        )
+
       val biospecimenDfReformat = biospecimensDf
-        .withColumn("biospecimen", struct(biospecimensDf.columns.map(col): _*))
+        .join(sequencingExperimentReformat, col("biospecimen_fhir_id") === col("fhir_id"), "left_outer")
+        .withColumn("biospecimen", struct((biospecimensDf.columns :+ "sequencing_experiments").map(col): _*))
         .withColumnRenamed("fhir_id", "specimen_fhir_id")
         .withColumnRenamed("participant_fhir_id", "specimen_participant_fhir_id")
         .select("specimen_fhir_id", "specimen_participant_fhir_id", "biospecimen")
 
       val filesWithBiospecimenDf =
         filesDf
-          .withColumn("participant_fhir_id", explode(col("participant_fhir_ids")))
-          .join(biospecimenDfReformat, array_contains(filesDf("specimen_fhir_ids"), biospecimenDfReformat("specimen_fhir_id")), "left_outer")
-          .drop("specimen_fhir_id", "specimen_participant_fhir_id")
+          .withColumn("participant_fhir_id", explode_outer(col("participant_fhir_ids")))
+          .withColumn("specimen_fhir_id_file", explode_outer(col("specimen_fhir_ids")))
+          .join(biospecimenDfReformat,
+            col("specimen_fhir_id_file") === biospecimenDfReformat("specimen_fhir_id") &&
+              biospecimenDfReformat("specimen_participant_fhir_id") === col("participant_fhir_id"),
+            "left_outer")
           .groupBy("fhir_id", "participant_fhir_id")
           .agg(collect_list(col("biospecimen")) as "biospecimens", filesDf.columns.filter(!_.equals("fhir_id")).map(c => first(c).as(c)): _*)
 

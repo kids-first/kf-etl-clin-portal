@@ -78,7 +78,7 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
         .withColumn("is_proband", lit(false)) // TODO
         .withColumn("age_at_data_collection", lit(111)) // TODO
         .withColumn("study_external_id", col("study")("external_id"))
-        .drop("outcomes") //FIXME
+//        .drop("outcomes") //FIXME remove this line
 
     transformedParticipant.show(false)
     Map(mainDestination.id -> transformedParticipant)
