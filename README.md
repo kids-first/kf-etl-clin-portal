@@ -152,6 +152,13 @@ mutation updateStudyMappingObservedPhenotypeAgeAtEventDays($inputObservedPhenoty
     isArray
   }
 }
+
+mutation updateFileMappingAcl($inputAcl:ExtendedFieldMappingInput!) {
+  updateExtendedMapping(projectId: "[NEW_PROJECT_ID]", graphqlField:"file", field: "acl", extendedFieldMappingInput: $inputAcl) {
+    field
+    isArray
+  }
+}
 ```
 
 With these inputs (isArray true is the important part)
@@ -195,6 +202,13 @@ With these inputs (isArray true is the important part)
   },
   "inputObservedPhenotypeAgeAtEventDays": {
     "displayName": "Observed Phenotype Age At Event Days",
+    "active": false,
+    "isArray": true,
+    "primaryKey": false,
+    "quickSearchEnabled": false
+  },
+  "inputAcl": {
+    "displayName": "Acl",
     "active": false,
     "isArray": true,
     "primaryKey": false,

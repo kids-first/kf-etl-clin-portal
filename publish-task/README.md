@@ -16,7 +16,7 @@ ElasticSearch 7.X
 
 - Study IDs example: `SD_Z6MWD3H0,SD_Y6PXD3F0`
 
-- Job type `study_centric` or `participant_centric` or `file_centric` or `biospecimen_centric`
+- Job type `study_centric` or `participant_centric` or `file_centric` or `biospecimen_centric` or `all`
 
 Example: `http://localhost:9200 9200 RE_000004 SD_Z6MWD3H0;SD_65064P2Z file_centric`
 

@@ -239,8 +239,8 @@
         "is_proband": {
           "type": "boolean"
         },
-        "karyotype": {
-          "type": "keyword"
+        "down_syndrome_status": {
+          "type": "boolean"
         },
         "mondo" : {
           "type": "nested",
@@ -323,13 +323,16 @@
             "fhir_id" : {
               "type": "keyword"
             },
-            "hpo_id_phenotype": {
-              "type": "keyword"
-            },
             "hpo_phenotype_observed" : {
               "type": "keyword"
             },
             "hpo_phenotype_observed_text" : {
+              "type": "keyword"
+            },
+            "hpo_phenotype_not_observed" : {
+              "type": "keyword"
+            },
+            "hpo_phenotype_not_observed_text" : {
               "type": "keyword"
             },
             "observed" : {
@@ -347,7 +350,6 @@
           "type": "keyword"
         },
         "study": {
-          "type": "nested",
           "properties" : {
             "attribution" : {
               "type": "keyword"

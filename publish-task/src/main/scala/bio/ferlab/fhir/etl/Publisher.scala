@@ -1,6 +1,7 @@
 package bio.ferlab.fhir.etl
 
 import bio.ferlab.datalake.spark3.elasticsearch.ElasticSearchClient
+import bio.ferlab.fhir.etl.PublishTask.{esNodes, jobType, release_id}
 import org.apache.http.HttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.util.EntityUtils
@@ -27,6 +28,16 @@ object Publisher {
               currentIndex: String,
               previousIndex: Option[String] = None)(implicit esClient: ElasticSearchClient): Unit = {
     esClient.setAlias(add = List(currentIndex), remove = previousIndex.toList, alias)
+  }
+
+  def runPublish(jobType: String, release_id: String, study_id: String)(implicit esClient: ElasticSearchClient): Unit = {
+    val newIndexName = s"${jobType}_${study_id}_$release_id".toLowerCase
+    println(s"Add $newIndexName to alias $jobType")
+
+    val oldIndexName = Publisher.retrievePreviousIndex(jobType, study_id, esNodes.split(',').head)
+    oldIndexName.foreach(old => println(s"Remove $old from alias $jobType"))
+
+    publish(jobType, newIndexName, oldIndexName)
   }
 
 }

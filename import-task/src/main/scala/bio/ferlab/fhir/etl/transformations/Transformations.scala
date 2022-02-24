@@ -67,10 +67,9 @@ object Transformations {
 
   val observationVitalStatusMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "release_id","subject", "valueCodeableConcept", "identifier", "_effectiveDateTime")
+      .select("fhir_id", "release_id","subject", "valueCodeableConcept", "identifier", "_effectiveDateTime", "study_id")
       .withColumn("participant_fhir_id", extractReferenceId( col("subject")("reference")))
       .withColumn("vital_status", col("valueCodeableConcept")("text"))
-      .withColumn("study_id", extractStudyId())
       .withColumn("observation_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
       .withColumn("age_at_event_days", struct(
         col("_effectiveDateTime")("effectiveDateTime")("offset")("value") as "value",

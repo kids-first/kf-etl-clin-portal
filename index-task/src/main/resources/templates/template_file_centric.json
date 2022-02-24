@@ -213,8 +213,8 @@
             "is_proband": {
               "type": "boolean"
             },
-            "karyotype": {
-              "type": "keyword"
+            "down_syndrome_status": {
+              "type": "boolean"
             },
             "mondo" : {
               "type": "nested",
@@ -268,13 +268,16 @@
                 "fhir_id" : {
                   "type": "keyword"
                 },
-                "hpo_id_phenotype": {
-                  "type": "keyword"
-                },
                 "hpo_phenotype_observed" : {
                   "type": "keyword"
                 },
                 "hpo_phenotype_observed_text" : {
+                  "type": "keyword"
+                },
+                "hpo_phenotype_not_observed" : {
+                  "type": "keyword"
+                },
+                "hpo_phenotype_not_observed_text" : {
                   "type": "keyword"
                 },
                 "observed" : {
@@ -290,6 +293,62 @@
             },
             "sex": {
               "type": "keyword"
+            },
+            "study": {
+              "type": "nested",
+              "properties" : {
+                "attribution" : {
+                  "type": "keyword"
+                },
+                "data_access" : {
+                  "type": "keyword"
+                },
+                "experimental_strategy" : {
+                  "type": "keyword"
+                },
+                "external_id" : {
+                  "type": "keyword"
+                },
+                "family_count" : {
+                  "type" : "long"
+                },
+                "family_data" : {
+                  "type" : "boolean"
+                },
+                "fhir_id" : {
+                  "type": "keyword"
+                },
+                "file_count" : {
+                  "type" : "long"
+                },
+                "participant_count" : {
+                  "type" : "long"
+                },
+                "program" : {
+                  "type": "keyword"
+                },
+                "release_id" : {
+                  "type": "keyword"
+                },
+                "status" : {
+                  "type": "keyword"
+                },
+                "study_code" : {
+                  "type": "keyword"
+                },
+                "study_id" : {
+                  "type": "keyword"
+                },
+                "study_name" : {
+                  "type": "keyword"
+                },
+                "type_of_omics" : {
+                  "type": "keyword"
+                },
+                "version" : {
+                  "type": "keyword"
+                }
+              }
             },
             "study_external_id": {
               "type": "keyword"
@@ -315,7 +374,6 @@
           "type": "keyword"
         },
         "study": {
-          "type": "nested",
           "properties" : {
             "attribution" : {
               "type": "keyword"

@@ -30,10 +30,10 @@ class BiospecimenCentric(releaseId: String, studyIds: List[String])(implicit con
   override def transform(data: Map[String, DataFrame],
                          lastRunDateTime: LocalDateTime = minDateTime,
                          currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    val fileDF = data(normalized_specimen.id)
+    val specimenDF = data(normalized_specimen.id)
 
     val transformedBiospecimen =
-      fileDF
+      specimenDF
         .addStudy(data(es_index_study_centric.id))
         .addBiospecimenParticipant(data(simple_participant.id))
         .addBiospecimenFiles(data(normalized_drs_document_reference.id))
