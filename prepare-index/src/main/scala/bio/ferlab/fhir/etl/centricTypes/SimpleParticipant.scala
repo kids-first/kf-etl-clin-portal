@@ -4,8 +4,7 @@ import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.v2.ETL
 import bio.ferlab.datalake.spark3.loader.GenericLoader.read
 import bio.ferlab.fhir.etl.common.Utils._
-import org.apache.spark.sql.expressions.UserDefinedFunction
-import org.apache.spark.sql.functions.{array_contains, col, lit, lower, udf, when, transform => tranform_function}
+import org.apache.spark.sql.functions.{col, lit}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
@@ -23,15 +22,6 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
   val normalized_group: DatasetConf = conf.getDataset("normalized_group")
   val hpo_terms: DatasetConf = conf.getDataset("hpo_terms")
   val mondo_terms: DatasetConf = conf.getDataset("mondo_terms")
-
-  val downsyndromeStatusExtract: UserDefinedFunction =
-    udf((arr: Seq[String]) => if(arr != null) {
-      if(arr.map(_.trim.toLowerCase).contains("down syndrome")) {
-        "T21"
-      } else "Other"
-    } else {
-      "Other"
-    })
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
@@ -66,10 +56,8 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
         .withColumn("is_proband", lit(false)) // TODO
         .withColumn("age_at_data_collection", lit(111)) // TODO
         .withColumn("study_external_id", col("study")("external_id"))
-            .drop("outcomes") //FIXME remove this line
 
     transformedParticipant.show(false)
-    transformedParticipant.printSchema()
     Map(mainDestination.id -> transformedParticipant)
   }
 
@@ -78,6 +66,7 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
                     currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     val dataToLoad = Map(mainDestination.id -> data(mainDestination.id)
       .sortWithinPartitions("fhir_id").toDF())
+
     super.load(dataToLoad)
   }
 }

@@ -42,6 +42,9 @@
             "access": {
               "type": "keyword"
             },
+            "controlled_access": {
+              "type": "keyword"
+            },
             "access_urls" : {
               "type": "keyword"
             },
@@ -216,7 +219,7 @@
               "type": "boolean"
             },
             "down_syndrome_status": {
-              "type": "boolean"
+              "type": "keyword"
             },
             "mondo" : {
               "type": "nested",

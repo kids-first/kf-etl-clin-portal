@@ -25,6 +25,15 @@ object Utils {
       case _ => "other"
     })
 
+  val downsyndromeStatusExtract: UserDefinedFunction =
+    udf((arr: Seq[String]) => if(arr != null) {
+      if(arr.map(_.trim.toLowerCase).contains("down syndrome")) {
+        "T21"
+      } else "Other"
+    } else {
+      "Other"
+    })
+
 
   implicit class DataFrameOperations(df: DataFrame) {
     def addStudy(studyDf: DataFrame): DataFrame = {
@@ -137,7 +146,7 @@ object Utils {
 
     }
 
-    def addParticipantFilesWithBiospecimen(filesDf: DataFrame, biospecimensDf: DataFrame, sequencingExperimentDf: DataFrame): DataFrame = {
+    private def addSequencingExperimentToBiospecimensDF(biospecimensDf: DataFrame, sequencingExperimentDf: DataFrame): DataFrame = {
       val sequencingExperimentCols = Seq("fhir_id", "sequencing_experiment_id", "experiment_strategy",
         "instrument_model", "library_name", "library_strand", "platform")
 
@@ -156,12 +165,17 @@ object Utils {
           ) as "sequencing_experiments"
         )
 
-      val biospecimenDfReformat = biospecimensDf
+      biospecimensDf
         .join(sequencingExperimentReformat, col("biospecimen_fhir_id") === col("fhir_id"), "left_outer")
         .withColumn("biospecimen", struct((biospecimensDf.columns :+ "sequencing_experiments").map(col): _*))
         .withColumnRenamed("fhir_id", "specimen_fhir_id")
         .withColumnRenamed("participant_fhir_id", "specimen_participant_fhir_id")
         .select("specimen_fhir_id", "specimen_participant_fhir_id", "biospecimen")
+    }
+
+    def addParticipantFilesWithBiospecimen(filesDf: DataFrame, biospecimensDf: DataFrame, sequencingExperimentDf: DataFrame): DataFrame = {
+
+      val biospecimenDfReformat = addSequencingExperimentToBiospecimensDF(biospecimensDf, sequencingExperimentDf)
 
       val filesWithBiospecimenDf =
         filesDf
@@ -187,7 +201,9 @@ object Utils {
         .drop("participant_fhir_id")
     }
 
-    def addFileParticipantsWithBiospecimen(participantDf: DataFrame, biospecimensDf: DataFrame): DataFrame = {
+    def addFileParticipantsWithBiospecimen(participantDf: DataFrame, biospecimensDf: DataFrame, sequencingExperimentDf: DataFrame): DataFrame = {
+
+      val biospecimensWSequencingExperimentDf = addSequencingExperimentToBiospecimensDF(biospecimensDf, sequencingExperimentDf)
 
       def buildMappingTable(): DataFrame = {
         // Link file - biospecimen
@@ -207,25 +223,21 @@ object Utils {
           .withColumnRenamed("fhir_id", "file_fhir_id")
           .select("file_fhir_id", "participant_fhir_id")
 
-          // Mapping table with: file - (biospecimen) - participant
-          fileIdParticipantId
-            .join(fileIdBiospecimenIdParticipantId, Seq("file_fhir_id", "participant_fhir_id"), "left_outer")
+        // Mapping table with: file - (biospecimen) - participant
+        fileIdParticipantId
+          .join(fileIdBiospecimenIdParticipantId, Seq("file_fhir_id", "participant_fhir_id"), "left_outer")
       }
-
       // Mapping table with: file - (biospecimen) - participant
-      val mappingTable =buildMappingTable()
-
-      val biospecimenReformat = biospecimensDf
-        .withColumn("biospecimen", struct(biospecimensDf.columns.map(col): _*))
-        .withColumnRenamed("fhir_id", "specimen_fhir_id")
-        .select("specimen_fhir_id", "biospecimen")
+      val mappingTable = buildMappingTable()
 
       // |file_fhir_id|participant_fhir_id|biospecimens|
       val mappingTableWithBiospecimens = mappingTable
-        .join(biospecimenReformat, mappingTable("specimen_fhir_id") === biospecimenReformat("specimen_fhir_id"), "left_outer")
+        .join(biospecimensWSequencingExperimentDf, mappingTable("specimen_fhir_id") === biospecimensWSequencingExperimentDf("specimen_fhir_id"), "left_outer")
         .drop("specimen_fhir_ids", "specimen_fhir_id")
         .groupBy("file_fhir_id","participant_fhir_id")
         .agg(collect_list(col("biospecimen")) as "biospecimens")
+
+      mappingTableWithBiospecimens.show(false)
 
       // |file_fhir_id|participants|
       val mappingTableWithParticipants = mappingTableWithBiospecimens

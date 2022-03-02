@@ -108,6 +108,7 @@ object Transformations {
       .withColumn("uberon_id_tumor_location", flatten(transform(col("bodySite")("coding"), c => c("display"))))
       .withColumn("affected_status", col("verificationStatus")("text").cast(BooleanType))
       .withColumn("affected_status_text", col("verificationStatus")("coding")("display")(0))
+      .withColumn("down_syndrome_diagnosis", col("verificationStatus")("text"))
       .withColumn("age_at_event", struct(
         col("_recordedDate")("recordedDate")("offset")("value") as "value",
         col("_recordedDate")("recordedDate")("offset")("unit") as "units",
@@ -216,10 +217,10 @@ object Transformations {
   val documentreferenceMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id","study_id", "release_id", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus")
-      .withColumn("acl", extractAclFromList(col("securityLabel")("text"), col("study_id")))
       .withColumn("access_urls", col("content")("attachment")("url")(0))
       // TODO availability
-      .withColumn("access", retrieveIsControlledAccess(col("securityLabel")(0)("coding")(0)("code"))) //TODO check if correct!!!!
+      .withColumn("acl", extractAclFromList(col("securityLabel")("text"), col("study_id")))
+      .withColumn("controlled_access", col("securityLabel")(0)("text"))
       .withColumn("data_type", col("type")("text"))
       .withColumn("external_id", col("content")(1)("attachment")("url"))
       .withColumn("file_format", firstNonNull(col("content")("format")("display")))
