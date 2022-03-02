@@ -16,7 +16,7 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
         SIMPLE_PARTICIPANT(`fhir_id` = "1"),
         SIMPLE_PARTICIPANT(`fhir_id` = "2")
       ).toDF(),
-      "normalized_documentreference_drs-document-reference" -> Seq(
+      "normalized_drs_document_reference" -> Seq(
         DOCUMENTREFERENCE(`fhir_id` = "11", `participant_fhir_ids` = Seq("1"), `specimen_fhir_ids` = Seq("111")),
         DOCUMENTREFERENCE(`fhir_id` = "12", `participant_fhir_ids` = Seq("1")),
         DOCUMENTREFERENCE(`fhir_id` = "21", `participant_fhir_ids` = Seq("2"), `specimen_fhir_ids` = Seq("222"))).toDF(),

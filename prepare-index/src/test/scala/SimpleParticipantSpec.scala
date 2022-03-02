@@ -18,21 +18,21 @@ class SimpleParticipantSpec extends FlatSpec with Matchers with WithSparkSession
         PATIENT(`fhir_id` = "P2"),
         PATIENT(`fhir_id` = "P3")
       ).toDF(),
-      "normalized_observation_vital-status" -> Seq(
+      "normalized_vital_status" -> Seq(
         OBSERVATION_VITAL_STATUS(`fhir_id` = "O1", `participant_fhir_id` = "P1"),
         OBSERVATION_VITAL_STATUS(`fhir_id` = "O2", `participant_fhir_id` = "P2")
       ).toDF(),
-      "normalized_observation_family-relationship" -> Seq(
+      "normalized_family_relationship" -> Seq(
         OBSERVATION_FAMILY_RELATIONSHIP(`fhir_id` = "O1", `participant1_fhir_id` = "P1", `participant2_fhir_id` = "P3"),
         OBSERVATION_FAMILY_RELATIONSHIP(`fhir_id` = "O2", `participant1_fhir_id` = "P2", `participant2_fhir_id` = "P3", `participant1_to_participant_2_relationship` = "father"),
         OBSERVATION_FAMILY_RELATIONSHIP(`fhir_id` = "O2", `participant1_fhir_id` = "P3", `participant2_fhir_id` = "P1", `participant1_to_participant_2_relationship` = "son"),
         OBSERVATION_FAMILY_RELATIONSHIP(`fhir_id` = "O2", `participant1_fhir_id` = "P3", `participant2_fhir_id` = "P2", `participant1_to_participant_2_relationship` = "son")
       ).toDF(),
-      "normalized_condition_phenotype" -> Seq(
+      "normalized_phenotype" -> Seq(
         CONDITION_PHENOTYPE(`fhir_id` = "CP1", `participant_fhir_id` = "P1", condition_coding = Seq(CONDITION_CODING(`category` = "HPO", `code` = "HP_0001631")), observed = "positive"),
         CONDITION_PHENOTYPE(`fhir_id` = "CP2", `participant_fhir_id` = "P2", condition_coding = Seq(CONDITION_CODING(`category` = "HPO", `code` = "HP_0001631")), observed = "positive")
       ).toDF(),
-      "normalized_condition_disease" -> Seq(
+      "normalized_disease" -> Seq(
         CONDITION_DISEASE(`fhir_id` = "CD1", `participant_fhir_id` = "P1", condition_coding = Seq(CONDITION_CODING(`category` = "ICD", `code` = "Q90.9"))),
         CONDITION_DISEASE(`fhir_id` = "CD2", `participant_fhir_id` = "P2", condition_coding = Seq(CONDITION_CODING(`category` = "ICD", `code` = "Q90.9"))),
       ).toDF(),

@@ -12,7 +12,7 @@ class FileCentricSpec extends FlatSpec with Matchers with WithSparkSession {
 
   "transform" should "prepare index file_centric" in {
     val data: Map[String, DataFrame] = Map(
-      "normalized_documentreference_drs-document-reference" -> Seq(
+      "normalized_drs_document_reference" -> Seq(
         DOCUMENTREFERENCE(`fhir_id` = "11", `participant_fhir_ids` = Seq("1"), `specimen_fhir_ids` = Seq("111")),
         DOCUMENTREFERENCE(`fhir_id` = "12", `participant_fhir_ids` = Seq("1")),
         DOCUMENTREFERENCE(`fhir_id` = "21", `participant_fhir_ids` = Seq("2"), `specimen_fhir_ids` = Seq("222"))).toDF(),
@@ -44,7 +44,7 @@ class FileCentricSpec extends FlatSpec with Matchers with WithSparkSession {
 
   "transform" should "ignore file linked to no participant" in {
     val data: Map[String, DataFrame] = Map(
-      "normalized_documentreference_drs-document-reference" -> Seq(
+      "normalized_drs_document_reference" -> Seq(
         DOCUMENTREFERENCE(`fhir_id` = "11", `participant_fhir_ids` = Seq("1"), `specimen_fhir_ids` = Seq("111")),
         DOCUMENTREFERENCE(`fhir_id` = "12", `participant_fhir_ids` = Seq("1")),
         DOCUMENTREFERENCE(`fhir_id` = "21", `participant_fhir_ids` = Seq("2"), `specimen_fhir_ids` = Seq("222"))).toDF(),
