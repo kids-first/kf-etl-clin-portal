@@ -8,7 +8,7 @@ import ca.uhn.fhir.parser.IParser
 import ca.uhn.fhir.rest.client.api.{IGenericClient, ServerValidationModeEnum}
 import org.hl7.fhir.instance.model.api.IIdType
 import org.hl7.fhir.r4.model.Enumerations.AdministrativeGender
-import org.hl7.fhir.r4.model.{Coding, Enumerations, IdType, Meta, Patient}
+import org.hl7.fhir.r4.model.{CodeableConcept, Coding, Condition, Enumerations, IdType, Meta, Patient, Reference}
 
 import scala.collection.JavaConverters._
 import java.time.{LocalDate, ZoneId}
@@ -52,6 +52,17 @@ trait FhirServer {
 
     fhirClient.create()
       .resource(patient)
+      .execute()
+      .getId
+  }
+
+  def loadCondition(system:String = "http://purl.obolibrary.org/obo/mondo.owl", code: String = "0007186", tag: String = "SD_ABC") ={
+    val cond = new Condition()
+    cond.setSubject(new Reference("Patient/1"))
+    cond.setMeta(new Meta().setTag(List(new Coding(null, tag, null)).asJava))
+    cond.setCode(new CodeableConcept().addCoding(new Coding(system, code, "")))
+    fhirClient.create()
+      .resource(cond)
       .execute()
       .getId
   }

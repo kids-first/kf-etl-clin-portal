@@ -18,7 +18,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters._
 
-class FhavroExporter(bucketName:String, releaseId: String, studyId: String)(implicit val s3Client: S3Client, val fhirClient: IGenericClient) {
+class FhavroExporter(bucketName: String, releaseId: String, studyId: String)(implicit val s3Client: S3Client, val fhirClient: IGenericClient) {
 
   val LOGGER: Logger = LoggerFactory.getLogger(getClass)
 
@@ -36,9 +36,9 @@ class FhavroExporter(bucketName:String, releaseId: String, studyId: String)(impl
       case _ => bundle.withTag(null, studyId)
     }
 
-    if (request.profile.isDefined) {
-      bundleEnriched.withProfile(request.profile.get)
-    }
+    request.profile.foreach(bundleEnriched.withProfile)
+
+    request.additionalQueryParam.foreach(a => bundleEnriched.whereMap(a.view.mapValues(_.asJava).toMap.asJava))
 
     var query = bundleEnriched.execute()
     resources.addAll(getResourcesFromBundle(query))
@@ -53,7 +53,7 @@ class FhavroExporter(bucketName:String, releaseId: String, studyId: String)(impl
 
   def uploadFiles(fhirRequest: FhirRequest, resources: List[DomainResource]): Unit = {
     LOGGER.info(s"Converting resource(s): ${fhirRequest.`type`}")
-    val key = buildKey(fhirRequest,releaseId, studyId)
+    val key = buildKey(fhirRequest, releaseId, studyId)
     val file = convertResources(fhirRequest, resources)
     writeFile(bucketName, key, file)
     LOGGER.info(s"Uploaded ${fhirRequest.schema} successfully!")

@@ -13,7 +13,7 @@ case class KeycloakConfig(cookie: String)
 
 case class FhirConfig(baseUrl: String, resources: List[FhirRequest])
 
-case class FhirRequest(`type`: String, schema: String, total: Option[String], profile: Option[String], count: Option[Int])
+case class FhirRequest(`type`: String, schema: String, total: Option[String], profile: Option[String], count: Option[Int], additionalQueryParam: Option[Map[String, List[String]]])
 
 case class Config(awsConfig: AWSConfig,
                   keycloakConfig: KeycloakConfig,
@@ -23,7 +23,7 @@ object Config {
 
   val LOGGER: Logger = LoggerFactory.getLogger(getClass)
 
-  def readConfiguration(env:String): ValidatedNel[String, Config] = {
+  def readConfiguration(env: String): ValidatedNel[String, Config] = {
     val confResult: Result[Config] = loadConfiguration(env)
     confResult match {
       case Left(errors) =>
@@ -33,7 +33,7 @@ object Config {
     }
   }
 
-  private def loadConfiguration(environment:String): Result[Config] = {
+  private def loadConfiguration(environment: String): Result[Config] = {
     LOGGER.info(s"Loading configuration in $environment")
     ConfigSource.resources(s"application-$environment.conf").load[Config]
   }
