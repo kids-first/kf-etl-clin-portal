@@ -28,7 +28,7 @@ trait FhirServer {
 
   implicit val fhirClient: IGenericClient = fhirContext.newRestfulGenericClient(fhirBaseUrl)
 
-  implicit val fhirConfig: FhirConfig = FhirConfig(fhirBaseUrl, null, null)
+  implicit val fhirConfig: FhirConfig = FhirConfig(fhirBaseUrl, null)
 
   implicit val keycloakConfig: KeycloakConfig = KeycloakConfig("cookie")
 

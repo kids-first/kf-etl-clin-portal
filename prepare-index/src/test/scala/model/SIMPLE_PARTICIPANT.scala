@@ -16,6 +16,7 @@ case class SIMPLE_PARTICIPANT(
                                `diagnosis`: Seq[DIAGNOSIS] = Seq.empty,
                                `mondo`: Seq[PHENOTYPE_MONDO] = Seq.empty,
                                `outcomes`: Seq[OUTCOME] = Seq.empty,
+                               `study`: LIGHT_STUDY_CENTRIC = LIGHT_STUDY_CENTRIC(),
                                `family`: FAMILY = null,
                                `family_type`: String = "probant_only",
                                `karyotype`: String = "TODO",
