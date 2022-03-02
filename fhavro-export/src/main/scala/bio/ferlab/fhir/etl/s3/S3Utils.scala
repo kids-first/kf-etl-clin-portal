@@ -1,7 +1,7 @@
 package bio.ferlab.fhir.etl.s3
 
 import bio.ferlab.fhir.etl.config.{AWSConfig, FhirRequest}
-import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
+import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, DefaultCredentialsProvider, InstanceProfileCredentialsProvider, StaticCredentialsProvider}
 import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.http.apache.ApacheHttpClient
 import software.amazon.awssdk.regions.Region
@@ -13,15 +13,10 @@ import java.net.URI
 
 object S3Utils {
 
-  def buildS3Client(configuration: AWSConfig): S3Client = {
+  def buildS3Client(): S3Client = {
     S3Client.builder()
-      .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(configuration.accessKey, configuration.secretKey)))
-      .endpointOverride(URI.create(configuration.endpoint))
-      .serviceConfiguration(S3Configuration.builder()
-        .pathStyleAccessEnabled(configuration.pathStyleAccess)
-        .build())
+      .credentialsProvider(DefaultCredentialsProvider.create())
       .httpClient(ApacheHttpClient.create())
-      .region(Region.of(configuration.region))
       .build()
   }
 

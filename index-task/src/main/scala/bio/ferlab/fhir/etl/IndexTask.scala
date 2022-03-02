@@ -2,6 +2,7 @@ package bio.ferlab.fhir.etl
 
 import bio.ferlab.datalake.commons.config.{Configuration, ConfigurationLoader, DatasetConf}
 import bio.ferlab.datalake.spark3.elasticsearch.{ElasticSearchClient, Indexer}
+import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -44,7 +45,7 @@ object IndexTask extends App {
 
   spark.sparkContext.setLogLevel("ERROR")
 
-  val templatePath = s"${conf.storages.find(_.id == "esindex").get.path}/templates/template_$jobType.json"
+  val templatePath = s"${conf.storages.find(_.id == "storage").get.path}/templates/template_$jobType.json"
 
   implicit val esClient: ElasticSearchClient = new ElasticSearchClient(esNodes.split(',').head, None, None)
 
@@ -62,7 +63,7 @@ object IndexTask extends App {
 
     println(s"Run Index Task to fill index $indexName")
 
-    val df: DataFrame = spark.read.parquet(ds.location)
+    val df: DataFrame = ds.read
       .where(col("release_id") === release_id)
       .where(col("study_id") === studyId)
 

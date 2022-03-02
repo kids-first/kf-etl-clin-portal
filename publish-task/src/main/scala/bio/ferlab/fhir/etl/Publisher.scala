@@ -7,8 +7,6 @@ import org.apache.http.util.EntityUtils
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
-import scala.util.Try
-
 object Publisher {
 
   def retrievePreviousIndex(alias: String, studyId: String, url: String)(implicit esClient: ElasticSearchClient): Option[String] = {

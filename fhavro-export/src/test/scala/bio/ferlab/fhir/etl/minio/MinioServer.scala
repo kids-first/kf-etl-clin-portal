@@ -1,24 +1,34 @@
 package bio.ferlab.fhir.etl.minio
 
-import bio.ferlab.fhir.etl.config.AWSConfig
-import bio.ferlab.fhir.etl.s3.S3Utils.buildS3Client
-import org.scalatest.{BeforeAndAfterAll, TestSuite}
 import org.slf4j.{Logger, LoggerFactory}
+import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.core.sync.RequestBody
-import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.http.apache.ApacheHttpClient
+import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.model.{CreateBucketRequest, DeleteObjectRequest, ListObjectsRequest, PutObjectRequest}
+import software.amazon.awssdk.services.s3.{S3Client, S3Configuration}
 
 import java.io.File
+import java.net.URI
 import scala.collection.JavaConverters._
 import scala.util.Random
 
 trait MinioServer {
 
   val minioPort: Int = MinioContainer.startIfNotRunning()
-  val minioEndpoint = s"http://localhost:${minioPort}"
-  val awsConfig: AWSConfig = AWSConfig("minioadmin", "minioadmin", "us-east-1", minioEndpoint, pathStyleAccess = true, "input")
+  val minioEndpoint = s"http://localhost:$minioPort"
 
-  implicit val s3Client: S3Client = buildS3Client(awsConfig)
+  implicit val s3Client: S3Client =
+    S3Client.builder()
+      .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("minioadmin", "minioadmin")))
+      .endpointOverride(URI.create(minioEndpoint))
+      .region(Region.US_EAST_1)
+      .serviceConfiguration(S3Configuration.builder()
+        .pathStyleAccessEnabled(true)
+        .build())
+      .httpClient(ApacheHttpClient.create())
+      .build()
+
 
   val LOGGER: Logger = LoggerFactory.getLogger(getClass)
 

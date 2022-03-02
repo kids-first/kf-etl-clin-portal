@@ -13,9 +13,8 @@ object ImportTask extends SparkApp {
   val studyList = studyIds.split(";").toList
 
   implicit val (conf, _, spark) = init()
-  spark.sparkContext.setLogLevel("WARN")
 
-  val jobs: List[ETL] = FhavroToNormalizedMappings
+  val jobs = FhavroToNormalizedMappings
     .mappings(releaseId)
     .map { case (src, dst, transformations) => new ImportRawToNormalizedETL(src, dst, transformations, releaseId, studyList) }
 

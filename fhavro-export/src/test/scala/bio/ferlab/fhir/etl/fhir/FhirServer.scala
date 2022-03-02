@@ -19,9 +19,6 @@ trait FhirServer {
   val fhirPort: Int = FhirContainer.startIfNotRunning()
   val fhirBaseUrl = s"http://localhost:$fhirPort/fhir"
 
-  val minioPort: Int = MinioContainer.startIfNotRunning()
-  val minioEndpoint = s"http://localhost:${minioPort}"
-
   val fhirContext: FhirContext = FhirContext.forR4()
 
   fhirContext.setPerformanceOptions(PerformanceOptionsEnum.DEFERRED_MODEL_SCANNING)
@@ -30,8 +27,6 @@ trait FhirServer {
   val parser: IParser = fhirContext.newJsonParser().setPrettyPrint(true)
 
   implicit val fhirClient: IGenericClient = fhirContext.newRestfulGenericClient(fhirBaseUrl)
-
-  implicit val awsConfig: AWSConfig = AWSConfig("minioadmin", "minioadmin", "us-east-1", minioEndpoint, pathStyleAccess = true, "input")
 
   implicit val fhirConfig: FhirConfig = FhirConfig(fhirBaseUrl, null, null)
 
