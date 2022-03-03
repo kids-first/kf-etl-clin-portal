@@ -20,5 +20,5 @@ case class FILE_WITH_BIOSPECIMEN(
                                   `participant_fhir_ids`: Seq[String] = Seq("39167"),
                                   `release_id`: String = "re_000001",
                                   `specimen_fhir_ids`: Seq[String] = Seq.empty,
-                                  `biospecimens`: Seq[BIOSPECIMEN] = Seq.empty
+                                  `biospecimens`: Seq[BIOSPECIMEN_WITH_SEQ_EXPERIMENTS] = Seq.empty
                                 )

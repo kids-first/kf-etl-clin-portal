@@ -50,7 +50,8 @@ object Utils {
         .select("participant_fhir_id", "outcome")
         .groupBy("participant_fhir_id")
         .agg(
-          collect_list(col("outcome").dropFields("study_id", "release_id")) as "outcomes")
+          collect_list(col("outcome")) as "outcomes"
+        )
 
       df
         .join(reformatObservation, col("fhir_id") === col("participant_fhir_id"), "left_outer")
@@ -152,7 +153,7 @@ object Utils {
 
       val sequencingExperimentReformat = sequencingExperimentDf
         .withColumnRenamed("task_id", "sequencing_experiment_id")
-        .withColumn("biospecimen_fhir_id", explode(col("document_reference_fhir_ids")))
+        .withColumn("biospecimen_fhir_id", explode(col("biospecimen_fhir_ids")))
         .withColumn("sequencing_experiment", struct(
           sequencingExperimentCols map col: _*
         ))
@@ -236,8 +237,6 @@ object Utils {
         .drop("specimen_fhir_ids", "specimen_fhir_id")
         .groupBy("file_fhir_id","participant_fhir_id")
         .agg(collect_list(col("biospecimen")) as "biospecimens")
-
-      mappingTableWithBiospecimens.show(false)
 
       // |file_fhir_id|participants|
       val mappingTableWithParticipants = mappingTableWithBiospecimens

@@ -288,7 +288,7 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val inputSequencingExperiments = Seq(
-      SEQUENCING_EXPERIMENT() //TODO
+      TASK()
     ).toDF()
 
     val output = inputParticipant.addParticipantFilesWithBiospecimen(inputDocumentReference, inputBiospecimen, inputSequencingExperiments)
@@ -400,7 +400,7 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val inputSequencingExperiments = Seq(
-      SEQUENCING_EXPERIMENT() //TODO
+      TASK()
     ).toDF()
 
     val output = inputDocumentReference.addFileParticipantsWithBiospecimen(inputParticipant, inputBiospecimen, inputSequencingExperiments)
