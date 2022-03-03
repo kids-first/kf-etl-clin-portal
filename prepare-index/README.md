@@ -21,7 +21,7 @@ Example of a setup with Minio:
 
 4th argument: Release id
 
-5th argument: Study ids separated by `;`
+5th argument: Study ids separated by `,`
 
 Example : `./config/dev.conf default study_centric RE_000001 SD_Z6MWD3H0;SD_Y6PXD3F0`
 

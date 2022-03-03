@@ -42,4 +42,4 @@ assembly / assemblyMergeStrategy:= {
 
 assembly / test := {}
 assembly / mainClass := Some("bio.ferlab.fhir.etl.FhavroExport")
-assembly / assemblyJarName:= "fhavro-export-etl.jar"
+assembly / assemblyJarName:= "fhavro-export.jar"

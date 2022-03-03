@@ -163,6 +163,16 @@ steps=$(cat <<EOF
      "Jar": "command-runner.jar",
      "Properties": "",
      "Name": "Index Biospecimen"
+   },
+   {
+     "Type":"CUSTOM_JAR",
+     "Name":"Publish",
+     "ActionOnFailure":"TERMINATE_CLUSTER",
+     "Jar":"command-runner.jar",
+     "Args":[
+       "bash","-c",
+       "aws s3 cp s3://include-373997854230-datalake-${env}/jobs/publish-task.jar /home/hadoop; cd /home/hadoop; /usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar publish-task.jar ${es} 443 ${release_id} ${study_id} all"
+     ]
    }
 
 

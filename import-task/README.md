@@ -23,7 +23,7 @@ Example of a setup with Minio:
 
 3rd argument: Release id
 
-4th argument: Study ids separated by `;`
+4th argument: Study ids separated by `,`
 
 Example : `./config/dev.conf default RE_000001 SD_Z6MWD3H0;SD_Y6PXD3F0`
 

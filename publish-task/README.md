@@ -14,7 +14,7 @@ ElasticSearch 7.X
 
 - Release ID example: `RE_000001`
 
-- Study IDs example: `SD_Z6MWD3H0;SD_Y6PXD3F0`
+- Study IDs example: `SD_Z6MWD3H0,SD_Y6PXD3F0`
 
 - Job type `study_centric` or `participant_centric` or `file_centric` or `biospecimen_centric`
 

@@ -39,7 +39,7 @@ This is to simulate the dockerized application</b>
 
 1st argument: release id
 
-2nd argument: study ids separated by `;`
+2nd argument: study ids separated by `,`
 
 3rd argument: environment
 
