@@ -37,7 +37,6 @@ class FileCentric(releaseId: String, studyIds: List[String])(implicit configurat
         .addFileParticipantsWithBiospecimen(data(simple_participant.id), data(normalized_specimen.id), data(normalized_task.id))
         .withColumn("type_of_omics", lit("TODO"))
         .withColumn("experimental_strategy", lit("TODO"))
-        .withColumn("data_category", lit("TODO"))
 
     transformedFile.show(false)
     Map(mainDestination.id -> transformedFile)

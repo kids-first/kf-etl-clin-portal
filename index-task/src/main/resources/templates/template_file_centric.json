@@ -170,37 +170,30 @@
             "external_id" : {
               "type": "keyword"
             },
-            "families": {
-              "type": "nested",
+            "family": {
               "properties": {
-                "external_id" : {
+                "fhir_id": {
                   "type": "keyword"
                 },
                 "family_id": {
                   "type": "keyword"
                 },
-                "family_members": {
-                  "type": "nested",
-                  "properties": {
-                    "exploded_member_entity": {
-                      "type": "keyword"
-                    },
-                    "exploded_member_inactive": {
-                      "type": "boolean"
-                    }
-                  }
-                },
-                "fhir_id": {
-                  "type": "keyword"
-                },
-                "release_id" : {
-                  "type": "keyword"
-                },
-                "study_id": {
-                  "type": "keyword"
-                },
                 "type": {
                   "type": "keyword"
+                },
+                "family_members_id": {
+                  "type": "keyword"
+                },
+                "family_relations": {
+                  "type": "nested",
+                  "properties": {
+                    "related_participant_id": {
+                      "type": "keyword"
+                    },
+                    "relation": {
+                      "type": "keyword"
+                    }
+                  }
                 }
               }
             },

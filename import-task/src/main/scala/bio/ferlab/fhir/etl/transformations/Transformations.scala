@@ -222,6 +222,7 @@ object Transformations {
       .withColumn("acl", extractAclFromList(col("securityLabel")("text"), col("study_id")))
       .withColumn("controlled_access", col("securityLabel")(0)("text"))
       .withColumn("data_type", col("type")("text"))
+      .withColumn("data_category", col("category")(0)("text"))
       .withColumn("external_id", col("content")(1)("attachment")("url"))
       .withColumn("file_format", firstNonNull(col("content")("format")("display")))
       .withColumn("file_name", firstNonNull(col("content")("attachment")("title")))

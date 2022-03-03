@@ -6,6 +6,7 @@ case class DOCUMENTREFERENCE(
                  `access_urls`: String = "drs://data.kidsfirstdrc.org//a4e15e78-de88-44d8-87f4-7f56cda2475f",
                  `access`: String = "Controlled",
                  `data_type`: String = "gVCF",
+                 `data_category`: String = "Genomics",
                  `external_id`: String = "s3://kf-study-us-east-1-prd-sd-z6mwd3h0/harmonized-data/raw-gvcf/4db9adf4-94f7-4800-a360-49eda89dfb62.g.vcf.gz",
                  `file_format`: String = "gvcf",
                  `file_name`: String = "4db9adf4-94f7-4800-a360-49eda89dfb62.g.vcf.gz",

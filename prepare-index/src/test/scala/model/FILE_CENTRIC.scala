@@ -20,7 +20,7 @@ case class FILE_CENTRIC(
                          `participant_fhir_ids`: Seq[String] = Seq.empty,
                          `type_of_omics`: String = "TODO",
                          `experimental_strategy`: String = "TODO",
-                         `data_category`: String = "TODO",
+                         `data_category`: String = "Genomics",
                          `study`: LIGHT_STUDY_CENTRIC = LIGHT_STUDY_CENTRIC(),
                          `release_id`: String = "re_000001",
                          `participants`: Seq[PARTICIPANT_WITH_BIOSPECIMEN] = Seq.empty
