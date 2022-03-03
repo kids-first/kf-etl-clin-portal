@@ -12,31 +12,27 @@ object PrepareIndex extends SparkApp {
 
   spark.sparkContext.setLogLevel("WARN")
 
-  val studyList = studyIds.split(";").toList
+  val studyList = studyIds.split(",").toList
 
   jobName match {
     case "study_centric" => new StudyCentric(releaseId, studyList).run()
-    case "participant_centric" => {
+    case "participant_centric" =>
       new StudyCentric(releaseId, studyList).run()
       new SimpleParticipant(releaseId, studyList).run()
       new ParticipantCentric(releaseId, studyList).run()
-    }
-    case "file_centric" => {
+    case "file_centric" =>
       new StudyCentric(releaseId, studyList).run()
       new SimpleParticipant(releaseId, studyList).run()
       new FileCentric(releaseId, studyList).run()
-    }
-    case "biospecimen_centric" => {
+    case "biospecimen_centric" =>
       new StudyCentric(releaseId, studyList).run()
       new SimpleParticipant(releaseId, studyList).run()
       new BiospecimenCentric(releaseId, studyList).run()
-    }
-    case "all" => {
+    case "all" =>
       new StudyCentric(releaseId, studyList).run()
       new SimpleParticipant(releaseId, studyList).run()
       new ParticipantCentric(releaseId, studyList).run()
       new FileCentric(releaseId, studyList).run()
       new BiospecimenCentric(releaseId, studyList).run()
-    }
   }
 }

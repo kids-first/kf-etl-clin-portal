@@ -69,7 +69,7 @@ object ConfigurationGenerator extends App {
 
   case class Index(name: String, partitionBy: List[String])
 
-  val rawsAndNormalized= sourceNames.flatMap( source => {
+  val rawsAndNormalized = sourceNames.flatMap(source => {
 
     val rawPath = source.fhirProfile.map(p => s"${source.fhirResource}/$p").getOrElse(source.fhirResource)
     val tableName = source.fhirProfile.map(_.replace("-", "_")).getOrElse(source.fhirResource.replace("-", "_"))
@@ -80,6 +80,7 @@ object ConfigurationGenerator extends App {
         path = s"/fhir/$rawPath",
         format = AVRO,
         loadtype = OverWrite,
+        table = Some(TableConf("database", s"raw_$tableName")),
         partitionby = source.partitionBy
       ),
       DatasetConf(
@@ -108,6 +109,7 @@ object ConfigurationGenerator extends App {
         path = s"/es_index/fhir/${index.name}",
         format = PARQUET,
         loadtype = OverWrite,
+        table = Some(TableConf("database", s"es_index_${index.name}")),
         partitionby = index.partitionBy
       )
     )
@@ -119,12 +121,14 @@ object ConfigurationGenerator extends App {
       storageid = storage,
       path = s"/hpo_terms",
       format = JSON,
+      table = Some(TableConf("database", "hpo_terms")),
       loadtype = OverWrite,
     ),
     DatasetConf(
       id = "mondo_terms",
       storageid = storage,
       path = s"/mondo_terms",
+      table = Some(TableConf("database", "mondo_terms")),
       format = JSON,
       loadtype = OverWrite,
     )

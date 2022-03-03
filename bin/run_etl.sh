@@ -8,7 +8,7 @@ instance_count="1"
 if [ "$env" = "prd" ]
 then
   subnet="subnet-0cdbe9ba6231146b5"
-  es=""
+  es="https://vpc-arranger-es-service-ykxirqamjqxyiyfg2rruxusfg4.us-east-1.es.amazonaws.com"
 else
   subnet="subnet-0f1161ac2ee2fba5b"
   es="https://vpc-include-arranger-blue-es-qa-xf3ttht4hjmxjfoh5u5x4jnw34.us-east-1.es.amazonaws.com"
@@ -19,7 +19,7 @@ steps=$(cat <<EOF
   {
     "Type":"CUSTOM_JAR",
     "Name":"Cleanup jars",
-    "ActionOnFailure":"CONTINUE",
+    "ActionOnFailure":"TERMINATE_CLUSTER",
     "Jar":"command-runner.jar",
     "Args":[
       "bash","-c",
@@ -29,7 +29,7 @@ steps=$(cat <<EOF
   {
     "Type":"CUSTOM_JAR",
     "Name":"Download and Run Fhavro-export",
-    "ActionOnFailure":"CONTINUE",
+    "ActionOnFailure":"TERMINATE_CLUSTER",
     "Jar":"command-runner.jar",
     "Args":[
       "bash","-c",
@@ -51,7 +51,7 @@ steps=$(cat <<EOF
       "${study_id}"
     ],
     "Type": "CUSTOM_JAR",
-    "ActionOnFailure": "CONTINUE",
+    "ActionOnFailure": "TERMINATE_CLUSTER",
     "Jar": "command-runner.jar",
     "Properties": "",
     "Name": "Import Task"
@@ -71,7 +71,7 @@ steps=$(cat <<EOF
        "${study_id}"
      ],
      "Type": "CUSTOM_JAR",
-     "ActionOnFailure": "CONTINUE",
+     "ActionOnFailure": "TERMINATE_CLUSTER",
      "Jar": "command-runner.jar",
      "Properties": "",
      "Name": "Prepare Index"
@@ -93,7 +93,7 @@ steps=$(cat <<EOF
 
      ],
      "Type": "CUSTOM_JAR",
-     "ActionOnFailure": "CONTINUE",
+     "ActionOnFailure": "TERMINATE_CLUSTER",
      "Jar": "command-runner.jar",
      "Properties": "",
      "Name": "Index Study"
@@ -115,7 +115,7 @@ steps=$(cat <<EOF
 
      ],
      "Type": "CUSTOM_JAR",
-     "ActionOnFailure": "CONTINUE",
+     "ActionOnFailure": "TERMINATE_CLUSTER",
      "Jar": "command-runner.jar",
      "Properties": "",
      "Name": "Index Participant"
@@ -137,7 +137,7 @@ steps=$(cat <<EOF
 
      ],
      "Type": "CUSTOM_JAR",
-     "ActionOnFailure": "CONTINUE",
+     "ActionOnFailure": "TERMINATE_CLUSTER",
      "Jar": "command-runner.jar",
      "Properties": "",
      "Name": "Index File"
@@ -159,10 +159,20 @@ steps=$(cat <<EOF
 
      ],
      "Type": "CUSTOM_JAR",
-     "ActionOnFailure": "CONTINUE",
+     "ActionOnFailure": "TERMINATE_CLUSTER",
      "Jar": "command-runner.jar",
      "Properties": "",
      "Name": "Index Biospecimen"
+   },
+   {
+     "Type":"CUSTOM_JAR",
+     "Name":"Publish",
+     "ActionOnFailure":"TERMINATE_CLUSTER",
+     "Jar":"command-runner.jar",
+     "Args":[
+       "bash","-c",
+       "aws s3 cp s3://include-373997854230-datalake-${env}/jobs/publish-task.jar /home/hadoop; cd /home/hadoop; /usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar publish-task.jar ${es} 443 ${release_id} ${study_id} all"
+     ]
    }
 
 
@@ -185,4 +195,5 @@ aws emr create-cluster \
   --instance-groups "[{\"InstanceCount\":${instance_count},\"InstanceGroupType\":\"CORE\",\"InstanceType\":\"${instance_type}\",\"Name\":\"Core - 2\"},{\"InstanceCount\":1,\"EbsConfiguration\":{\"EbsBlockDeviceConfigs\":[{\"VolumeSpecification\":{\"SizeInGB\":32,\"VolumeType\":\"gp2\"},\"VolumesPerInstance\":2}]},\"InstanceGroupType\":\"MASTER\",\"InstanceType\":\"m5.xlarge\",\"Name\":\"Master - 1\"}]" \
   --scale-down-behavior TERMINATE_AT_TASK_COMPLETION \
   --configurations file://./spark-config.json \
+  --auto-terminate \
  --region us-east-1

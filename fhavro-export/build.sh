@@ -9,4 +9,4 @@ docker run -ti --rm -v $(pwd):/app/fhavro-export-etl \
     -w /app/fhavro-export-etl hseeberger/scala-sbt:11.0.13_1.6.1_2.13.7 \
     sbt clean assembly
 
-docker build -t fhavro-export-etl .
+docker build -t fhavro-export .

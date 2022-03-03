@@ -10,7 +10,7 @@ object ImportTask extends SparkApp {
 
   val Array(_, _, releaseId, studyIds) = args
 
-  val studyList = studyIds.split(";").toList
+  val studyList = studyIds.split(",").toList
 
   implicit val (conf, _, spark) = init()
 

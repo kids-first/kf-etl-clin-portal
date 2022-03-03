@@ -56,7 +56,7 @@ object IndexTask extends App {
     case "biospecimen_centric" => conf.getDataset("es_index_biospecimen_centric")
   }
 
-  val studyList = study_ids.split(";")
+  val studyList = study_ids.split(",")
 
   studyList.map(studyId => {
     val indexName = s"${jobType}_${studyId}_$release_id".toLowerCase

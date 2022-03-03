@@ -12,7 +12,7 @@ object FhavroExport extends App {
 
   val Array(releaseId, studyIds, env) = args
 
-  val studyList = studyIds.split(";").toList
+  val studyList = studyIds.split(",").toList
 
   studyList.foreach(studyId => {
     withSystemExit {
