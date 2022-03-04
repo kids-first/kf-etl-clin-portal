@@ -33,7 +33,7 @@ steps=$(cat <<EOF
     "Jar":"command-runner.jar",
     "Args":[
       "bash","-c",
-      "aws s3 cp s3://include-373997854230-datalake-${env}/jobs/fhavro-export-etl.jar /home/hadoop; cd /home/hadoop; /usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar fhavro-export-etl.jar ${release_id} ${study_id} include-${env}"
+      "aws s3 cp s3://include-373997854230-datalake-${env}/jobs/fhavro-export.jar /home/hadoop; cd /home/hadoop; /usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar fhavro-export.jar ${release_id} ${study_id} include-${env}"
     ]
   },
 

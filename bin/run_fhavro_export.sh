@@ -25,6 +25,16 @@ steps=$(cat <<EOF
       "bash","-c",
       "sudo rm -f /usr/lib/spark/jars/spark-avro.jar"
     ]
+  },
+  {
+    "Type":"CUSTOM_JAR",
+    "Name":"Download and Run Fhavro-export",
+    "ActionOnFailure":"TERMINATE_CLUSTER",
+    "Jar":"command-runner.jar",
+    "Args":[
+      "bash","-c",
+      "aws s3 cp s3://include-373997854230-datalake-${env}/jobs/fhavro-export.jar /home/hadoop; cd /home/hadoop; /usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar fhavro-export.jar ${release_id} ${study_id} include-${env}"
+    ]
   }
 
 ]
