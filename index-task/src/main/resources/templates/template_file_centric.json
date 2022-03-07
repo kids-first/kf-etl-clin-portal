@@ -97,8 +97,14 @@
                 "fhir_id" : {
                   "type": "keyword"
                 },
+                "method_of_sample_procurement" : {
+                  "type": "keyword"
+                },
                 "ncit_id_tissue_type": {
                   "type": "keyword"
+                },
+                "ncit_id_anatomical_site": {
+                  "type": "boolean"
                 },
                 "participant_fhir_id" : {
                   "type": "keyword"
@@ -106,10 +112,39 @@
                 "release_id" : {
                   "type": "keyword"
                 },
-                "sample_id ": {
+                "sample_id": {
                   "type": "keyword"
                 },
                 "sample_type": {
+                  "type": "keyword"
+                },
+                "sequencing_experiments": {
+                  "type": "nested",
+                  "properties": {
+                    "fhir_id": {
+                      "type": "keyword"
+                    },
+                    "sequencing_experiment_id": {
+                      "type": "keyword"
+                    },
+                    "experiment_strategy": {
+                      "type": "keyword"
+                    },
+                    "instrument_model": {
+                      "type": "keyword"
+                    },
+                    "library_name": {
+                      "type": "keyword"
+                    },
+                    "library_strand": {
+                      "type": "keyword"
+                    },
+                    "platform": {
+                      "type": "keyword"
+                    }
+                  }
+                },
+                "source_text_anatomical_site": {
                   "type": "keyword"
                 },
                 "specimen_id" : {
@@ -119,6 +154,15 @@
                   "type": "keyword"
                 },
                 "study_id" : {
+                  "type": "keyword"
+                },
+                "uberon_id_anatomical_site" : {
+                  "type": "keyword"
+                },
+                "volume_ul" : {
+                  "type": "long"
+                },
+                "volume_ul_unit" : {
                   "type": "keyword"
                 }
               }
