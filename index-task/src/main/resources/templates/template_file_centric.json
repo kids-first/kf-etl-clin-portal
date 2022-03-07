@@ -27,9 +27,6 @@
         "data_type": {
           "type": "keyword"
         },
-        "experimental_strategy": {
-          "type": "keyword"
-        },
         "external_id" : {
           "type": "keyword"
         },

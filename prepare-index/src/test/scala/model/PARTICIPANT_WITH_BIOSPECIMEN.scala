@@ -21,5 +21,5 @@ case class PARTICIPANT_WITH_BIOSPECIMEN(
                                          `down_syndrome_diagnosis`: String = "TODO",
                                          `is_proband`: Boolean = false, // TODO
                                          `age_at_data_collection`: Int = 111, // TODO
-                                         `biospecimens`: Seq[BIOSPECIMEN_WITH_SEQ_EXPERIMENTS] = Seq.empty
+                                         `biospecimens`: Seq[BIOSPECIMEN] = Seq.empty
                                        )

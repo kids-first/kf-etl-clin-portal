@@ -19,9 +19,9 @@ case class FILE_CENTRIC(
                          `study_id`: String = "SD_Z6MWD3H0",
                          `participant_fhir_ids`: Seq[String] = Seq.empty,
                          `type_of_omics`: String = "TODO",
-                         `experimental_strategy`: String = "TODO",
                          `data_category`: String = "Genomics",
                          `study`: LIGHT_STUDY_CENTRIC = LIGHT_STUDY_CENTRIC(),
                          `release_id`: String = "re_000001",
-                         `participants`: Seq[PARTICIPANT_WITH_BIOSPECIMEN] = Seq.empty
+                         `participants`: Seq[PARTICIPANT_WITH_BIOSPECIMEN] = Seq.empty,
+                         `sequencing_experiment`: SEQUENCING_EXPERIMENT = null
                        )
