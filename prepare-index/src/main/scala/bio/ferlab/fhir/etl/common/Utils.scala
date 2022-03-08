@@ -37,6 +37,18 @@ object Utils {
   val sequencingExperimentCols = Seq("fhir_id", "sequencing_experiment_id", "experiment_strategy",
     "instrument_model", "library_name", "library_strand", "platform")
 
+  private def reformatSequencingExperiment(seqExp: DataFrame) = {
+    seqExp
+      .withColumn("document_reference_fhir_id", explode(col("document_reference_fhir_ids")))
+      .withColumnRenamed("task_id","sequencing_experiment_id")
+      .withColumn("sequencing_experiments", struct(sequencingExperimentCols.map(col): _*))
+      .groupBy("document_reference_fhir_id")
+      .agg(
+        // should not be more than one Seq. Exp. per file
+        collect_list("sequencing_experiments")(0) as "sequencing_experiment"
+      )
+  }
+
 
   implicit class DataFrameOperations(df: DataFrame) {
     def addStudy(studyDf: DataFrame): DataFrame = {
@@ -158,16 +170,8 @@ object Utils {
         .withColumnRenamed("participant_fhir_id", "specimen_participant_fhir_id")
         .select("specimen_fhir_id", "specimen_participant_fhir_id", "biospecimen")
 
-      val sequencingExperimentDfReformat = sequencingExperimentDf
-        .withColumn("document_reference_fhir_id", explode(col("document_reference_fhir_ids")))
-        .withColumnRenamed("task_id","sequencing_experiment_id")
-        .withColumn("sequencing_experiments", struct(sequencingExperimentCols.map(col): _*))
-        .select("document_reference_fhir_id", "sequencing_experiments")
-        .groupBy("document_reference_fhir_id")
-        .agg(
-          // should not be more than one Seq. Exp. per file
-          collect_list("sequencing_experiments")(0) as "sequencing_experiment"
-        )
+      val sequencingExperimentDfReformat =
+        reformatSequencingExperiment(sequencingExperimentDf)
 
       val `filesWithBiospecimenDf` =
         filesDf
@@ -203,11 +207,7 @@ object Utils {
         .withColumnRenamed("participant_fhir_id", "specimen_participant_fhir_id")
         .select("specimen_fhir_id", "specimen_participant_fhir_id", "biospecimen")
 
-      val sequencingExperimentDfReformat = sequencingExperimentDf
-        .withColumn("document_reference_fhir_id", explode(col("document_reference_fhir_ids")))
-        .withColumnRenamed("task_id","sequencing_experiment_id")
-        .withColumn("sequencing_experiments", struct(sequencingExperimentCols.map(col): _*))
-        .select("document_reference_fhir_id", "sequencing_experiments")
+      val sequencingExperimentDfReformat = reformatSequencingExperiment(sequencingExperimentDf)
 
       def buildMappingTable(): DataFrame = {
         // Link file - biospecimen
@@ -249,30 +249,23 @@ object Utils {
         .groupBy("file_fhir_id")
         .agg(collect_list(col("participant")) as "participants")
 
-      val filesWithSequencingExperimentDf = df
-        .join(sequencingExperimentDfReformat,
-          sequencingExperimentDfReformat("document_reference_fhir_id") === col("fhir_id"),"left_outer")
-        .drop(col("document_reference_fhir_id"))
-
-      val colsSeqExp = filesWithSequencingExperimentDf.columns.filter(c =>  c != "sequencing_experiments" && c != "hashes")
-
-      filesWithSequencingExperimentDf
-        .groupBy(colsSeqExp.head, colsSeqExp.tail: _*)
-        .agg(
-          collect_list(col("hashes"))(0) as "hashes",
-          // should not be more than one Seq. Exp. per file
-          collect_list(col("sequencing_experiments"))(0) as "sequencing_experiment"
-        )
+      df
         .join(sequencingExperimentDfReformat,
           sequencingExperimentDfReformat("document_reference_fhir_id") === col("fhir_id"),"left_outer")
         .join(mappingTableWithParticipants, df("fhir_id") === mappingTableWithParticipants("file_fhir_id"))
-        .drop("file_fhir_id")
+        .drop("file_fhir_id", "document_reference_fhir_id")
     }
 
-    def addBiospecimenFiles(filesDf: DataFrame): DataFrame = {
-      val reformatFile = filesDf
+    def addBiospecimenFiles(filesDf: DataFrame, sequencingExperimentDf: DataFrame): DataFrame = {
+      val sequencingExperimentDfReformat = reformatSequencingExperiment(sequencingExperimentDf)
+
+      val filesWithSeqExperiments = filesDf
         .withColumn("biospecimen_fhir_id", explode(col("specimen_fhir_ids")))
-        .withColumn("file", struct(filesDf.columns.map(col): _*))
+        .join(sequencingExperimentDfReformat, col("document_reference_fhir_id") === col("fhir_id"), "left_outer")
+        .drop("document_reference_fhir_id")
+
+      val reformatFile = filesWithSeqExperiments
+        .withColumn("file", struct((filesDf.columns :+ "sequencing_experiment").map(col): _*))
         .select("biospecimen_fhir_id", "file")
         .groupBy("biospecimen_fhir_id")
         .agg(collect_list(col("file")) as "files")

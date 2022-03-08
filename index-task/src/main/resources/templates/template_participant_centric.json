@@ -161,32 +161,6 @@
                 "sample_type": {
                   "type": "keyword"
                 },
-                "sequencing_experiments": {
-                  "type": "nested",
-                  "properties": {
-                    "fhir_id": {
-                      "type": "keyword"
-                    },
-                    "sequencing_experiment_id": {
-                      "type": "keyword"
-                    },
-                    "experiment_strategy": {
-                      "type": "keyword"
-                    },
-                    "instrument_model": {
-                      "type": "keyword"
-                    },
-                    "library_name": {
-                      "type": "keyword"
-                    },
-                    "library_strand": {
-                      "type": "keyword"
-                    },
-                    "platform": {
-                      "type": "keyword"
-                    }
-                  }
-                },
                 "source_text_anatomical_site": {
                   "type": "keyword"
                 },
@@ -258,6 +232,31 @@
             },
             "repository" : {
               "type": "keyword"
+            },
+            "sequencing_experiment": {
+              "properties": {
+                "fhir_id": {
+                  "type": "keyword"
+                },
+                "sequencing_experiment_id": {
+                  "type": "keyword"
+                },
+                "experiment_strategy": {
+                  "type": "keyword"
+                },
+                "instrument_model": {
+                  "type": "keyword"
+                },
+                "library_name": {
+                  "type": "keyword"
+                },
+                "library_strand": {
+                  "type": "keyword"
+                },
+                "platform": {
+                  "type": "keyword"
+                }
+              }
             },
             "size": {
               "type": "long"

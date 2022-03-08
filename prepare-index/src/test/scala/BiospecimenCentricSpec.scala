@@ -25,6 +25,7 @@ class BiospecimenCentricSpec extends FlatSpec with Matchers with WithSparkSessio
         BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2")
       ).toDF(),
       "es_index_study_centric" -> Seq(STUDY_CENTRIC()).toDF(),
+      "normalized_task" -> Seq(TASK(`fhir_id` = "1", `document_reference_fhir_ids` = Seq("11", "21"))).toDF(),
     )
 
     val output = new BiospecimenCentric("re_000001", List("SD_Z6MWD3H0"))(conf).transform(data)
@@ -39,13 +40,25 @@ class BiospecimenCentricSpec extends FlatSpec with Matchers with WithSparkSessio
           `participant_fhir_id` = "1",
           `participant` = SIMPLE_PARTICIPANT(`fhir_id` = "1"),
           `files` = Seq(
-            DOCUMENTREFERENCE_WITH_SEQ_EXP(`fhir_id` = "11", `participant_fhir_ids` = Seq("1"), `specimen_fhir_ids` = Seq("111")))),
+            DOCUMENTREFERENCE_WITH_SEQ_EXP(
+              `fhir_id` = "11",
+              `participant_fhir_ids` = Seq("1"),
+              `specimen_fhir_ids` = Seq("111"),
+              `sequencing_experiment` = SEQUENCING_EXPERIMENT(`fhir_id` = "1")
+            )
+          )
+        ),
         BIOSPECIMEN_CENTRIC(
           `fhir_id` = "222",
           `participant_fhir_id` = "2",
           `participant` = SIMPLE_PARTICIPANT(`fhir_id` = "2"),
           `files` = Seq(
-            DOCUMENTREFERENCE_WITH_SEQ_EXP(`fhir_id` = "21", `participant_fhir_ids` = Seq("2"), `specimen_fhir_ids` = Seq("222")))))
+            DOCUMENTREFERENCE_WITH_SEQ_EXP(
+              `fhir_id` = "21",
+              `participant_fhir_ids` = Seq("2"),
+              `specimen_fhir_ids` = Seq("222"),
+              `sequencing_experiment` = SEQUENCING_EXPERIMENT(`fhir_id` = "1")
+            ))))
   }
 }
 

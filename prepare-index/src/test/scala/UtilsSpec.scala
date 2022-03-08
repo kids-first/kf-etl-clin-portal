@@ -477,7 +477,12 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
       DOCUMENTREFERENCE(`participant_fhir_ids` = Seq("P3"), `fhir_id` = "F3", `specimen_fhir_ids` = Seq("B_NOT_THERE")),
     ).toDF()
 
-    val output = inputBiospecimen.addBiospecimenFiles(inputDocumentReference)
+    val inputSequenceExperiments = Seq(
+      TASK(`fhir_id` = "T1", `document_reference_fhir_ids` = Seq("F1")),
+      TASK(`fhir_id` = "T2", `document_reference_fhir_ids` = Seq("F2"))
+    ).toDF()
+
+    val output = inputBiospecimen.addBiospecimenFiles(inputDocumentReference, inputSequenceExperiments)
 
     val biospecimenWithFiles = output.select("fhir_id", "files").as[(String, Seq[DOCUMENTREFERENCE])].collect()
 
