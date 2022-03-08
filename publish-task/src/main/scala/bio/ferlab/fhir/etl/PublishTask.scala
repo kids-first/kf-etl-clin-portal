@@ -1,8 +1,12 @@
 package bio.ferlab.fhir.etl
 
 import bio.ferlab.datalake.spark3.elasticsearch.ElasticSearchClient
+import org.slf4j.LoggerFactory
+
+import scala.util.{Failure, Try}
 
 object PublishTask extends App {
+  val log = LoggerFactory.getLogger("publish")
   println(s"ARGS: " + args.mkString("[", ", ", "]"))
 
   val Array(
@@ -28,8 +32,8 @@ object PublishTask extends App {
   val studyList = study_ids.split(",")
 
   val jobs = if (jobTypes == "all") Seq("biospecimen_centric", "participant_centric", "study_centric", "file_centric") else jobTypes.split(",").toSeq
-  jobs.foreach { job =>
-    studyList.foreach(studyId => {
+  val results: Seq[Result[Unit]] = jobs.flatMap { job =>
+    studyList.map(studyId => Result(job, studyId, Try {
       val newIndexName = s"${job}_${studyId}_$release_id".toLowerCase
       println(s"Add $newIndexName to alias $job")
 
@@ -38,6 +42,17 @@ object PublishTask extends App {
 
       Publisher.publish(job, newIndexName, oldIndexName)
     })
+    )
   }
 
+  if (results.forall(_.t.isSuccess)) {
+    System.exit(0)
+  } else {
+    results.collect { case Result(job, studyId, Failure(exception)) =>
+      log.error(s"An error occur for study $studyId, job $job", exception)
+    }
+    System.exit(-1)
+  }
+
+  case class Result[T](job: String, studyId: String, t: Try[T])
 }
