@@ -520,15 +520,121 @@
             }
           },
           {
-            "name":"collectedDateTime",
-            "type":[
-              "null",
-              {
-                "type":"long",
-                "logicalType":"timestamp-micros"
-              }
-            ],
-            "default":null
+            "name": "_collectedDateTime",
+            "type": {
+              "type": "record",
+              "name": "collectedDateTimeExt1",
+              "fields": [
+                {
+                  "name": "relativeDateTime",
+                  "type": {
+                    "type": "record",
+                    "name": "collectedDateTimeExt3",
+                    "fields": [
+                      {
+                        "name": "target",
+                        "type": "bio.ferlab.fhir.Reference",
+                        "default": {},
+                        "aliases": [
+                          "ext:target"
+                        ]
+                      },
+                      {
+                        "name": "targetPath",
+                        "type": [
+                          "null",
+                          "string"
+                        ],
+                        "default": null,
+                        "aliases": [
+                          "ext:targetPath"
+                        ]
+                      },
+                      {
+                        "name": "relationship",
+                        "type": [
+                          "null",
+                          "string"
+                        ],
+                        "default": null,
+                        "aliases": [
+                          "ext:relationship"
+                        ]
+                      },
+                      {
+                        "name": "offset",
+                        "type": {
+                          "type": "record",
+                          "name": "Duration",
+                          "doc": "A length of time.",
+                          "namespace": "bio.ferlab.fhir",
+                          "fields": [
+                            {
+                              "name": "id",
+                              "type": [
+                                "null",
+                                "string"
+                              ],
+                              "default": null
+                            },
+                            {
+                              "name": "value",
+                              "type": [
+                                "null",
+                                "int"
+                              ],
+                              "default": null
+                            },
+                            {
+                              "name": "comparator",
+                              "type": [
+                                "null",
+                                "string"
+                              ],
+                              "default": null
+                            },
+                            {
+                              "name": "unit",
+                              "type": [
+                                "null",
+                                "string"
+                              ],
+                              "default": null
+                            },
+                            {
+                              "name": "system",
+                              "type": [
+                                "null",
+                                "string"
+                              ],
+                              "default": null
+                            },
+                            {
+                              "name": "code",
+                              "type": [
+                                "null",
+                                "string"
+                              ],
+                              "default": null
+                            }
+                          ],
+                          "default": {}
+                        },
+                        "default": {},
+                        "aliases": [
+                          "ext:offset"
+                        ]
+                      }
+                    ]
+                  },
+                  "aliases": [
+                    "ext:http://hl7.org/fhir/StructureDefinition/cqf-relativeDateTime"
+                  ],
+                  "default": {}
+                }
+              ]
+            },
+            "default": {}
           },
           {
             "type":"bio.ferlab.fhir.Period",
@@ -539,70 +645,7 @@
           },
           {
             "name":"duration",
-            "type":{
-              "type":"record",
-              "name":"Duration",
-              "doc":"A length of time.",
-              "namespace":"bio.ferlab.fhir",
-              "fields":[
-                {
-                  "name":"id",
-                  "type":[
-                    "null",
-                    "string"
-                  ],
-                  "default":null
-                },
-                {
-                  "name":"value",
-                  "type":[
-                    "null",
-                    {
-                      "type":"bytes",
-                      "logicalType":"decimal",
-                      "precision":18,
-                      "scale":0
-                    }
-                  ],
-                  "default":null
-                },
-                {
-                  "name":"comparator",
-                  "type":[
-                    "null",
-                    "string"
-                  ],
-                  "default":null
-                },
-                {
-                  "name":"unit",
-                  "type":[
-                    "null",
-                    "string"
-                  ],
-                  "default":null
-                },
-                {
-                  "name":"system",
-                  "type":[
-                    "null",
-                    "string"
-                  ],
-                  "default":null
-                },
-                {
-                  "name":"code",
-                  "type":[
-                    "null",
-                    "string"
-                  ],
-                  "default":null
-                }
-              ],
-              "default":{
-
-              }
-            },
+            "type": "bio.ferlab.fhir.Duration",
             "default":{
 
             }
