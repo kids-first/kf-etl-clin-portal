@@ -70,70 +70,43 @@
                 "age_at_biospecimen_collection": {
                   "type": "integer"
                 },
-                "bio_repository": {
-                  "type": "keyword"
-                },
-                "biospecimen_id": {
-                  "type": "keyword"
-                },
-                "biospecimen_type": {
-                  "type": "keyword"
-                },
-                "composition" : {
-                  "type": "keyword"
-                },
-                "derived_sample_id": {
-                  "type": "keyword"
-                },
-                "derived_sample_type": {
-                  "type": "keyword"
-                },
-                "external_aliquot_id" : {
-                  "type": "keyword"
-                },
-                "fhir_id" : {
-                  "type": "keyword"
-                },
-                "method_of_sample_procurement" : {
-                  "type": "keyword"
-                },
-                "ncit_id_tissue_type": {
-                  "type": "keyword"
-                },
-                "ncit_id_anatomical_site": {
-                  "type": "boolean"
-                },
-                "participant_fhir_id" : {
-                  "type": "keyword"
-                },
-                "release_id" : {
-                  "type": "keyword"
-                },
                 "sample_id": {
                   "type": "keyword"
                 },
                 "sample_type": {
                   "type": "keyword"
                 },
-                "source_text_anatomical_site": {
+                "parent_sample_id": {
                   "type": "keyword"
                 },
-                "specimen_id" : {
+                "parent_sample_type": {
+                  "type": "keyword"
+                },
+                "collection_sample_id": {
+                  "type": "keyword"
+                },
+                "collection_sample_type": {
+                  "type": "keyword"
+                },
+                "container_id" : {
+                  "type": "keyword"
+                },
+                "volume_ul": {
+                  "type": "float"
+                },
+                "volume_unit": {
+                  "type": "keyword"
+                },
+                "laboratory_procedure" : {
+                  "type": "keyword"
+                },
+                "biospecimen_storage" : {
+                  "type": "keyword"
+                },
+                "fhir_id" : {
                   "type": "keyword"
                 },
                 "status" : {
-                  "type": "keyword"
-                },
-                "study_id" : {
-                  "type": "keyword"
-                },
-                "uberon_id_anatomical_site" : {
-                  "type": "keyword"
-                },
-                "volume_ul" : {
-                  "type": "long"
-                },
-                "volume_ul_unit" : {
                   "type": "keyword"
                 }
               }
