@@ -90,7 +90,8 @@ object ConfigurationGenerator extends App {
         format = DELTA,
         loadtype = OverWritePartition,
         table = Some(TableConf("database", tableName)),
-        partitionby = source.partitionBy
+        partitionby = source.partitionBy,
+        writeoptions = WriteOptions.DEFAULT_OPTIONS ++ Map("overwriteSchema"-> "true")
       )
     )
   })

@@ -12,28 +12,43 @@
         "age_at_biospecimen_collection": {
           "type": "integer"
         },
-        "bio_repository": {
+        "sample_id": {
           "type": "keyword"
         },
-        "biospecimen_id": {
+        "sample_type": {
           "type": "keyword"
         },
-        "biospecimen_type": {
+        "parent_sample_id": {
           "type": "keyword"
         },
-        "composition" : {
+        "parent_sample_type": {
           "type": "keyword"
         },
-        "derived_sample_id": {
+        "collection_sample_id": {
           "type": "keyword"
         },
-        "derived_sample_type": {
+        "collection_sample_type": {
           "type": "keyword"
         },
-        "external_aliquot_id" : {
+        "container_id" : {
+          "type": "keyword"
+        },
+        "volume_ul": {
+          "type": "float"
+        },
+        "volume_unit": {
+          "type": "keyword"
+        },
+        "laboratory_procedure" : {
+          "type": "keyword"
+        },
+        "biospecimen_storage" : {
           "type": "keyword"
         },
         "fhir_id" : {
+          "type": "keyword"
+        },
+        "status" : {
           "type": "keyword"
         },
         "files": {
@@ -141,9 +156,6 @@
               "type": "keyword"
             }
           }
-        },
-        "ncit_id_tissue_type": {
-          "type": "keyword"
         },
         "participant": {
           "properties": {
@@ -384,21 +396,6 @@
           "type": "keyword"
         },
         "release_id" : {
-          "type": "keyword"
-        },
-        "sample_id ": {
-          "type": "keyword"
-        },
-        "sample_type": {
-          "type": "keyword"
-        },
-        "source_text_anatomical_site" : {
-          "type": "keyword"
-        },
-        "specimen_id" : {
-          "type": "keyword"
-        },
-        "status" : {
           "type": "keyword"
         },
         "study": {

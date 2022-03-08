@@ -13,7 +13,7 @@ object Transformations {
 
   val patientMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "study_id", "release_id","gender", "ethnicity", "identifier", "race")
+      .select("fhir_id", "study_id", "release_id", "gender", "ethnicity", "identifier", "race")
       .withColumn("ethnicity", col("ethnicity.text"))
       .withColumn("external_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
       // TODO is_proband
@@ -33,42 +33,44 @@ object Transformations {
   )
 
   val specimenMappings: List[Transformation] = List(
-    Custom(_
-      .select("fhir_id", "release_id", "study_id", "type", "identifier", "collection", "subject", "status")
-      // TODO age_at_event_days
-      // TODO analyte_type
-      .withColumn("composition", col("type")("text"))
-      // TODO concentration_mg_per_ml
-      // TODO consent_type
-      // TODO created_at
-      // TODO duo_ids
-      // TODO dbgap_consent_code
-      // TODO external_sample_id
-      .withColumn("specimen_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
-      .withColumn("external_aliquot_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
-      .withColumn("method_of_sample_procurement", col("collection")("method")("coding"))
-      // TODO modified_at
-      .withColumn("ncit_id_anatomical_site", ncitIdAnatomicalSite(col("collection")("bodySite")("coding")))
-      // TODO ncit_id_tissue_type
-      // TODO shipment_date
-      // TODO shipment_origin
-      .withColumn("participant_fhir_id",   extractReferenceId(col("subject")("reference")))
-      // TODO source_text_tumor_descriptor
-      // TODO source_text_tissue_type
-      .withColumn("source_text_anatomical_site", col("collection")("bodySite")("text"))
-      // TODO spatial_descriptor
-      .withColumn("uberon_id_anatomical_site", uberonIdAnatomicalSite(col("collection")("bodySite")("coding")))
-      .withColumn("volume_ul", col("collection")("quantity")("value"))
-      .withColumn("volume_ul_unit", col("collection")("quantity")("unit"))
-      // TODO visible
-    ),
-    Drop("type", "identifier", "collection", "subject")
+    Custom { input =>
+      val specimen = input
+        .select("fhir_id", "release_id", "study_id", "type", "identifier", "collection", "subject", "status", "container", "parent")
+        .withColumn("sample_type", col("type")("text"))
+        .withColumn("sample_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
+        .withColumn("laboratory_procedure", col("processing")(0)("description"))
+        .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
+        .withColumn("container", explode_outer(col("container")))
+        .withColumn("container_id", extractFirstForSystem(col("container")("identifier"), SYSTEM_URL))
+        .withColumn("volume", col("container")("specimenQuantity")("value"))
+        .withColumn("volume_unit", col("container")("specimenQuantity")("unit"))
+        .withColumn("biospecimen_storage", col("container")("description"))
+        .withColumn("parent", col("parent")(0))
+        .withColumn("parent_id", extractReferenceId(col("parent.reference")))
+        .withColumn("parent_0", struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(0) as "level"))
+
+      val df = (1 to 5).foldLeft(specimen) { case (s, i) =>
+        val joined = specimen.select(struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(i) as "level") as s"parent_$i")
+        s.join(joined, s(s"parent_${i - 1}.parent_id") === joined(s"parent_$i.fhir_id"), "left")
+      }
+      df
+        .withColumn("parent_sample_type", col("parent_1.sample_type"))
+        .withColumn("parent_sample_id", col("parent_1.sample_id"))
+        .withColumn("parent_fhir_id", col("parent_1.fhir_id"))
+        .withColumn("collection_sample", coalesce(col("parent_5"), col("parent_4"), col("parent_3"), col("parent_2"), col("parent_1"), col("parent_0")))
+        .withColumn("collection_sample_id", col("collection_sample.sample_id"))
+        .withColumn("collection_sample_type", col("collection_sample.sample_type"))
+        .withColumn("collection_fhir_id", col("collection_sample.fhir_id"))
+    },
+    Drop("type", "identifier", "collection", "subject",
+      "parent", "parent_5", "parent_4", "parent_3", "parent_2", "parent_1", "parent_0",
+      "container", "collection_sample")
   )
 
   val observationVitalStatusMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "release_id","subject", "valueCodeableConcept", "identifier", "_effectiveDateTime", "study_id")
-      .withColumn("participant_fhir_id", extractReferenceId( col("subject")("reference")))
+      .select("fhir_id", "release_id", "subject", "valueCodeableConcept", "identifier", "_effectiveDateTime", "study_id")
+      .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
       .withColumn("vital_status", col("valueCodeableConcept")("text"))
       .withColumn("observation_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
       .withColumn("age_at_event_days", struct(
@@ -86,7 +88,7 @@ object Transformations {
       .select("fhir_id", "release_id", "subject", "identifier", "focus", "valueCodeableConcept", "meta")
       .withColumn("study_id", col("meta")("tag")(0)("code"))
       .withColumn("observation_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
-      .withColumn("participant1_fhir_id", extractReferenceId( col("subject")("reference")))
+      .withColumn("participant1_fhir_id", extractReferenceId(col("subject")("reference")))
       .withColumn("participant2_fhir_id", extractReferencesId(col("focus")("reference"))(0))
       .withColumn(
         "participant1_to_participant_2_relationship",
@@ -99,11 +101,11 @@ object Transformations {
 
   val conditionDiseaseMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id","study_id", "release_id","identifier", "code", "bodySite", "subject", "verificationStatus", "_recordedDate")
+      .select("fhir_id", "study_id", "release_id", "identifier", "code", "bodySite", "subject", "verificationStatus", "_recordedDate")
       .withColumn("diagnosis_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
       .withColumn("condition_coding", codingClassify(col("code")("coding")).cast("array<struct<category:string,code:string>>"))
       .withColumn("source_text", col("code")("text"))
-      .withColumn("participant_fhir_id", extractReferenceId( col("subject")("reference")))
+      .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
       .withColumn("source_text_tumor_location", col("bodySite")("text"))
       .withColumn("uberon_id_tumor_location", flatten(transform(col("bodySite")("coding"), c => c("display"))))
       .withColumn("affected_status", col("verificationStatus")("text").cast(BooleanType))
@@ -122,11 +124,11 @@ object Transformations {
 
   val conditionPhenotypeMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "study_id", "release_id","identifier", "code", "subject", "verificationStatus", "_recordedDate")
+      .select("fhir_id", "study_id", "release_id", "identifier", "code", "subject", "verificationStatus", "_recordedDate")
       .withColumn("phenotype_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
       .withColumn("condition_coding", codingClassify(col("code")("coding")).cast("array<struct<category:string,code:string>>"))
       .withColumn("source_text", col("code")("text"))
-      .withColumn("participant_fhir_id", extractReferenceId( col("subject")("reference")))
+      .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
       .withColumn("observed", col("verificationStatus")("text"))
       .withColumn("age_at_event", struct(
         col("_recordedDate")("recordedDate")("offset")("value") as "value",
@@ -142,7 +144,7 @@ object Transformations {
 
   val organizationMappings: List[Transformation] = List(
     Custom(_
-      .select( "fhir_id", "release_id", "study_id","identifier", "name")
+      .select("fhir_id", "release_id", "study_id", "identifier", "name")
       .withColumn("organization_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
       .withColumn("institution", col("name"))
     ),
@@ -196,7 +198,7 @@ object Transformations {
 
   val researchstudyMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "keyword", "release_id", "study_id","title", "identifier", "principalInvestigator", "status")
+      .select("fhir_id", "keyword", "release_id", "study_id", "title", "identifier", "principalInvestigator", "status")
       .withColumn("attribution", extractFirstForSystem(col("identifier"), Seq(SYS_NCBI_URL))("value"))
       // TODO data_access_authority
       .withColumn("external_id", extractStudyExternalId(extractFirstForSystem(col("identifier"), Seq(SYS_NCBI_URL))("value")))
@@ -216,7 +218,7 @@ object Transformations {
 
   val documentreferenceMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id","study_id", "release_id", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus")
+      .select("fhir_id", "study_id", "release_id", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus")
       .withColumn("access_urls", col("content")("attachment")("url")(0))
       // TODO availability
       .withColumn("acl", extractAclFromList(col("securityLabel")("text"), col("study_id")))
@@ -237,7 +239,7 @@ object Transformations {
       .withColumn("repository", retrieveRepository(col("content")("attachment")("url")(0)))
       .withColumn("size", retrieveSize(col("content")(1)("attachment")("fileSize")))
       .withColumn("urls", col("content")(1)("attachment")("url"))
-      .withColumn("participant_fhir_ids", array(extractReferenceId( col("subject")("reference"))))
+      .withColumn("participant_fhir_ids", array(extractReferenceId(col("subject")("reference"))))
       .withColumn("specimen_fhir_ids", extractReferencesId(col("context")("related")("reference")))
       .withColumnRenamed("docStatus", "status")
     ),
