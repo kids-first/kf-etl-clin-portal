@@ -25,7 +25,8 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
         BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2")
       ).toDF(),
       "normalized_task" -> Seq(
-        SEQUENCING_EXPERIMENT(),
+        TASK(fhir_id = "1", biospecimen_fhir_ids = Seq("111"), document_reference_fhir_ids = Seq("11", "12")),
+        TASK(fhir_id = "2", biospecimen_fhir_ids = Seq("222"), document_reference_fhir_ids = Seq("21"))
       ).toDF(),
       "es_index_study_centric" -> Seq(STUDY_CENTRIC()).toDF(),
     )
@@ -35,6 +36,7 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
     output.keys should contain("es_index_participant_centric")
 
     val participant_centric = output("es_index_participant_centric")
+
     participant_centric.as[PARTICIPANT_CENTRIC].collect() should contain theSameElementsAs
       Seq(
         PARTICIPANT_CENTRIC(
@@ -45,21 +47,30 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
               `participant_fhir_ids` = Seq("1"),
               `specimen_fhir_ids` = Seq("111"),
               `biospecimens` = Seq(
-                BIOSPECIMEN(`fhir_id` = "111", `participant_fhir_id` = "1"))),
+                BIOSPECIMEN(
+                  `fhir_id` = "111",
+                  `participant_fhir_id` = "1",
+                )),
+            `sequencing_experiment` = SEQUENCING_EXPERIMENT(`fhir_id` = "1")
+            ),
             FILE_WITH_BIOSPECIMEN(
               `fhir_id` = "12",
               `participant_fhir_ids` = Seq("1"),
               `specimen_fhir_ids` = Seq.empty,
-              `biospecimens` = Seq.empty
+              `biospecimens` = Seq.empty,
+              `sequencing_experiment` = SEQUENCING_EXPERIMENT(`fhir_id` = "1")
             ))
         ),
         PARTICIPANT_CENTRIC(
           `fhir_id` = "2",
           `files` = Seq(
-            FILE_WITH_BIOSPECIMEN(`fhir_id` = "21",
+            FILE_WITH_BIOSPECIMEN(
+              `fhir_id` = "21",
               `participant_fhir_ids` = Seq("2"),
               `specimen_fhir_ids` = Seq("222"),
               `biospecimens` = Seq(
-                BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2"))))))
+                BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2")),
+              `sequencing_experiment` = SEQUENCING_EXPERIMENT(`fhir_id` = "2")
+            ))))
   }
 }

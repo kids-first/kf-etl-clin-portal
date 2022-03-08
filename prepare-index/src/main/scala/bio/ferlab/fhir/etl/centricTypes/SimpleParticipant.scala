@@ -51,12 +51,11 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
         .addOutcomes(data(normalized_vital_status.id))
         .addFamily(data(normalized_group.id), data(normalized_family_relationship.id))
         .withColumnRenamed("gender", "sex")
-        .withColumn("karyotype", lit("TODO"))
+        .withColumn("down_syndrome_status", downsyndromeStatusExtract(col("diagnosis.source_text")))
         .withColumn("down_syndrome_diagnosis", lit("TODO"))
         .withColumn("is_proband", lit(false)) // TODO
         .withColumn("age_at_data_collection", lit(111)) // TODO
         .withColumn("study_external_id", col("study")("external_id"))
-    //        .drop("outcomes") //FIXME remove this line
 
     transformedParticipant.show(false)
     Map(mainDestination.id -> transformedParticipant)
@@ -67,6 +66,7 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
                     currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     val dataToLoad = Map(mainDestination.id -> data(mainDestination.id)
       .sortWithinPartitions("fhir_id").toDF())
+
     super.load(dataToLoad)
   }
 }

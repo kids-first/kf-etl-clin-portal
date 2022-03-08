@@ -28,5 +28,4 @@ object Publisher {
               previousIndex: Option[String] = None)(implicit esClient: ElasticSearchClient): Unit = {
     esClient.setAlias(add = List(currentIndex), remove = previousIndex.toList, alias)
   }
-
 }

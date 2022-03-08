@@ -3,7 +3,6 @@ package bio.ferlab.fhir.etl.centricTypes
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.v2.ETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
-import bio.ferlab.datalake.spark3.loader.GenericLoader.read
 import bio.ferlab.fhir.etl.common.Utils._
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -17,6 +16,7 @@ class BiospecimenCentric(releaseId: String, studyIds: List[String])(implicit con
   val normalized_drs_document_reference: DatasetConf = conf.getDataset("normalized_drs_document_reference")
   val simple_participant: DatasetConf = conf.getDataset("simple_participant")
   val es_index_study_centric: DatasetConf = conf.getDataset("es_index_study_centric")
+  val normalized_task: DatasetConf = conf.getDataset("normalized_task")
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
@@ -30,13 +30,13 @@ class BiospecimenCentric(releaseId: String, studyIds: List[String])(implicit con
   override def transform(data: Map[String, DataFrame],
                          lastRunDateTime: LocalDateTime = minDateTime,
                          currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    val fileDF = data(normalized_specimen.id)
+    val specimenDF = data(normalized_specimen.id)
 
     val transformedBiospecimen =
-      fileDF
+      specimenDF
         .addStudy(data(es_index_study_centric.id))
         .addBiospecimenParticipant(data(simple_participant.id))
-        .addBiospecimenFiles(data(normalized_drs_document_reference.id))
+        .addBiospecimenFiles(data(normalized_drs_document_reference.id), data(normalized_task.id))
 
     transformedBiospecimen.show(false)
     Map(mainDestination.id -> transformedBiospecimen)

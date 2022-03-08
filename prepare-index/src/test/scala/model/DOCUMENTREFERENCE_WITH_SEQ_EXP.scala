@@ -1,6 +1,6 @@
 package model
 
-case class DOCUMENTREFERENCE(
+case class DOCUMENTREFERENCE_WITH_SEQ_EXP(
                  `fhir_id`: String = "337786",
                  `acl`: Seq[String] = Seq("phs002330.c999", "SD_Z6MWD3H0", "phs002330.c1"),
                  `access_urls`: String = "drs://data.kidsfirstdrc.org//a4e15e78-de88-44d8-87f4-7f56cda2475f",
@@ -20,5 +20,6 @@ case class DOCUMENTREFERENCE(
                  `study_id`: String = "SD_Z6MWD3H0",
                  `participant_fhir_ids`: Seq[String] = Seq("39167"),
                  `release_id`: String = "re_000001",
-                 `specimen_fhir_ids`: Seq[String] = Seq.empty
+                 `specimen_fhir_ids`: Seq[String] = Seq.empty,
+                 `sequencing_experiment`: SEQUENCING_EXPERIMENT = null
                )

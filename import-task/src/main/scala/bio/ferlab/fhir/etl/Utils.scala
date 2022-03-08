@@ -14,6 +14,7 @@ object Utils {
   val patternUrnUniqueIdStudy = "[A-Z][a-z]+-(SD_[0-9A-Za-z]+)-([A-Z]{2}_[0-9A-Za-z]+)"
   val documentReferenceExtract = "^DocumentReference\\/([0-9]+)$"
   val specimenExtract = "^Specimen\\/([0-9]+)$"
+  val phenotypeExtract = "^[A-Z]{2,}.[0-9]+$"
 
 
   private def codingSystemClassify(url: String) = {
@@ -39,7 +40,12 @@ object Utils {
 
 
   val codingClassify: UserDefinedFunction =
-    udf((arr: Seq[(String, String, String, String, String, String)]) => arr.map(r => (codingSystemClassify(r._2), r._4)))
+    udf((arr: Seq[(String, String, String, String, String, String)]) =>
+      arr.map(
+        r => (codingSystemClassify(r._2),
+          if(r._4.matches(phenotypeExtract)) r._4.replace("_", ":") else r._4)
+      )
+    )
 
   def firstNonNull: UserDefinedFunction = udf((arr: Seq[String]) => arr.find(_ != null).orNull)
 
@@ -61,14 +67,6 @@ object Utils {
         => arr.map(r => r._2.head._5 -> r._3).toMap)
 
   val retrieveIsHarmonized: UserDefinedFunction = udf((s: Option[String]) => s.exists(_.contains("harmonized-data")))
-
-  val retrieveIsControlledAccess: UserDefinedFunction = udf((s: Option[String]) => {
-    if(s.exists(_.equals("R"))) {
-      "Controlled"
-    } else {
-      "Open"
-    }
-  })
 
   val retrieveRepository: UserDefinedFunction = udf((s: Option[String]) => {
     if(s.exists(_.contains(gen3Host))) {
