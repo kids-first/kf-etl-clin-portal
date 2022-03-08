@@ -35,7 +35,7 @@ object Transformations {
   val specimenMappings: List[Transformation] = List(
     Custom { input =>
       val specimen = input
-        .select("fhir_id", "release_id", "study_id", "type", "identifier", "collection", "subject", "status", "container", "parent")
+        .select("fhir_id", "release_id", "study_id", "type", "identifier", "collection", "subject", "status", "container", "parent", "processing")
         .withColumn("sample_type", col("type")("text"))
         .withColumn("sample_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
         .withColumn("laboratory_procedure", col("processing")(0)("description"))
@@ -218,7 +218,7 @@ object Transformations {
 
   val documentreferenceMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "study_id", "release_id", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus")
+      .select("fhir_id", "study_id", "release_id", "category", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus")
       .withColumn("access_urls", col("content")("attachment")("url")(0))
       // TODO availability
       .withColumn("acl", extractAclFromList(col("securityLabel")("text"), col("study_id")))
