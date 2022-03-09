@@ -43,7 +43,7 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     val patient2 = patientWithOutcome.filter(_._1 == "P2").head
     patientWithOutcome.exists(_._1 == "P_NOT_THERE") shouldBe false
 
-    patient1._2.map(_.`fhir_id`) == Seq("O1")
+    patient1._2.map(_.`fhir_id`) shouldEqual Seq("O1")
     patient2._2.isEmpty shouldBe true
   }
 
@@ -72,7 +72,7 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     val patientWithFamilies = output.select("fhir_id", "family").as[(String, FAMILY)].collect()
 
     val patient3 = patientWithFamilies.filter(_._1 == "33").head
-    patient3._2.family_relations.map(_.`relation`) shouldBe Seq("mother", "father")
+    patient3._2.family_relations.map(_.`relation`) should contain theSameElementsAs Seq("mother", "father")
 
     val patient1 = patientWithFamilies.filter(_._1 == "11").head
     patient1._2.family_relations.map(_.`relation`) shouldBe Seq("son")
@@ -89,7 +89,7 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val inputPhenotypes = Seq(
-      CONDITION_PHENOTYPE(fhir_id = "1p", participant_fhir_id = "A", condition_coding = Seq(CONDITION_CODING(`category` = "HPO", `code` = "HP_0001631")), observed = "positive"),
+      CONDITION_PHENOTYPE(fhir_id = "1p", participant_fhir_id = "A", condition_coding = Seq(CONDITION_CODING(`category` = "HPO", `code` = "HP_0001631")), observed = "confirmed"),
       CONDITION_PHENOTYPE(fhir_id = "2p", participant_fhir_id = "A", condition_coding = Seq(CONDITION_CODING())),
       CONDITION_PHENOTYPE(fhir_id = "3p", participant_fhir_id = "A", condition_coding = Seq(CONDITION_CODING()), observed = "not"),
       CONDITION_PHENOTYPE(fhir_id = "4p", participant_fhir_id = "A")
@@ -146,7 +146,7 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
         fhir_id = "1p",
         participant_fhir_id = "A",
         condition_coding = Seq(CONDITION_CODING(`category` = "HPO", `code` = "HP_0000234")),
-        observed = "positive"
+        observed = "confirmed"
       ),
       CONDITION_PHENOTYPE(
         fhir_id = "2p",
@@ -172,6 +172,8 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
         .as[(String, Seq[OBSERVABLE_TERM], Seq[OBSERVABLE_TERM])].collect()
 
     val participantA_Ph = output.filter(_._1 == "A").head
+
+    println(participantA_Ph._2)
 
     participantA_Ph._2.filter(t => t.`name` === "Phenotypic abnormality (HP:0000118)").head.`age_at_event_days` shouldEqual Seq(0)
     participantA_Ph._3.filter(t => t.`name` === "Phenotypic abnormality (HP:0000118)").head.`age_at_event_days` shouldEqual Seq(5, 10)
@@ -323,31 +325,55 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     participant5._2.isEmpty shouldBe true
 
     val participantP1FileF1 = participant1._2.filter(_.`fhir_id` == "F1").head
-    participantP1FileF1.`biospecimens`.map(_.`fhir_id`) == Seq("B11")
-    participantP1FileF1.`biospecimens`.map(_.`fhir_id`) == Seq("B12")
+    participantP1FileF1.`biospecimens`.map(_.`fhir_id`) should contain theSameElementsAs Seq("B11", "B12")
 
     val participantP1FileF2 = participant1._2.filter(_.`fhir_id` == "F2").head
-    participantP1FileF2.`biospecimens`.map(_.`fhir_id`) == Seq("B11")
-    participantP1FileF2.`biospecimens`.map(_.`fhir_id`) == Seq("B13")
+    participantP1FileF2.`biospecimens`.map(_.`fhir_id`) should contain theSameElementsAs Seq("B11", "B13")
 
     val participantP2FileF1 = participant2._2.filter(_.`fhir_id` == "F1").head
-    participantP2FileF1.`biospecimens`.map(_.`fhir_id`) == Seq("B21")
+    participantP2FileF1.`biospecimens`.map(_.`fhir_id`) should contain theSameElementsAs Seq("B21")
 
     val participantP2FileF3 = participant2._2.filter(_.`fhir_id` == "F3").head
-    participantP2FileF3.`biospecimens`.map(_.`fhir_id`) == Seq("B22")
+    participantP2FileF3.`biospecimens`.map(_.`fhir_id`) should contain theSameElementsAs Seq("B22")
 
     val participantP2FileF5 = participant2._2.filter(_.`fhir_id` == "F5").head
     participantP2FileF5.`biospecimens`.isEmpty shouldBe true
 
     val participantP3FileF2 = participant3._2.filter(_.`fhir_id` == "F2").head
-    participantP3FileF2.`biospecimens`.map(_.`fhir_id`) == Seq("B31")
-    participantP3FileF2.`biospecimens`.map(_.`fhir_id`) == Seq("B32")
+    participantP3FileF2.`biospecimens`.map(_.`fhir_id`) should contain theSameElementsAs Seq("B31", "B32")
 
     val participantP3FileF4 = participant3._2.filter(_.`fhir_id` == "F4").head
-    participantP3FileF4.`biospecimens`.map(_.`fhir_id`) == Seq("B33")
+    participantP3FileF4.`biospecimens`.map(_.`fhir_id`) should contain theSameElementsAs Seq("B33")
 
     val participantP3FileF5 = participant3._2.filter(_.`fhir_id` == "F5").head
     participantP3FileF5.`biospecimens`.isEmpty shouldBe true
+  }
+
+  it should "add empty files for biospecimen without files for a specific participant" in {
+    val inputParticipant = Seq(
+      SIMPLE_PARTICIPANT(`fhir_id` = "P1"),
+    ).toDF()
+
+    val inputBiospecimen = Seq(
+      BIOSPECIMEN(`participant_fhir_id` = "P1", `fhir_id` = "B11"),
+      BIOSPECIMEN(`participant_fhir_id` = "P1", `fhir_id` = "B12"), //No file associated
+    ).toDF()
+
+    val inputDocumentReference = Seq(
+      DOCUMENTREFERENCE(`participant_fhir_ids` = Seq("P1"), `fhir_id` = "F1", `specimen_fhir_ids` = Seq("B11")),
+    ).toDF()
+
+    val inputSequencingExperiments = Seq.empty[TASK].toDF()
+
+    val output = inputParticipant.addParticipantFilesWithBiospecimen(inputDocumentReference, inputBiospecimen, inputSequencingExperiments)
+
+    //B11 and B12 should be attached to P1
+    val participant1AndSpecimen = output.select("fhir_id","files.biospecimens").filter(col("fhir_id") === "P1").as[(String, Seq[Seq[BIOSPECIMEN]])].collect()
+    participant1AndSpecimen.head._2.flatten.map(_.fhir_id) should contain theSameElementsAs Seq("B11", "B12")
+
+    //P1 should contain one file and one dummy file
+    val participantWithFile = output.select("fhir_id","files.file_name").filter(col("fhir_id") === "P1").as[(String, Seq[String])].collect()
+    participantWithFile.head._2 should contain theSameElementsAs Seq("4db9adf4-94f7-4800-a360-49eda89dfb62.g.vcf.gz", "dummy_file")
   }
 
   "addFileParticipantsWithBiospecimen" should "add participant with their biospecimen for a specific file" in {
@@ -400,7 +426,9 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val inputSequencingExperiments = Seq(
-      TASK()
+      TASK(`fhir_id` = "1", `document_reference_fhir_ids` = Seq("F1")),
+      TASK(`fhir_id` = "2", `document_reference_fhir_ids` = Seq("F2", "F3")),
+      TASK(`fhir_id` = "3", `document_reference_fhir_ids` = Seq("F5")),
     ).toDF()
 
     val output = inputDocumentReference.addFileParticipantsWithBiospecimen(inputParticipant, inputBiospecimen, inputSequencingExperiments)
@@ -432,25 +460,22 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     file4._2.map(_.`fhir_id`) == Seq("P3", "P4")
 
     val fileF1ParticipantP1 = file1._2.filter(_.`fhir_id` == "P1").head
-    fileF1ParticipantP1.`biospecimens`.map(_.`fhir_id`) == Seq("B11")
-    fileF1ParticipantP1.`biospecimens`.map(_.`fhir_id`) == Seq("B12")
+    fileF1ParticipantP1.`biospecimens`.map(_.`fhir_id`) should contain theSameElementsAs Seq("B11", "B12")
 
     val fileF1ParticipantP2 = file1._2.filter(_.`fhir_id` == "P2").head
-    fileF1ParticipantP2.`biospecimens`.map(_.`fhir_id`) == Seq("B21")
+    fileF1ParticipantP2.`biospecimens`.map(_.`fhir_id`) should contain theSameElementsAs Seq("B21")
 
     val fileF2ParticipantP1 = file2._2.filter(_.`fhir_id` == "P1").head
-    fileF2ParticipantP1.`biospecimens`.map(_.`fhir_id`) == Seq("B11")
-    fileF2ParticipantP1.`biospecimens`.map(_.`fhir_id`) == Seq("B13")
+    fileF2ParticipantP1.`biospecimens`.map(_.`fhir_id`) should contain theSameElementsAs Seq("B11", "B13")
 
     val fileF2ParticipantP3 = file2._2.filter(_.`fhir_id` == "P3").head
-    fileF2ParticipantP3.`biospecimens`.map(_.`fhir_id`) == Seq("B31")
-    fileF2ParticipantP3.`biospecimens`.map(_.`fhir_id`) == Seq("B32")
+    fileF2ParticipantP3.`biospecimens`.map(_.`fhir_id`) should contain theSameElementsAs Seq("B31", "B32")
 
     val fileF3ParticipantP2 = file3._2.filter(_.`fhir_id` == "P2").head
-    fileF3ParticipantP2.`biospecimens`.map(_.`fhir_id`) == Seq("B22")
+    fileF3ParticipantP2.`biospecimens`.map(_.`fhir_id`) should contain theSameElementsAs Seq("B22")
 
     val fileF4ParticipantP3 = file4._2.filter(_.`fhir_id` == "P3").head
-    fileF4ParticipantP3.`biospecimens`.map(_.`fhir_id`) == Seq("B33")
+    fileF4ParticipantP3.`biospecimens`.map(_.`fhir_id`) should contain theSameElementsAs Seq("B33")
 
     val fileF4ParticipantP4 = file4._2.filter(_.`fhir_id` == "P4").head
     fileF4ParticipantP4.`biospecimens`.isEmpty shouldBe true
@@ -484,7 +509,7 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
 
     val output = inputBiospecimen.addBiospecimenFiles(inputDocumentReference, inputSequenceExperiments)
 
-    val biospecimenWithFiles = output.select("fhir_id", "files").as[(String, Seq[DOCUMENTREFERENCE])].collect()
+    val biospecimenWithFiles = output.select("fhir_id", "files").as[(String, Seq[DOCUMENTREFERENCE_WITH_SEQ_EXP])].collect()
 
     // Assertions
     // B1 -> F1 & F2
@@ -493,10 +518,10 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     // B_NOT_THERE is not in result
 
     val biospecimen1 = biospecimenWithFiles.filter(_._1 == "B1").head
-    biospecimen1._2.map(_.`fhir_id`) == Seq("F1", "F2")
+    biospecimen1._2.map(_.`fhir_id`) should contain theSameElementsAs Seq("F1", "F2")
 
     val biospecimen2 = biospecimenWithFiles.filter(_._1 == "B2").head
-    biospecimen2._2.map(_.`fhir_id`) == Seq("F2")
+    biospecimen2._2.map(_.`fhir_id`) should contain theSameElementsAs Seq("F2")
 
     val biospecimen3 = biospecimenWithFiles.filter(_._1 == "B3").head
     biospecimen3._2.isEmpty shouldBe true
