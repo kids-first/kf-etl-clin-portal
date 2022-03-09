@@ -1,6 +1,5 @@
 package bio.ferlab.fhir.etl
 
-import bio.ferlab.datalake.spark3.etl.v2.ETL
 import bio.ferlab.datalake.spark3.public.SparkApp
 import bio.ferlab.fhir.etl.fhavro.FhavroToNormalizedMappings
 
