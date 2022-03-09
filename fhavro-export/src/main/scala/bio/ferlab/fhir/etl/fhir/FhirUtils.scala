@@ -9,9 +9,9 @@ object FhirUtils {
 
   implicit val fhirContext: FhirContext = FhirContext.forR4()
 
-  def buildFhirClient(config: Config): GenericClient =  {
-    val fhirClient : GenericClient = fhirContext.getRestfulClientFactory.newGenericClient(s"${config.fhirConfig.baseUrl}").asInstanceOf[GenericClient]
-    fhirClient.registerInterceptor(new CookieInterceptor(config.keycloakConfig.cookie))
+  def buildFhirClient(config: Config): GenericClient = {
+    val fhirClient: GenericClient = fhirContext.getRestfulClientFactory.newGenericClient(s"${config.fhirConfig.baseUrl}").asInstanceOf[GenericClient]
+    config.keycloakConfig.foreach(kc => fhirClient.registerInterceptor(new CookieInterceptor(kc.cookie)))
     fhirClient
   }
 }

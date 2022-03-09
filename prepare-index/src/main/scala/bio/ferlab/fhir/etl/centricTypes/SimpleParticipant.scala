@@ -57,7 +57,6 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
         .withColumn("age_at_data_collection", lit(111)) // TODO
         .withColumn("study_external_id", col("study")("external_id"))
 
-    transformedParticipant.show(false)
     Map(mainDestination.id -> transformedParticipant)
   }
 

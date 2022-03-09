@@ -35,13 +35,14 @@ object Transformations {
   val specimenMappings: List[Transformation] = List(
     Custom { input =>
       val specimen = input
-        .select("fhir_id", "release_id", "study_id", "type", "identifier", "collection", "subject", "status", "container", "parent")
+        .select("fhir_id", "release_id", "study_id", "type", "identifier", "collection", "subject", "status", "container", "parent", "processing")
         .withColumn("sample_type", col("type")("text"))
         .withColumn("sample_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
         .withColumn("laboratory_procedure", col("processing")(0)("description"))
         .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
+        .withColumn("age_at_biospecimen_collection", col("collection._collectedDateTime.relativeDateTime.offset.value"))
         .withColumn("container", explode_outer(col("container")))
-        .withColumn("container_id", extractFirstForSystem(col("container")("identifier"), SYSTEM_URL))
+        .withColumn("container_id", col("container")("identifier")(0)("value"))
         .withColumn("volume", col("container")("specimenQuantity")("value"))
         .withColumn("volume_unit", col("container")("specimenQuantity")("unit"))
         .withColumn("biospecimen_storage", col("container")("description"))
@@ -129,7 +130,7 @@ object Transformations {
       .withColumn("condition_coding", codingClassify(col("code")("coding")).cast("array<struct<category:string,code:string>>"))
       .withColumn("source_text", col("code")("text"))
       .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
-      .withColumn("observed", col("verificationStatus")("text"))
+      .withColumn("observed", col("verificationStatus")("coding")(0)("code"))
       .withColumn("age_at_event", struct(
         col("_recordedDate")("recordedDate")("offset")("value") as "value",
         col("_recordedDate")("recordedDate")("offset")("unit") as "units",
@@ -218,7 +219,7 @@ object Transformations {
 
   val documentreferenceMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "study_id", "release_id", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus")
+      .select("fhir_id", "study_id", "release_id", "category", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus")
       .withColumn("access_urls", col("content")("attachment")("url")(0))
       // TODO availability
       .withColumn("acl", extractAclFromList(col("securityLabel")("text"), col("study_id")))
@@ -271,10 +272,10 @@ object Transformations {
     "family_relationship" -> observationFamilyRelationshipMappings,
     "phenotype" -> conditionPhenotypeMappings,
     "disease" -> conditionDiseaseMappings,
-    "researchsubject" -> researchSubjectMappings,
-    "researchstudy" -> researchstudyMappings,
+    "research_subject" -> researchSubjectMappings,
+    "research_study" -> researchstudyMappings,
     "group" -> groupMappings,
-    "drs_document_reference" -> documentreferenceMappings,
+    "document_reference" -> documentreferenceMappings,
     "organization" -> organizationMappings,
     "task" -> taskMappings,
   )

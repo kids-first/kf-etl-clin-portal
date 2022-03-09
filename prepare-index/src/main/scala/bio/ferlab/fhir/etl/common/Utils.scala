@@ -10,7 +10,7 @@ object Utils {
   val hpoPhenotype: UserDefinedFunction =
     udf((code: String, observed: String, source_text: String, age_at_event_days: Int) => observed.toLowerCase.trim match {
       //  hpo_observed/hpo_non_observed/hpo_observed_text/hpo_non_observed_text/observed_bool
-      case "positive" => (s"$source_text ($code)", null, source_text, null, true, age_at_event_days)
+      case "confirmed" => (s"$source_text ($code)", null, source_text, null, true, age_at_event_days)
       case _ => (null, s"$source_text ($code)", null, source_text, false, age_at_event_days)
     })
 
@@ -75,7 +75,6 @@ object Utils {
     }
 
     def addDiagnosisPhenotypes(phenotypeDF: DataFrame, diagnosesDF: DataFrame)(hpoTerms: DataFrame, mondoTerms: DataFrame): DataFrame = {
-
       val phenotypes = addPhenotypes(phenotypeDF)
 
       val phenotypesWithHPOTerms =
@@ -92,10 +91,10 @@ object Utils {
               col("age_at_event_days")
             )) as "phenotype",
             collect_list(
-              when(lower(col("observed")) === "positive", col("observable_with_ancestors"))
+              when(lower(col("observed")) === "confirmed", col("observable_with_ancestors"))
             ) as "observed_phenotype",
             collect_list(
-              when(lower(col("observed")) =!= "positive" || col("observed").isNull, col("observable_with_ancestors"))
+              when(lower(col("observed")) =!= "confirmed" || col("observed").isNull, col("observable_with_ancestors"))
             ) as "non_observed_phenotype"
           )
 

@@ -12,8 +12,8 @@ import java.time.LocalDateTime
 class StudyCentric(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETL {
 
   override val mainDestination: DatasetConf = conf.getDataset("es_index_study_centric")
-  val normalized_researchstudy: DatasetConf = conf.getDataset("normalized_researchstudy")
-  val normalized_drs_document_reference: DatasetConf = conf.getDataset("normalized_drs_document_reference")
+  val normalized_researchstudy: DatasetConf = conf.getDataset("normalized_research_study")
+  val normalized_drs_document_reference: DatasetConf = conf.getDataset("normalized_document_reference")
   val normalized_patient: DatasetConf = conf.getDataset("normalized_patient")
   val normalized_group: DatasetConf = conf.getDataset("normalized_group")
 
@@ -52,7 +52,6 @@ class StudyCentric(releaseId: String, studyIds: List[String])(implicit configura
       .withColumn("family_count", coalesce(col("family_count"), lit(0)))
       .withColumn("family_data", col("family_count").gt(0))
 
-    transformedStudyDf.show(false)
     Map(mainDestination.id -> transformedStudyDf)
   }
 

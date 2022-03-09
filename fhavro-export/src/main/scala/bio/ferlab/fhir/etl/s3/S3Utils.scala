@@ -42,11 +42,8 @@ object S3Utils {
   }
 
   def buildKey(fhirRequest: FhirRequest, releaseId: String, studyId: String): String = {
-    val profilePath = fhirRequest.profile match {
-      case Some(profile) => s"/${profile.split("/").last}"
-      case None => ""
-    }
+    val profilePath = fhirRequest.entityType.getOrElse(fhirRequest.`type`.toLowerCase())
 
-    s"fhir/${fhirRequest.`type`.toLowerCase()}$profilePath/study_id=$studyId/release_id=$releaseId/${fhirRequest.schema}.avro"
+    s"fhir/$profilePath/study_id=$studyId/release_id=$releaseId/${fhirRequest.schema}.avro"
   }
 }

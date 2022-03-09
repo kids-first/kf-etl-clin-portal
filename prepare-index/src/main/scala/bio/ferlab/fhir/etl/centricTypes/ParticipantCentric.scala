@@ -13,7 +13,7 @@ class ParticipantCentric(releaseId: String, studyIds: List[String])(implicit con
 
   override val mainDestination: DatasetConf = conf.getDataset("es_index_participant_centric")
   val simple_participant: DatasetConf = conf.getDataset("simple_participant")
-  val normalized_drs_document_reference: DatasetConf = conf.getDataset("normalized_drs_document_reference")
+  val normalized_drs_document_reference: DatasetConf = conf.getDataset("normalized_document_reference")
   val normalized_specimen: DatasetConf = conf.getDataset("normalized_specimen")
   val normalized_task: DatasetConf = conf.getDataset("normalized_task")
 
@@ -39,7 +39,6 @@ class ParticipantCentric(releaseId: String, studyIds: List[String])(implicit con
           data(normalized_task.id)
         )
 
-    transformedParticipant.show(false)
     Map(mainDestination.id -> transformedParticipant)
   }
 
