@@ -39,7 +39,6 @@ class ParticipantCentric(releaseId: String, studyIds: List[String])(implicit con
           data(normalized_task.id)
         )
 
-    transformedParticipant.show(false)
     Map(mainDestination.id -> transformedParticipant)
   }
 

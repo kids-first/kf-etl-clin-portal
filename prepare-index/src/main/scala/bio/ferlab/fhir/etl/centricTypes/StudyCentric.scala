@@ -52,7 +52,6 @@ class StudyCentric(releaseId: String, studyIds: List[String])(implicit configura
       .withColumn("family_count", coalesce(col("family_count"), lit(0)))
       .withColumn("family_data", col("family_count").gt(0))
 
-    transformedStudyDf.show(false)
     Map(mainDestination.id -> transformedStudyDf)
   }
 
