@@ -21,7 +21,7 @@ class BiospecimenCentric(releaseId: String, studyIds: List[String])(implicit con
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
 
-    Seq(normalized_specimen, normalized_drs_document_reference, simple_participant, es_index_study_centric)
+    Seq(normalized_specimen, normalized_drs_document_reference, simple_participant, es_index_study_centric, normalized_task)
       .map(ds => ds.id -> ds.read.where(col("release_id") === releaseId)
         .where(col("study_id").isin(studyIds: _*))
       ).toMap
