@@ -16,7 +16,7 @@ case class FhirConfig(baseUrl: String, resources: List[FhirRequest])
 case class FhirRequest(`type`: String, schema: String, total: Option[String], profile: Option[String], count: Option[Int], additionalQueryParam: Option[Map[String, List[String]]])
 
 case class Config(awsConfig: AWSConfig,
-                  keycloakConfig: KeycloakConfig,
+                  keycloakConfig: Option[KeycloakConfig],
                   fhirConfig: FhirConfig)
 
 object Config {
