@@ -2,6 +2,7 @@ package bio.ferlab.fhir.etl.task
 
 import bio.ferlab.fhir.Fhavro
 import bio.ferlab.fhir.etl.config.FhirRequest
+import bio.ferlab.fhir.etl.fhir.FhirUtils
 import bio.ferlab.fhir.etl.logging.LoggerUtils
 import bio.ferlab.fhir.etl.s3.S3Utils.{buildKey, writeFile}
 import ca.uhn.fhir.rest.client.api.IGenericClient
@@ -45,6 +46,8 @@ class FhavroExporter(bucketName: String, releaseId: String, studyId: String)(imp
 
     while (query.getLink("next") != null) {
       LoggerUtils.logProgress("export", resources.length)
+      //Update next link in case server base url changed, that happens if fhir client is configured to use ip address of fhir instance
+      query.getLink("next").setUrl(FhirUtils.replaceBaseUrl(query.getLink("next").getUrl, fhirClient.getServerBase))
       query = fhirClient.loadPage().next(query).execute()
       resources.addAll(getResourcesFromBundle(query))
     }
