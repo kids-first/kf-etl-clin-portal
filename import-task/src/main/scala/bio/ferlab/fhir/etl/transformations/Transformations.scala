@@ -130,7 +130,7 @@ object Transformations {
       .withColumn("condition_coding", codingClassify(col("code")("coding")).cast("array<struct<category:string,code:string>>"))
       .withColumn("source_text", col("code")("text"))
       .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
-      .withColumn("observed", col("verificationStatus")("text"))
+      .withColumn("observed", col("verificationStatus")("coding")(0)("code"))
       .withColumn("age_at_event", struct(
         col("_recordedDate")("recordedDate")("offset")("value") as "value",
         col("_recordedDate")("recordedDate")("offset")("unit") as "units",
