@@ -40,6 +40,7 @@ object Transformations {
         .withColumn("sample_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
         .withColumn("laboratory_procedure", col("processing")(0)("description"))
         .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
+        .withColumn("age_at_biospecimen_collection", col("collection._collectedDateTime.relativeDateTime.offset.value"))
         .withColumn("container", explode_outer(col("container")))
         .withColumn("container_id", extractFirstForSystem(col("container")("identifier"), SYSTEM_URL))
         .withColumn("volume", col("container")("specimenQuantity")("value"))
