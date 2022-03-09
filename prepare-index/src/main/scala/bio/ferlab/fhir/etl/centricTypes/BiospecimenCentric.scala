@@ -13,7 +13,7 @@ class BiospecimenCentric(releaseId: String, studyIds: List[String])(implicit con
 
   override val mainDestination: DatasetConf = conf.getDataset("es_index_biospecimen_centric")
   val normalized_specimen: DatasetConf = conf.getDataset("normalized_specimen")
-  val normalized_drs_document_reference: DatasetConf = conf.getDataset("normalized_drs_document_reference")
+  val normalized_drs_document_reference: DatasetConf = conf.getDataset("normalized_document_reference")
   val simple_participant: DatasetConf = conf.getDataset("simple_participant")
   val es_index_study_centric: DatasetConf = conf.getDataset("es_index_study_centric")
   val normalized_task: DatasetConf = conf.getDataset("normalized_task")

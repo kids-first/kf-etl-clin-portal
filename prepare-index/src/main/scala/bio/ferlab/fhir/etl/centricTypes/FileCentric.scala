@@ -12,7 +12,7 @@ import java.time.LocalDateTime
 class FileCentric(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETL {
 
   override val mainDestination: DatasetConf = conf.getDataset("es_index_file_centric")
-  val normalized_drs_document_reference: DatasetConf = conf.getDataset("normalized_drs_document_reference")
+  val normalized_drs_document_reference: DatasetConf = conf.getDataset("normalized_document_reference")
   val normalized_specimen: DatasetConf = conf.getDataset("normalized_specimen")
   val simple_participant: DatasetConf = conf.getDataset("simple_participant")
   val es_index_study_centric: DatasetConf = conf.getDataset("es_index_study_centric")

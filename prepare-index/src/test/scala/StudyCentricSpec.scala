@@ -12,9 +12,9 @@ class StudyCentricSpec extends FlatSpec with Matchers with WithSparkSession {
 
   "transform" should "prepare index study_centric" in {
     val data: Map[String, DataFrame] = Map(
-      "normalized_researchstudy" -> Seq(RESEARCHSTUDY()).toDF(),
+      "normalized_research_study" -> Seq(RESEARCHSTUDY()).toDF(),
       "normalized_patient" -> Seq(PATIENT(), PATIENT()).toDF(),
-      "normalized_drs_document_reference" -> Seq(DOCUMENTREFERENCE(), DOCUMENTREFERENCE(), DOCUMENTREFERENCE()).toDF(),
+      "normalized_document_reference" -> Seq(DOCUMENTREFERENCE(), DOCUMENTREFERENCE(), DOCUMENTREFERENCE()).toDF(),
       "normalized_group" -> Seq(GROUP(), GROUP()).toDF()
     )
 
@@ -29,9 +29,9 @@ class StudyCentricSpec extends FlatSpec with Matchers with WithSparkSession {
   
   "transform" should "prepare index study_centric with family_data false if no group" in {
     val data: Map[String, DataFrame] = Map(
-      "normalized_researchstudy" -> Seq(RESEARCHSTUDY()).toDF(),
+      "normalized_research_study" -> Seq(RESEARCHSTUDY()).toDF(),
       "normalized_patient" -> Seq(PATIENT(), PATIENT()).toDF(),
-      "normalized_drs_document_reference" -> Seq(DOCUMENTREFERENCE(), DOCUMENTREFERENCE(), DOCUMENTREFERENCE()).toDF(),
+      "normalized_document_reference" -> Seq(DOCUMENTREFERENCE(), DOCUMENTREFERENCE(), DOCUMENTREFERENCE()).toDF(),
       "normalized_group" -> Seq[GROUP]().toDF()
     )
 

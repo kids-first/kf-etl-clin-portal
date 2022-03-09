@@ -51,28 +51,28 @@ object ConfigurationGenerator extends App {
 
   private val partitionByStudyIdAndReleaseId = List("study_id", "release_id")
   val sourceNames: Seq[SourceConfig] = Seq(
-    SourceConfig("observation", Some("family-relationship"), partitionByStudyIdAndReleaseId),
-    SourceConfig("observation", Some("vital-status"), partitionByStudyIdAndReleaseId),
+    SourceConfig("observation", Some("family_relationship"), partitionByStudyIdAndReleaseId),
+    SourceConfig("observation", Some("vital_status"), partitionByStudyIdAndReleaseId),
     SourceConfig("condition", Some("disease"), partitionByStudyIdAndReleaseId),
     SourceConfig("condition", Some("phenotype"), partitionByStudyIdAndReleaseId),
     SourceConfig("patient", None, partitionByStudyIdAndReleaseId),
     SourceConfig("group", None, partitionByStudyIdAndReleaseId),
-    SourceConfig("documentreference", Some("drs-document-reference"), partitionByStudyIdAndReleaseId),
-    SourceConfig("researchstudy", None, partitionByStudyIdAndReleaseId),
-    SourceConfig("researchsubject", None, partitionByStudyIdAndReleaseId),
+    SourceConfig("documentreference", Some("document_reference"), partitionByStudyIdAndReleaseId),
+    SourceConfig("researchstudy", Some("research_study"), partitionByStudyIdAndReleaseId),
+    SourceConfig("researchsubject", Some("research_subject"), partitionByStudyIdAndReleaseId),
     SourceConfig("specimen", None, partitionByStudyIdAndReleaseId),
     SourceConfig("organization", None, List("release_id")),
     SourceConfig("task", None, partitionByStudyIdAndReleaseId),
   )
 
-  case class SourceConfig(fhirResource: String, fhirProfile: Option[String], partitionBy: List[String])
+  case class SourceConfig(fhirResource: String, entityType: Option[String], partitionBy: List[String])
 
   case class Index(name: String, partitionBy: List[String])
 
   val rawsAndNormalized = sourceNames.flatMap(source => {
 
-    val rawPath = source.fhirProfile.map(p => s"${source.fhirResource}/$p").getOrElse(source.fhirResource)
-    val tableName = source.fhirProfile.map(_.replace("-", "_")).getOrElse(source.fhirResource.replace("-", "_"))
+    val rawPath = source.entityType.getOrElse(source.fhirResource)
+    val tableName = source.entityType.map(_.replace("-", "_")).getOrElse(source.fhirResource.replace("-", "_"))
     Seq(
       DatasetConf(
         id = s"raw_$tableName",

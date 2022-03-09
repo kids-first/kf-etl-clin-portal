@@ -272,10 +272,10 @@ object Transformations {
     "family_relationship" -> observationFamilyRelationshipMappings,
     "phenotype" -> conditionPhenotypeMappings,
     "disease" -> conditionDiseaseMappings,
-    "researchsubject" -> researchSubjectMappings,
-    "researchstudy" -> researchstudyMappings,
+    "research_subject" -> researchSubjectMappings,
+    "research_study" -> researchstudyMappings,
     "group" -> groupMappings,
-    "drs_document_reference" -> documentreferenceMappings,
+    "document_reference" -> documentreferenceMappings,
     "organization" -> organizationMappings,
     "task" -> taskMappings,
   )
