@@ -1,8 +1,9 @@
 package bio.ferlab.fhir.etl
 
 //import bio.ferlab.fhir.etl.ImportTask.expReleaseId
+
 import org.apache.spark.sql.expressions.UserDefinedFunction
-import org.apache.spark.sql.functions.{col, filter, regexp_extract, udf}
+import org.apache.spark.sql.functions.{coalesce, col, filter, regexp_extract, udf}
 import org.apache.spark.sql.{Column, functions}
 
 object Utils {
@@ -28,7 +29,7 @@ object Utils {
   }
 
   val extractAclFromList: UserDefinedFunction =
-    udf((arr: Seq[String], studyId: String) => arr.filter(e => (e matches actCodeR) || (e == studyId) ))
+    udf((arr: Seq[String], studyId: String) => arr.filter(e => (e matches actCodeR) || (e == studyId)))
 
   val extractReferencesId: Column => Column = (column: Column) => functions.transform(column, c => functions.split(c, "/")(1))
 
@@ -36,14 +37,16 @@ object Utils {
 
   val extractStudyId: () => Column = () => regexp_extract(extractFirstForSystem(col("identifier"), Seq(URN_UNIQUE_ID))("value"), patternUrnUniqueIdStudy, 1)
 
-  val extractFirstForSystem = (column: Column, system: Seq[String]) => filter(column, c => regexp_extract(c("system"), extractSystemUrl, 1).isin(system: _*))(0)
+  val extractFirstForSystem: (Column, Seq[String]) => Column = (column: Column, system: Seq[String]) => filter(column, c => regexp_extract(c("system"), extractSystemUrl, 1).isin(system: _*))(0)
+
+  val extractOfficial: Column => Column = (identifiers: Column) => coalesce(filter(identifiers, identifier => identifier("use") === "official")(0)("value"), identifiers(0)("value"))
 
 
   val codingClassify: UserDefinedFunction =
     udf((arr: Seq[(String, String, String, String, String, String)]) =>
       arr.map(
         r => (codingSystemClassify(r._2),
-          if(r._4.matches(phenotypeExtract)) r._4.replace("_", ":") else r._4)
+          if (r._4.matches(phenotypeExtract)) r._4.replace("_", ":") else r._4)
       )
     )
 
@@ -64,12 +67,12 @@ object Utils {
   val extractHashes: UserDefinedFunction =
     udf(
       (arr: Seq[(Option[String], Seq[(Option[String], Option[String], Option[String], Option[String], Option[String], Option[Boolean])], Option[String])])
-        => arr.map(r => r._2.head._5 -> r._3).toMap)
+      => arr.map(r => r._2.head._5 -> r._3).toMap)
 
   val retrieveIsHarmonized: UserDefinedFunction = udf((s: Option[String]) => s.exists(_.contains("harmonized-data")))
 
   val retrieveRepository: UserDefinedFunction = udf((s: Option[String]) => {
-    if(s.exists(_.contains(gen3Host))) {
+    if (s.exists(_.contains(gen3Host))) {
       "gen3"
     }
     else if (s.exists(_.contains(dcfHost))) {
