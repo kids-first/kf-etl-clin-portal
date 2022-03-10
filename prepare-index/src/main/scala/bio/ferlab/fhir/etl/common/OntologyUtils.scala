@@ -2,20 +2,30 @@ package bio.ferlab.fhir.etl.common
 
 import bio.ferlab.fhir.etl.common.Utils.observableTitleStandard
 import org.apache.spark.sql.{Column, DataFrame}
-import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions._
 
 object OntologyUtils {
-  val SCHEMA_OBSERVABLE_TERM = "array<struct<name:string,parents:array<string>,is_tagged:boolean,is_leaf:boolean,age_at_event_days:int>>"
 
-  val transformAncestors: UserDefinedFunction =
-    udf((arr: Seq[(String, String, Seq[String])], age_at_event: Int) => arr.map(a => (s"${a._2} (${a._1})", a._3, false, false, age_at_event)))
+  val transformAncestors: (Column, Column) => Column = (ancestors, age) => transform(ancestors, a =>
+    struct(
+      concat(a("name"), lit(" ("), a("id"), lit(")")) as "name",
+      a("parents") as "parents",
+      lit(false) as "is_tagged",
+      lit(false) as "is_leaf",
+      age as "age_at_event_days"
+    )
+  )
 
-  val transformTaggedTerm: UserDefinedFunction =
-    udf((id: String, name: String, parents: Seq[String], is_leaf: Boolean, age_at_event: Int) => (s"${name} (${id})", parents, true, is_leaf, age_at_event))
+  val transformTaggedTerm: (Column, Column, Column, Column, Column) => Column = (id, name, parents, is_leaf, age) =>
+    struct(
+      concat(name, lit(" ("), id, lit(")")) as "name",
+      parents as "parents",
+      lit(true) as "is_tagged",
+      is_leaf as "is_leaf",
+      age as "age_at_event_days"
+    )
 
   val firstCategory: (String, Column) => Column = (category, codes) => filter(codes, code => code("category") === lit(category))(0)("code")
-
 
   def addDiseases(df: DataFrame): DataFrame = {
     df
@@ -46,10 +56,6 @@ object OntologyUtils {
       .withColumn("transform_ancestors", when(col("ancestors").isNotNull, transformAncestors(col("ancestors"), col("age_at_event_days"))))
       .withColumn("transform_tagged_observable", transformTaggedTerm(col("id"), col("name"), col("parents"), col("is_leaf"), col("age_at_event_days")))
       .withColumn("observable_with_ancestors", array_union(col("transform_ancestors"), array(col("transform_tagged_observable"))))
-      .withColumn("observable_with_ancestors",
-        when(col("observable_with_ancestors").isNull, array().cast(SCHEMA_OBSERVABLE_TERM))
-          .otherwise(col("observable_with_ancestors").cast(SCHEMA_OBSERVABLE_TERM))
-      )
       .drop("transform_ancestors", "transform_tagged_observable", "ancestors", "id", "is_leaf", "name", "parents")
   }
 
