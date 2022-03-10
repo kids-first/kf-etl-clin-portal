@@ -57,7 +57,7 @@ object Utils {
       (arr: Seq[(Option[String], Seq[(Option[String], Option[String], Option[String], Option[String], Option[String], Option[Boolean])], Option[String])])
       => arr.map(r => r._2.head._5 -> r._3).toMap)
 
-  val retrieveIsHarmonized: Column => Column = url => url.isNotNull && url like "harmonized-data"
+  val retrieveIsHarmonized: Column => Column = url => url.isNotNull && (url like "harmonized-data")
 
   val retrieveRepository: Column => Column = url => when(url like s"%$gen3Host%", "gen3")
     .when(url like s"%$dcfHost%", "dcf")
