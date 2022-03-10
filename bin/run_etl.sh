@@ -188,7 +188,7 @@ aws emr create-cluster \
   --service-role include-datalake-emr-$env-role \
   --enable-debugging \
   --release-label emr-6.5.0 \
-  --bootstrap-actions Path="s3://include-373997854230-datalake-qa/jobs/bootstrap-actions/enable-ssm.sh" Path="s3://include-373997854230-datalake-${env}/jobs/bootstrap-actions/install-java11.sh" \
+  --bootstrap-actions Path="s3://include-373997854230-datalake-${env}/jobs/bootstrap-actions/enable-ssm.sh" Path="s3://include-373997854230-datalake-${env}/jobs/bootstrap-actions/install-java11.sh" \
   --steps "${steps}" \
   --log-uri "s3n://include-373997854230-datalake-${env}/jobs/elasticmapreduce/" \
   --name "Portal ETL - All Steps - ${env} ${release_id} ${study_id}" \

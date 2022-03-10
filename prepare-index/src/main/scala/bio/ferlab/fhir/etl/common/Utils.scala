@@ -1,21 +1,13 @@
 package bio.ferlab.fhir.etl.common
 
 import bio.ferlab.fhir.etl.common.OntologyUtils._
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions._
 
 object Utils {
 
-  val hpoPhenotype: UserDefinedFunction =
-    udf((code: String, observed: String, source_text: String, age_at_event_days: Int) => observed.toLowerCase.trim match {
-      //  hpo_observed/hpo_non_observed/hpo_observed_text/hpo_non_observed_text/observed_bool
-      case "confirmed" => (s"$source_text ($code)", null, source_text, null, true, age_at_event_days)
-      case _ => (null, s"$source_text ($code)", null, source_text, false, age_at_event_days)
-    })
-
-  val observableTitleStandard: UserDefinedFunction =
-    udf((term: String) => term.trim.replace("_", ":"))
+  val observableTitleStandard : Column => Column = term => trim(regexp_replace(term, "_", ":"))
 
   val getFamilyType: UserDefinedFunction =
     udf((arr: Seq[(String, String)], members: Seq[String]) => arr.map(_._2) match {
@@ -84,7 +76,6 @@ object Utils {
 
     def addDiagnosisPhenotypes(phenotypeDF: DataFrame, diagnosesDF: DataFrame)(hpoTerms: DataFrame, mondoTerms: DataFrame): DataFrame = {
       val phenotypes = addPhenotypes(phenotypeDF)
-
       val phenotypesWithHPOTerms =
         mapObservableTerms(phenotypes, "observable_term")(hpoTerms)
           .groupBy("participant_fhir_id")
@@ -93,16 +84,14 @@ object Utils {
               col("fhir_id"),
               col("hpo_phenotype_observed"),
               col("hpo_phenotype_not_observed"),
-              col("hpo_phenotype_observed_text"),
-              col("hpo_phenotype_not_observed_text"),
-              col("observed_bool") as "observed",
-              col("age_at_event_days")
+              col("age_at_event_days"),
+              col("is_observed")
             )) as "phenotype",
             collect_list(
-              when(lower(col("observed")) === "confirmed", col("observable_with_ancestors"))
+              when(col("is_observed"), col("observable_with_ancestors"))
             ) as "observed_phenotype",
             collect_list(
-              when(lower(col("observed")) =!= "confirmed" || col("observed").isNull, col("observable_with_ancestors"))
+              when(not(col("is_observed")), col("observable_with_ancestors"))
             ) as "non_observed_phenotype"
           )
 
@@ -125,8 +114,6 @@ object Utils {
           .drop("observed_phenotype", "non_observed_phenotype")
           .join(observedPhenotypes, Seq("participant_fhir_id"), "left_outer")
           .join(nonObservedPhenotypes, Seq("participant_fhir_id"), "left_outer")
-
-      val arrPhenotypeSchema = phenotypesWithHPOTermsGroupedByEvent.schema("phenotype").dataType
 
       val diseases = addDiseases(diagnosesDF)
       val commonColumns = Seq("participant_fhir_id", "study_id")
@@ -162,7 +149,6 @@ object Utils {
 
       df
         .join(phenotypesWithHPOTermsGroupedByEvent, col("fhir_id") === col("participant_fhir_id"), "left_outer")
-        .withColumn("phenotype", when(col("phenotype").isNull, array().cast(arrPhenotypeSchema)).otherwise(col("phenotype")))
         .drop("participant_fhir_id")
         .join(diseasesWithReplacedMondoTerms, col("fhir_id") === col("participant_fhir_id"), "left_outer")
         .drop("participant_fhir_id")
