@@ -23,5 +23,5 @@ case class FILE_CENTRIC(
                          `study`: LIGHT_STUDY_CENTRIC = LIGHT_STUDY_CENTRIC(),
                          `release_id`: String = "re_000001",
                          `participants`: Seq[PARTICIPANT_WITH_BIOSPECIMEN] = Seq.empty,
-                         `sequencing_experiment`: SEQUENCING_EXPERIMENT = null
+                         `sequencing_experiment`: SEQUENCING_EXPERIMENT = SEQUENCING_EXPERIMENT()
                        )

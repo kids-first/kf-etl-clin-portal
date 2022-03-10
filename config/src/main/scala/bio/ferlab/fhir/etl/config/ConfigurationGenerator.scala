@@ -61,8 +61,7 @@ object ConfigurationGenerator extends App {
     SourceConfig("researchstudy", Some("research_study"), partitionByStudyIdAndReleaseId),
     SourceConfig("researchsubject", Some("research_subject"), partitionByStudyIdAndReleaseId),
     SourceConfig("specimen", None, partitionByStudyIdAndReleaseId),
-    SourceConfig("organization", None, List("release_id")),
-    SourceConfig("task", None, partitionByStudyIdAndReleaseId),
+    SourceConfig("organization", None, List("release_id"))
   )
 
   case class SourceConfig(fhirResource: String, entityType: Option[String], partitionBy: List[String])

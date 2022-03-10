@@ -15,11 +15,10 @@ class ParticipantCentric(releaseId: String, studyIds: List[String])(implicit con
   val simple_participant: DatasetConf = conf.getDataset("simple_participant")
   val normalized_drs_document_reference: DatasetConf = conf.getDataset("normalized_document_reference")
   val normalized_specimen: DatasetConf = conf.getDataset("normalized_specimen")
-  val normalized_task: DatasetConf = conf.getDataset("normalized_task")
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    Seq(simple_participant, normalized_drs_document_reference, normalized_specimen, normalized_task)
+    Seq(simple_participant, normalized_drs_document_reference, normalized_specimen)
       .map(ds => ds.id -> ds.read.where(col("release_id") === releaseId)
                             .where(col("study_id").isin(studyIds: _*))
       ).toMap
@@ -35,8 +34,7 @@ class ParticipantCentric(releaseId: String, studyIds: List[String])(implicit con
         .withColumn("study_external_id", col("study")("external_id"))
         .addParticipantFilesWithBiospecimen(
           data(normalized_drs_document_reference.id),
-          data(normalized_specimen.id),
-          data(normalized_task.id)
+          data(normalized_specimen.id)
         )
 
     Map(mainDestination.id -> transformedParticipant)

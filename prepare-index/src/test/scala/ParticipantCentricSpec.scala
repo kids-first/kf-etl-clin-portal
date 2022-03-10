@@ -51,14 +51,14 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
                   `fhir_id` = "111",
                   `participant_fhir_id` = "1",
                 )),
-            `sequencing_experiment` = SEQUENCING_EXPERIMENT(`fhir_id` = "1")
+            `sequencing_experiment` = SEQUENCING_EXPERIMENT()
             ),
             FILE_WITH_BIOSPECIMEN(
               `fhir_id` = "12",
               `participant_fhir_ids` = Seq("1"),
               `specimen_fhir_ids` = Seq.empty,
               `biospecimens` = Seq.empty,
-              `sequencing_experiment` = SEQUENCING_EXPERIMENT(`fhir_id` = "1")
+              `sequencing_experiment` = SEQUENCING_EXPERIMENT()
             ))
         ),
         PARTICIPANT_CENTRIC(
@@ -70,7 +70,7 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
               `specimen_fhir_ids` = Seq("222"),
               `biospecimens` = Seq(
                 BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2")),
-              `sequencing_experiment` = SEQUENCING_EXPERIMENT(`fhir_id` = "2")
+              `sequencing_experiment` = SEQUENCING_EXPERIMENT()
             ))))
   }
 }

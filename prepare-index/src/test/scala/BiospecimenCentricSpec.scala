@@ -44,7 +44,7 @@ class BiospecimenCentricSpec extends FlatSpec with Matchers with WithSparkSessio
               `fhir_id` = "11",
               `participant_fhir_ids` = Seq("1"),
               `specimen_fhir_ids` = Seq("111"),
-              `sequencing_experiment` = SEQUENCING_EXPERIMENT(`fhir_id` = "1")
+              `sequencing_experiment` = SEQUENCING_EXPERIMENT()
             )
           )
         ),
@@ -57,7 +57,7 @@ class BiospecimenCentricSpec extends FlatSpec with Matchers with WithSparkSessio
               `fhir_id` = "21",
               `participant_fhir_ids` = Seq("2"),
               `specimen_fhir_ids` = Seq("222"),
-              `sequencing_experiment` = SEQUENCING_EXPERIMENT(`fhir_id` = "1")
+              `sequencing_experiment` = SEQUENCING_EXPERIMENT()
             ))))
   }
 }

@@ -16,11 +16,10 @@ class FileCentric(releaseId: String, studyIds: List[String])(implicit configurat
   val normalized_specimen: DatasetConf = conf.getDataset("normalized_specimen")
   val simple_participant: DatasetConf = conf.getDataset("simple_participant")
   val es_index_study_centric: DatasetConf = conf.getDataset("es_index_study_centric")
-  val normalized_task: DatasetConf = conf.getDataset("normalized_task")
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    Seq(normalized_drs_document_reference, normalized_specimen, simple_participant, es_index_study_centric, normalized_task)
+    Seq(normalized_drs_document_reference, normalized_specimen, simple_participant, es_index_study_centric)
       .map(ds => ds.id -> ds.read.where(col("release_id") === releaseId)
         .where(col("study_id").isin(studyIds: _*))
     ).toMap
@@ -34,7 +33,7 @@ class FileCentric(releaseId: String, studyIds: List[String])(implicit configurat
     val transformedFile =
       fileDF
         .addStudy(data(es_index_study_centric.id))
-        .addFileParticipantsWithBiospecimen(data(simple_participant.id), data(normalized_specimen.id), data(normalized_task.id))
+        .addFileParticipantsWithBiospecimen(data(simple_participant.id), data(normalized_specimen.id))
         .withColumn("type_of_omics", lit("TODO"))
 
     Map(mainDestination.id -> transformedFile)

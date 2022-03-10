@@ -155,51 +155,6 @@ object Transformations {
     Drop("identifier", "name")
   )
 
-  val taskMappings: List[Transformation] = List(
-    Custom(_
-      .select("fhir_id", "study_id", "release_id", "output", "input", "identifier")
-      .withColumn("task_id", officialIdentifier)
-      .withColumn(
-        "document_reference_fhir_ids", transform(
-          filter(col("output"), c => c("type")("text") === "genomic_file"),
-          c => regexp_extract(c("valueReference")("reference"), documentReferenceExtract, 1)
-        )
-      )
-      .withColumn(
-        "biospecimen_fhir_ids", transform(
-          filter(col("input"), c => c("type")("text") === "biospecimen"),
-          c => regexp_extract(c("valueReference")("reference"), specimenExtract, 1)
-        )
-      )
-      .withColumn(
-        "experiment_strategy", transform(
-          filter(col("input"), c => c("type")("text") === "experiment_strategy"), c => c("valueString")
-        )(0)
-      )
-      .withColumn(
-        "instrument_model", transform(
-          filter(col("input"), c => c("type")("text") === "instrument_model"), c => c("valueString")
-        )(0)
-      )
-      .withColumn(
-        "library_name", transform(
-          filter(col("input"), c => c("type")("text") === "library_name"), c => c("valueString")
-        )(0)
-      )
-      .withColumn(
-        "library_strand", transform(
-          filter(col("input"), c => c("type")("text") === "library_strand"), c => c("valueString")
-        )(0)
-      )
-      .withColumn(
-        "platform", transform(
-          filter(col("input"), c => c("type")("text") === "platform"), c => c("valueString")
-        )(0)
-      )
-    ),
-    Drop("output", "input", "identifier")
-  )
-
   val researchstudyMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id", "keyword", "release_id", "study_id", "title", "identifier", "principalInvestigator", "status")
@@ -228,7 +183,8 @@ object Transformations {
       .withColumn("acl", extractAclFromList(col("securityLabel")("text"), col("study_id")))
       .withColumn("controlled_access", col("securityLabel")(0)("text"))
       .withColumn("data_type", col("type")("text"))
-      .withColumn("data_category", col("category")(0)("text"))
+      .withColumn("data_category", when(size(col("category")) > 1, col("category")(1)("text")).otherwise(null))
+      .withColumn("experiment_strategy", col("category")(0)("text"))
       .withColumn("external_id", col("content")(1)("attachment")("url"))
       .withColumn("file_format", firstNonNull(col("content")("format")("display")))
       .withColumn("file_name", firstNonNull(col("content")("attachment")("title")))
@@ -279,8 +235,7 @@ object Transformations {
     "research_study" -> researchstudyMappings,
     "group" -> groupMappings,
     "document_reference" -> documentreferenceMappings,
-    "organization" -> organizationMappings,
-    "task" -> taskMappings,
+    "organization" -> organizationMappings
   )
 
 }
