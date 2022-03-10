@@ -2,7 +2,7 @@ import bio.ferlab.datalake.spark3.loader.GenericLoader.read
 import bio.ferlab.fhir.etl.common.Utils._
 import model._
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.functions.{col, explode_outer}
+import org.apache.spark.sql.functions.{assert_true, col, explode_outer}
 import org.scalatest.{FlatSpec, Matchers}
 
 class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
@@ -99,11 +99,12 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
 
     val output = inputParticipants.addDiagnosisPhenotypes(inputPhenotypes, inputDiseases)(allHpoTerms, allMondoTerms)
     val participantPhenotypes = output.select("participant_id", "phenotype").as[(String, Seq[PHENOTYPE])].collect()
-    val participantA_Ph = participantPhenotypes.filter(_._1 == "A").head
-    val participantB_Ph = participantPhenotypes.filter(_._1 == "B").head
 
-    participantA_Ph._2.map(p => (p.fhir_id, p.observed)) should contain theSameElementsAs Seq(("1p", true), ("2p", false), ("3p", false))
-    participantB_Ph._2.map(p => (p.fhir_id, p.observed)) should contain theSameElementsAs Nil
+    val participantA_Ph = participantPhenotypes.filter(_._1 == "A").head
+    participantA_Ph._2.map(p => (p.fhir_id, p.`is_observed`)) should contain theSameElementsAs Seq(("1p", true), ("2p", false), ("3p", false))
+
+    val participantB_Ph = participantPhenotypes.find(_._1 == "B")
+    participantB_Ph shouldBe Some(("B", null))
   }
 
   it should "map diseases to participants" in {
@@ -156,7 +157,7 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
         age_at_event = AGE_AT_EVENT(5)
       ),
       CONDITION_PHENOTYPE(
-        fhir_id = "2p",
+        fhir_id = "3p",
         participant_fhir_id = "A",
         condition_coding = Seq(CONDITION_CODING(`category` = "HPO", `code` = "HP_0002086")),
         age_at_event = AGE_AT_EVENT(10)
@@ -171,12 +172,14 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
         .select("participant_id", "observed_phenotype", "non_observed_phenotype")
         .as[(String, Seq[OBSERVABLE_TERM], Seq[OBSERVABLE_TERM])].collect()
 
-    val participantA_Ph = output.filter(_._1 == "A").head
 
-    println(participantA_Ph._2)
+    val (_, observedPheno, nonObservedPheno) = output.filter(_._1 == "A").head
 
-    participantA_Ph._2.filter(t => t.`name` === "Phenotypic abnormality (HP:0000118)").head.`age_at_event_days` shouldEqual Seq(0)
-    participantA_Ph._3.filter(t => t.`name` === "Phenotypic abnormality (HP:0000118)").head.`age_at_event_days` shouldEqual Seq(5, 10)
+    observedPheno.count(_.`is_tagged`) shouldBe 1
+    assert(observedPheno.forall(_.`age_at_event_days` == Seq(0)))
+
+    nonObservedPheno.count(_.`is_tagged`) shouldBe 2
+    nonObservedPheno.flatMap(_.`age_at_event_days`).distinct should contain only(5, 10)
   }
 
   it should "group diagnosis by age at event days" in {
@@ -527,6 +530,12 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     biospecimen3._2.isEmpty shouldBe true
 
     biospecimenWithFiles.exists(_._1 == "B_NOT_THERE") shouldBe false
+  }
+
+  "downsyndromeStatusExtract" should "return T21 if at least diagnosis contain down syndrome" in {
+
+    val df = Seq(Seq("this is down syndrome diagnosis", "another syndrome"), Seq("leukemia"), Seq(null)).toDF("diagnoses")
+    df.select(downsyndromeStatusExtract(col("diagnoses"))).as[String].collect() should contain theSameElementsAs Seq("T21", "Other", "Other")
   }
 
 }

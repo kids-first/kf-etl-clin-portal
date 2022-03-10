@@ -1,21 +1,13 @@
 package bio.ferlab.fhir.etl.common
 
 import bio.ferlab.fhir.etl.common.OntologyUtils._
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions._
 
 object Utils {
 
-  val hpoPhenotype: UserDefinedFunction =
-    udf((code: String, observed: String, source_text: String, age_at_event_days: Int) => observed.toLowerCase.trim match {
-      //  hpo_observed/hpo_non_observed/hpo_observed_text/hpo_non_observed_text/observed_bool
-      case "confirmed" => (s"$source_text ($code)", null, source_text, null, true, age_at_event_days)
-      case _ => (null, s"$source_text ($code)", null, source_text, false, age_at_event_days)
-    })
-
-  val observableTitleStandard: UserDefinedFunction =
-    udf((term: String) => term.trim.replace("_", ":"))
+  val observableTitleStandard: Column => Column = term => trim(regexp_replace(term, "_", ":"))
 
   val getFamilyType: UserDefinedFunction =
     udf((arr: Seq[(String, String)], members: Seq[String]) => arr.map(_._2) match {
@@ -25,14 +17,7 @@ object Utils {
       case _ => "other"
     })
 
-  val downsyndromeStatusExtract: UserDefinedFunction =
-    udf((arr: Seq[String]) => if(arr != null) {
-      if(arr.map(_.trim.toLowerCase).contains("down syndrome")) {
-        "T21"
-      } else "Other"
-    } else {
-      "Other"
-    })
+  val downsyndromeStatusExtract: Column => Column = diagnoses => when(diagnoses.isNotNull && exists(diagnoses, d => trim(lower(d)) like "%down syndrome%"), "T21").otherwise("Other")
 
   val sequencingExperimentCols = Seq("fhir_id", "sequencing_experiment_id", "experiment_strategy",
     "instrument_model", "library_name", "library_strand", "platform")
@@ -40,7 +25,7 @@ object Utils {
   private def reformatSequencingExperiment(seqExp: DataFrame) = {
     seqExp
       .withColumn("document_reference_fhir_id", explode(col("document_reference_fhir_ids")))
-      .withColumnRenamed("task_id","sequencing_experiment_id")
+      .withColumnRenamed("task_id", "sequencing_experiment_id")
       .withColumn("sequencing_experiments", struct(sequencingExperimentCols.map(col): _*))
       .groupBy("document_reference_fhir_id")
       .agg(
@@ -84,7 +69,6 @@ object Utils {
 
     def addDiagnosisPhenotypes(phenotypeDF: DataFrame, diagnosesDF: DataFrame)(hpoTerms: DataFrame, mondoTerms: DataFrame): DataFrame = {
       val phenotypes = addPhenotypes(phenotypeDF)
-
       val phenotypesWithHPOTerms =
         mapObservableTerms(phenotypes, "observable_term")(hpoTerms)
           .groupBy("participant_fhir_id")
@@ -93,16 +77,14 @@ object Utils {
               col("fhir_id"),
               col("hpo_phenotype_observed"),
               col("hpo_phenotype_not_observed"),
-              col("hpo_phenotype_observed_text"),
-              col("hpo_phenotype_not_observed_text"),
-              col("observed_bool") as "observed",
-              col("age_at_event_days")
+              col("age_at_event_days"),
+              col("is_observed")
             )) as "phenotype",
             collect_list(
-              when(lower(col("observed")) === "confirmed", col("observable_with_ancestors"))
+              when(col("is_observed"), col("observable_with_ancestors"))
             ) as "observed_phenotype",
             collect_list(
-              when(lower(col("observed")) =!= "confirmed" || col("observed").isNull, col("observable_with_ancestors"))
+              when(not(col("is_observed")), col("observable_with_ancestors"))
             ) as "non_observed_phenotype"
           )
 
@@ -125,8 +107,6 @@ object Utils {
           .drop("observed_phenotype", "non_observed_phenotype")
           .join(observedPhenotypes, Seq("participant_fhir_id"), "left_outer")
           .join(nonObservedPhenotypes, Seq("participant_fhir_id"), "left_outer")
-
-      val arrPhenotypeSchema = phenotypesWithHPOTermsGroupedByEvent.schema("phenotype").dataType
 
       val diseases = addDiseases(diagnosesDF)
       val commonColumns = Seq("participant_fhir_id", "study_id")
@@ -162,7 +142,6 @@ object Utils {
 
       df
         .join(phenotypesWithHPOTermsGroupedByEvent, col("fhir_id") === col("participant_fhir_id"), "left_outer")
-        .withColumn("phenotype", when(col("phenotype").isNull, array().cast(arrPhenotypeSchema)).otherwise(col("phenotype")))
         .drop("participant_fhir_id")
         .join(diseasesWithReplacedMondoTerms, col("fhir_id") === col("participant_fhir_id"), "left_outer")
         .drop("participant_fhir_id")
@@ -192,7 +171,7 @@ object Utils {
           .groupBy("fhir_id", "participant_fhir_id")
           .agg(collect_list(col("biospecimen")) as "biospecimens", filesDf.columns.filter(!_.equals("fhir_id")).map(c => first(c).as(c)): _*)
           .join(sequencingExperimentDfReformat,
-            sequencingExperimentDfReformat("document_reference_fhir_id") === col("fhir_id"),"left_outer")
+            sequencingExperimentDfReformat("document_reference_fhir_id") === col("fhir_id"), "left_outer")
 
       val filesWithBiospecimenGroupedByParticipantIdDf =
         filesWithBiospecimenDf
@@ -235,6 +214,7 @@ object Utils {
         fileIdParticipantId
           .join(fileIdBiospecimenIdParticipantId, Seq("file_fhir_id", "participant_fhir_id"), "left_outer")
       }
+
       // Mapping table with: file - (biospecimen) - participant
       val mappingTable = buildMappingTable()
 
@@ -242,7 +222,7 @@ object Utils {
       val mappingTableWithBiospecimens = mappingTable
         .join(biospecimensDfReformat, mappingTable("specimen_fhir_id") === biospecimensDfReformat("specimen_fhir_id"), "left_outer")
         .drop("specimen_fhir_ids", "specimen_fhir_id")
-        .groupBy("file_fhir_id","participant_fhir_id")
+        .groupBy("file_fhir_id", "participant_fhir_id")
         .agg(collect_list(col("biospecimen")) as "biospecimens")
 
       // |file_fhir_id|participants|
@@ -255,7 +235,7 @@ object Utils {
 
       df
         .join(sequencingExperimentDfReformat,
-          sequencingExperimentDfReformat("document_reference_fhir_id") === col("fhir_id"),"left_outer")
+          sequencingExperimentDfReformat("document_reference_fhir_id") === col("fhir_id"), "left_outer")
         .join(mappingTableWithParticipants, df("fhir_id") === mappingTableWithParticipants("file_fhir_id"))
         .drop("file_fhir_id", "document_reference_fhir_id")
     }

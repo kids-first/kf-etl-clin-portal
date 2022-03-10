@@ -3,6 +3,7 @@ package bio.ferlab.fhir.etl.transformations
 import bio.ferlab.datalake.spark3.transformation.{Custom, Drop, Transformation}
 import bio.ferlab.fhir.etl.Utils._
 import bio.ferlab.fhir.etl._
+import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.{col, collect_list, explode, filter, regexp_extract, struct, _}
 import org.apache.spark.sql.types.BooleanType
 
@@ -11,13 +12,15 @@ object Transformations {
   val patternPractitionerRoleResearchStudy = "PractitionerRole\\/([0-9]+)"
   val conditionTypeR = "^https:\\/\\/[A-Za-z0-9-_.\\/]+\\/([A-Za-z0-9]+)"
 
+  val officialIdentifier: Column = extractOfficial(col("identifier"))
+
   val patientMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id", "study_id", "release_id", "gender", "ethnicity", "identifier", "race")
       .withColumn("ethnicity", col("ethnicity.text"))
       .withColumn("external_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
       // TODO is_proband
-      .withColumn("participant_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
+      .withColumn("participant_id", officialIdentifier)
       .withColumn("race", col("race.text"))
     ),
     Drop("identifier")
@@ -27,7 +30,7 @@ object Transformations {
     Custom(_
       .select("fhir_id", "release_id", "identifier", "study_id")
       .withColumn("external_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
-      .withColumn("participant_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
+      .withColumn("participant_id", officialIdentifier)
     ),
     Drop("identifier")
   )
@@ -37,7 +40,7 @@ object Transformations {
       val specimen = input
         .select("fhir_id", "release_id", "study_id", "type", "identifier", "collection", "subject", "status", "container", "parent", "processing")
         .withColumn("sample_type", col("type")("text"))
-        .withColumn("sample_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
+        .withColumn("sample_id", officialIdentifier)
         .withColumn("laboratory_procedure", col("processing")(0)("description"))
         .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
         .withColumn("age_at_biospecimen_collection", col("collection._collectedDateTime.relativeDateTime.offset.value"))
@@ -73,7 +76,7 @@ object Transformations {
       .select("fhir_id", "release_id", "subject", "valueCodeableConcept", "identifier", "_effectiveDateTime", "study_id")
       .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
       .withColumn("vital_status", col("valueCodeableConcept")("text"))
-      .withColumn("observation_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
+      .withColumn("observation_id", officialIdentifier)
       .withColumn("age_at_event_days", struct(
         col("_effectiveDateTime")("effectiveDateTime")("offset")("value") as "value",
         col("_effectiveDateTime")("effectiveDateTime")("offset")("unit") as "units",
@@ -88,7 +91,7 @@ object Transformations {
     Custom(_
       .select("fhir_id", "release_id", "subject", "identifier", "focus", "valueCodeableConcept", "meta")
       .withColumn("study_id", col("meta")("tag")(0)("code"))
-      .withColumn("observation_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
+      .withColumn("observation_id", officialIdentifier)
       .withColumn("participant1_fhir_id", extractReferenceId(col("subject")("reference")))
       .withColumn("participant2_fhir_id", extractReferencesId(col("focus")("reference"))(0))
       .withColumn(
@@ -103,7 +106,7 @@ object Transformations {
   val conditionDiseaseMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id", "study_id", "release_id", "identifier", "code", "bodySite", "subject", "verificationStatus", "_recordedDate")
-      .withColumn("diagnosis_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
+      .withColumn("diagnosis_id", officialIdentifier)
       .withColumn("condition_coding", codingClassify(col("code")("coding")).cast("array<struct<category:string,code:string>>"))
       .withColumn("source_text", col("code")("text"))
       .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
@@ -126,7 +129,7 @@ object Transformations {
   val conditionPhenotypeMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id", "study_id", "release_id", "identifier", "code", "subject", "verificationStatus", "_recordedDate")
-      .withColumn("phenotype_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
+      .withColumn("phenotype_id", officialIdentifier)
       .withColumn("condition_coding", codingClassify(col("code")("coding")).cast("array<struct<category:string,code:string>>"))
       .withColumn("source_text", col("code")("text"))
       .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
@@ -146,7 +149,7 @@ object Transformations {
   val organizationMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id", "release_id", "study_id", "identifier", "name")
-      .withColumn("organization_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
+      .withColumn("organization_id", officialIdentifier)
       .withColumn("institution", col("name"))
     ),
     Drop("identifier", "name")
@@ -155,7 +158,7 @@ object Transformations {
   val taskMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id", "study_id", "release_id", "output", "input", "identifier")
-      .withColumn("task_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
+      .withColumn("task_id", officialIdentifier)
       .withColumn(
         "document_reference_fhir_ids", transform(
           filter(col("output"), c => c("type")("text") === "genomic_file"),
@@ -229,7 +232,7 @@ object Transformations {
       .withColumn("external_id", col("content")(1)("attachment")("url"))
       .withColumn("file_format", firstNonNull(col("content")("format")("display")))
       .withColumn("file_name", firstNonNull(col("content")("attachment")("title")))
-      .withColumn("file_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
+      .withColumn("file_id", officialIdentifier)
       .withColumn("hashes", extractHashes(col("content")(1)("attachment")("hashes")))
       // TODO instrument_models
       .withColumn("is_harmonized", retrieveIsHarmonized(col("content")(1)("attachment")("url")))
@@ -251,7 +254,7 @@ object Transformations {
     Custom(_
       .select("*")
       .withColumn("external_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
-      .withColumn("family_id", extractFirstForSystem(col("identifier"), SYSTEM_URL)("value"))
+      .withColumn("family_id", officialIdentifier)
       .withColumn("exploded_member", explode(col("member")))
       .withColumn("exploded_member_entity", extractReferenceId(col("exploded_member")("entity")("reference")))
       .withColumn("exploded_member_inactive", col("exploded_member")("inactive"))

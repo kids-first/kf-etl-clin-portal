@@ -45,7 +45,7 @@ aws emr create-cluster \
   --service-role include-datalake-emr-$env-role \
   --enable-debugging \
   --release-label emr-6.5.0 \
-  --bootstrap-actions Path="s3://include-373997854230-datalake-qa/jobs/bootstrap-actions/enable-ssm.sh" Path="s3://include-373997854230-datalake-qa/jobs/bootstrap-actions/cleanup-jars.sh" \
+  --bootstrap-actions Path="s3://include-373997854230-datalake-${env}/jobs/bootstrap-actions/enable-ssm.sh" Path="s3://include-373997854230-datalake-qa/jobs/bootstrap-actions/cleanup-jars.sh" \
   --steps "${steps}" \
   --log-uri "s3n://include-373997854230-datalake-${env}/jobs/elasticmapreduce/" \
   --name "Import task - ${env} ${release_id} ${study_id}" \

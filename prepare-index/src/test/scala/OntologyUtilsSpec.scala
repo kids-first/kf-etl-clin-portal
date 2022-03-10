@@ -1,4 +1,4 @@
-import bio.ferlab.fhir.etl.common.OntologyUtils.addDiseases
+import bio.ferlab.fhir.etl.common.OntologyUtils.{addDiseases, firstCategory}
 import model.AGE_AT_EVENT
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions.col
@@ -25,5 +25,11 @@ class OntologyUtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     val resultParticipant1 = result.filter(col("diagnosis_id") === "diag1").select("icd_id_diagnosis", "mondo_id_diagnosis").collect().head
 
     resultParticipant1 shouldBe Row("icd", "mondo")
+  }
+
+  "firstCategory" should "return the first found category" in {
+    val df = Seq(Seq(("ICD", "icd"))).toDF("condition_coding").withColumn("condition_coding", col("condition_coding").cast(SCHEMA_CONDITION_CODING))
+    df.withColumn("cat_icd", firstCategory("ICD", col("condition_coding"))).select("cat_icd").collect().head shouldBe Row("icd")
+    df.withColumn("cat_icd", firstCategory("NotFound", col("condition_coding"))).select("cat_icd").collect().head shouldBe Row(null)
   }
 }
