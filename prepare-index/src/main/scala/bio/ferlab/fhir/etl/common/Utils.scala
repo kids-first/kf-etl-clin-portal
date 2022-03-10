@@ -7,7 +7,7 @@ import org.apache.spark.sql.functions._
 
 object Utils {
 
-  val observableTitleStandard : Column => Column = term => trim(regexp_replace(term, "_", ":"))
+  val observableTitleStandard: Column => Column = term => trim(regexp_replace(term, "_", ":"))
 
   val getFamilyType: UserDefinedFunction =
     udf((arr: Seq[(String, String)], members: Seq[String]) => arr.map(_._2) match {
@@ -17,14 +17,7 @@ object Utils {
       case _ => "other"
     })
 
-  val downsyndromeStatusExtract: UserDefinedFunction =
-    udf((arr: Seq[String]) => if(arr != null) {
-      if(arr.map(_.trim.toLowerCase).contains("down syndrome")) {
-        "T21"
-      } else "Other"
-    } else {
-      "Other"
-    })
+  val downsyndromeStatusExtract: Column => Column = diagnoses => when(diagnoses.isNotNull && exists(diagnoses, d => trim(lower(d)) like "%down syndrome%"), "T21").otherwise("Other")
 
   val sequencingExperimentCols = Seq("fhir_id", "sequencing_experiment_id", "experiment_strategy",
     "instrument_model", "library_name", "library_strand", "platform")
@@ -32,7 +25,7 @@ object Utils {
   private def reformatSequencingExperiment(seqExp: DataFrame) = {
     seqExp
       .withColumn("document_reference_fhir_id", explode(col("document_reference_fhir_ids")))
-      .withColumnRenamed("task_id","sequencing_experiment_id")
+      .withColumnRenamed("task_id", "sequencing_experiment_id")
       .withColumn("sequencing_experiments", struct(sequencingExperimentCols.map(col): _*))
       .groupBy("document_reference_fhir_id")
       .agg(
@@ -178,7 +171,7 @@ object Utils {
           .groupBy("fhir_id", "participant_fhir_id")
           .agg(collect_list(col("biospecimen")) as "biospecimens", filesDf.columns.filter(!_.equals("fhir_id")).map(c => first(c).as(c)): _*)
           .join(sequencingExperimentDfReformat,
-            sequencingExperimentDfReformat("document_reference_fhir_id") === col("fhir_id"),"left_outer")
+            sequencingExperimentDfReformat("document_reference_fhir_id") === col("fhir_id"), "left_outer")
 
       val filesWithBiospecimenGroupedByParticipantIdDf =
         filesWithBiospecimenDf
@@ -221,6 +214,7 @@ object Utils {
         fileIdParticipantId
           .join(fileIdBiospecimenIdParticipantId, Seq("file_fhir_id", "participant_fhir_id"), "left_outer")
       }
+
       // Mapping table with: file - (biospecimen) - participant
       val mappingTable = buildMappingTable()
 
@@ -228,7 +222,7 @@ object Utils {
       val mappingTableWithBiospecimens = mappingTable
         .join(biospecimensDfReformat, mappingTable("specimen_fhir_id") === biospecimensDfReformat("specimen_fhir_id"), "left_outer")
         .drop("specimen_fhir_ids", "specimen_fhir_id")
-        .groupBy("file_fhir_id","participant_fhir_id")
+        .groupBy("file_fhir_id", "participant_fhir_id")
         .agg(collect_list(col("biospecimen")) as "biospecimens")
 
       // |file_fhir_id|participants|
@@ -241,7 +235,7 @@ object Utils {
 
       df
         .join(sequencingExperimentDfReformat,
-          sequencingExperimentDfReformat("document_reference_fhir_id") === col("fhir_id"),"left_outer")
+          sequencingExperimentDfReformat("document_reference_fhir_id") === col("fhir_id"), "left_outer")
         .join(mappingTableWithParticipants, df("fhir_id") === mappingTableWithParticipants("file_fhir_id"))
         .drop("file_fhir_id", "document_reference_fhir_id")
     }

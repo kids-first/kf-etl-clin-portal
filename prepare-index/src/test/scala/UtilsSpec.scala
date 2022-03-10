@@ -532,4 +532,10 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     biospecimenWithFiles.exists(_._1 == "B_NOT_THERE") shouldBe false
   }
 
+  "downsyndromeStatusExtract" should "return T21 if at least diagnosis contain down syndrome" in {
+
+    val df = Seq(Seq("this is down syndrome diagnosis", "another syndrome"), Seq("leukemia"), Seq(null)).toDF("diagnoses")
+    df.select(downsyndromeStatusExtract(col("diagnoses"))).as[String].collect() should contain theSameElementsAs Seq("T21", "Other", "Other")
+  }
+
 }
