@@ -3,7 +3,7 @@ package bio.ferlab.fhir.etl
 //import bio.ferlab.fhir.etl.ImportTask.expReleaseId
 
 import org.apache.spark.sql.expressions.UserDefinedFunction
-import org.apache.spark.sql.functions.{coalesce, col, filter, regexp_extract, udf}
+import org.apache.spark.sql.functions.{coalesce, col, exists, filter, lit, regexp_extract, udf, when}
 import org.apache.spark.sql.{Column, functions}
 
 object Utils {
@@ -50,37 +50,18 @@ object Utils {
       )
     )
 
-  def firstNonNull: UserDefinedFunction = udf((arr: Seq[String]) => arr.find(_ != null).orNull)
-
-  val ncitIdAnatomicalSite: UserDefinedFunction =
-    udf((arr: Seq[(String, String, String, String, String, Boolean)]) => arr.find(r => r._2 matches "ncit\\.owl$") match {
-      case Some(v) => v._4
-      case None => null
-    })
-
-  val uberonIdAnatomicalSite: UserDefinedFunction =
-    udf((arr: Seq[(String, String, String, String, String, Boolean)]) => arr.find(r => r._2 matches "uberon\\.owl$") match {
-      case Some(v) => v._4
-      case None => null
-    })
+  def firstNonNull: Column => Column = arr => filter(arr, a => a.isNotNull)(0)
 
   val extractHashes: UserDefinedFunction =
     udf(
       (arr: Seq[(Option[String], Seq[(Option[String], Option[String], Option[String], Option[String], Option[String], Option[Boolean])], Option[String])])
       => arr.map(r => r._2.head._5 -> r._3).toMap)
 
-  val retrieveIsHarmonized: UserDefinedFunction = udf((s: Option[String]) => s.exists(_.contains("harmonized-data")))
+  val retrieveIsHarmonized: Column => Column = url => url.isNotNull && url like "harmonized-data"
 
-  val retrieveRepository: UserDefinedFunction = udf((s: Option[String]) => {
-    if (s.exists(_.contains(gen3Host))) {
-      "gen3"
-    }
-    else if (s.exists(_.contains(dcfHost))) {
-      "dcf"
-    } else {
-      null
-    }
-  })
+  val retrieveRepository: Column => Column = url => when(url like s"%$gen3Host%", "gen3")
+    .when(url like s"%$dcfHost%", "dcf")
+    .otherwise(null)
 
   val retrieveSize: UserDefinedFunction = udf((d: Option[String]) => d.map(BigInt(_).toLong))
 

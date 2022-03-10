@@ -3,8 +3,8 @@
 release_id=$1
 study_id=$2
 env=${3:-"qa"}
-instance_type="m5.4xlarge"
-instance_count="1"
+instance_type=${4:-"m5.4xlarge"}
+instance_count=${5:-"1"}
 if [ "$env" = "prd" ]
 then
   subnet="subnet-0cdbe9ba6231146b5"
