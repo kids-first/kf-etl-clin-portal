@@ -57,6 +57,9 @@
         "status" : {
           "type": "keyword"
         },
+        "nb_files": {
+          "type": "integer"
+        },
         "files": {
           "type": "nested",
           "properties": {

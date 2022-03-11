@@ -58,6 +58,12 @@
         "participant_fhir_ids" : {
           "type": "keyword"
         },
+        "nb_participants": {
+          "type": "integer"
+        },
+        "nb_biospecimens": {
+          "type": "integer"
+        },
         "participants": {
           "type": "nested",
           "properties": {

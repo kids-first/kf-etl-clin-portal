@@ -190,20 +190,20 @@ object Utils {
       val biospecimensDfReformat = reformatBiospecimen(biospecimensDf)
 
       val fileWithBiospecimen = fileWithSeqExp
-        .select( struct(col("*")) as "file")
+        .select(struct(col("*")) as "file")
         .join(biospecimensDfReformat, col("file.specimen_fhir_id") === biospecimensDfReformat("specimen_fhir_id"), "left_outer")
         .withColumn("participant_file_fhir_id", when(biospecimensDfReformat("specimen_participant_fhir_id").isNotNull, biospecimensDfReformat("specimen_participant_fhir_id")).otherwise(col("file.participant_fhir_id")))
         .groupBy("file.fhir_id", "participant_file_fhir_id")
-        .agg(collect_list(col("biospecimen")) as "biospecimens", first("file") as "file")
+        .agg(collect_list(col("biospecimen")) as "biospecimens", first("file") as "file", count(col("biospecimen.fhir_id")) as "nb_biospecimens")
 
-      val participantReformat = participantDf.select( struct(col("*")) as "participant")
+      val participantReformat = participantDf.select(struct(col("*")) as "participant")
       fileWithBiospecimen
         .join(participantReformat, col("participant_file_fhir_id") === col("participant.fhir_id"))
         .withColumn("participant", struct(col("participant.*"), col("biospecimens")))
         .drop("biospecimens")
         .groupBy(col("fhir_id"))
-        .agg(collect_list(col("participant")) as "participants", first("file") as "file")
-        .select(col("file.*"), col("participants"))
+        .agg(collect_list(col("participant")) as "participants", first("file") as "file", count(lit(1)) as "nb_participants", sum("nb_biospecimens") as "nb_biospecimens")
+        .select(col("file.*"), col("participants"), col("nb_participants"), col("nb_biospecimens"))
 
 
     }
@@ -222,6 +222,7 @@ object Utils {
       df
         .join(reformatFile, df("fhir_id") === reformatFile("biospecimen_fhir_id"), "left_outer")
         .withColumn("files", coalesce(col("files"), array()))
+        .withColumn("nb_files", size(col("files")))
         .drop("biospecimen_fhir_id")
     }
 
