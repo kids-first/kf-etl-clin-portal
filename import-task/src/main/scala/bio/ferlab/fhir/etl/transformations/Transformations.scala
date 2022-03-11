@@ -53,7 +53,8 @@ object Transformations {
         .withColumn("parent_id", extractReferenceId(col("parent.reference")))
         .withColumn("parent_0", struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(0) as "level"))
 
-      val df = (1 to 5).foldLeft(specimen) { case (s, i) =>
+      val parentRange = 1 to 10
+      val df = parentRange.foldLeft(specimen) { case (s, i) =>
         val joined = specimen.select(struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(i) as "level") as s"parent_$i")
         s.join(joined, s(s"parent_${i - 1}.parent_id") === joined(s"parent_$i.fhir_id"), "left")
       }
@@ -61,10 +62,11 @@ object Transformations {
         .withColumn("parent_sample_type", col("parent_1.sample_type"))
         .withColumn("parent_sample_id", col("parent_1.sample_id"))
         .withColumn("parent_fhir_id", col("parent_1.fhir_id"))
-        .withColumn("collection_sample", coalesce(col("parent_5"), col("parent_4"), col("parent_3"), col("parent_2"), col("parent_1"), col("parent_0")))
+        .withColumn("collection_sample", coalesce(parentRange.map(p => col(s"parent_$p")): _*))
         .withColumn("collection_sample_id", col("collection_sample.sample_id"))
         .withColumn("collection_sample_type", col("collection_sample.sample_type"))
         .withColumn("collection_fhir_id", col("collection_sample.fhir_id"))
+        .where(col("collection_fhir_id") =!= col("fhir_id")) //Filter out collection sample
     },
     Drop("type", "identifier", "collection", "subject",
       "parent", "parent_5", "parent_4", "parent_3", "parent_2", "parent_1", "parent_0",
