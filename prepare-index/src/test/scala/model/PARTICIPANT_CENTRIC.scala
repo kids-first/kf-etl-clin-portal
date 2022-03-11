@@ -24,5 +24,7 @@ case class PARTICIPANT_CENTRIC(
                                 `age_at_data_collection`: Int = 111, // TODO
                                 `study`: LIGHT_STUDY_CENTRIC = LIGHT_STUDY_CENTRIC(),
                                 `files`: Seq[FILE_WITH_BIOSPECIMEN] = Seq.empty,
-                                `study_external_id`: String = "phs002330"
+                                `study_external_id`: String = "phs002330",
+                                `nb_files`: Long = 0,
+                                `nb_biospecimens`: Long = 0
                               )

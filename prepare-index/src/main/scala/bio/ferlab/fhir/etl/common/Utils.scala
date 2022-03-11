@@ -2,7 +2,7 @@ package bio.ferlab.fhir.etl.common
 
 import bio.ferlab.fhir.etl.common.OntologyUtils._
 import org.apache.spark.sql.{Column, DataFrame}
-import org.apache.spark.sql.expressions.UserDefinedFunction
+import org.apache.spark.sql.expressions.{UserDefinedFunction, Window}
 import org.apache.spark.sql.functions._
 
 object Utils {
@@ -160,14 +160,19 @@ object Utils {
               .otherwise(col("participant_fhir_id"))
           )
           .groupBy("fhir_id", "participant_fhir_id")
-          .agg(collect_list(col("biospecimen")) as "biospecimens", filesWithSeqExpDF.columns.filter(!_.equals("fhir_id")).map(c => first(c).as(c)): _*)
+          .agg(collect_list(col("biospecimen")) as "biospecimens",
+             filesWithSeqExpDF.columns.filter(!_.equals("fhir_id")).map(c => first(c).as(c)): _*)
 
       val filesWithBiospecimenGroupedByParticipantIdDf =
         filesWithBiospecimenDf
           .withColumn("file", struct(filesWithBiospecimenDf.columns.filterNot(c => c.equals("participant_fhir_id")).map(col): _*))
           .select("participant_fhir_id", "file")
           .groupBy("participant_fhir_id")
-          .agg(collect_list(col("file")) as "files")
+          .agg(
+            count(col("file.file_id") ) as "nb_files",
+            collect_list(col("file")) as "files",
+            size(flatten(collect_set(col("file.biospecimens.fhir_id")))) as "nb_biospecimens"
+          )
 
       df
         .join(filesWithBiospecimenGroupedByParticipantIdDf, df("fhir_id") === filesWithBiospecimenGroupedByParticipantIdDf("participant_fhir_id"), "left_outer")
@@ -230,7 +235,7 @@ object Utils {
       val reformatFile = filesWithSeqExperiments
         .withColumn("biospecimen_fhir_id", explode(col("specimen_fhir_ids")))
         .drop("document_reference_fhir_id")
-        .withColumn("file", struct((filesWithSeqExperiments.columns).map(col): _*))
+        .withColumn("file", struct(filesWithSeqExperiments.columns.map(col): _*))
         .select("biospecimen_fhir_id", "file")
         .groupBy("biospecimen_fhir_id")
         .agg(collect_list(col("file")) as "files")
