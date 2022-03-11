@@ -13,11 +13,15 @@ class FileCentricSpec extends FlatSpec with Matchers with WithSparkSession {
   "transform" should "prepare index file_centric" in {
     val data: Map[String, DataFrame] = Map(
       "normalized_document_reference" -> Seq(
-        DOCUMENTREFERENCE(`fhir_id` = "11", `participant_fhir_ids` = Seq("1"), `specimen_fhir_ids` = Seq("111")),
-        DOCUMENTREFERENCE(`fhir_id` = "12", `participant_fhir_ids` = Seq("1")),
-        DOCUMENTREFERENCE(`fhir_id` = "21", `participant_fhir_ids` = Seq("2"), `specimen_fhir_ids` = Seq("222"))).toDF(),
+        DOCUMENTREFERENCE(`fhir_id` = "11", `participant_fhir_id` = "1", `specimen_fhir_ids` = Seq("111")),
+        DOCUMENTREFERENCE(`fhir_id` = "12", `participant_fhir_id` = "1"),
+        DOCUMENTREFERENCE(`fhir_id` = "21", `participant_fhir_id` = "2", `specimen_fhir_ids` = Seq("222")),
+        DOCUMENTREFERENCE(`fhir_id` = "33", `participant_fhir_id` = null, `specimen_fhir_ids` = Seq("111","112", "222")),
+        DOCUMENTREFERENCE(`fhir_id` = "44", `participant_fhir_id` = "1", `specimen_fhir_ids` = Seq("111","112", "222"))
+      ).toDF(),
       "normalized_specimen" -> Seq(
         BIOSPECIMEN(`fhir_id` = "111", `participant_fhir_id` = "1"),
+        BIOSPECIMEN(`fhir_id` = "112", `participant_fhir_id` = "1"),
         BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2")
       ).toDF(),
       "es_index_study_centric" -> Seq(STUDY_CENTRIC()).toDF(),
@@ -29,27 +33,82 @@ class FileCentricSpec extends FlatSpec with Matchers with WithSparkSession {
 
     output.keys should contain("es_index_file_centric")
 
-    val file_centric = output("es_index_file_centric")
+    val file_centric = output("es_index_file_centric").as[FILE_CENTRIC].collect()
 
-    file_centric.as[FILE_CENTRIC].collect() should contain theSameElementsAs
-      Seq(
-        FILE_CENTRIC(`fhir_id` = "11", `participant_fhir_ids` = Seq("1"),
+    file_centric.find(_.`fhir_id` == "11") shouldBe Some(
+        FILE_CENTRIC(`fhir_id` = "11",
           `participants` = Seq(PARTICIPANT_WITH_BIOSPECIMEN(`fhir_id` = "1",
-            `biospecimens` = Seq(BIOSPECIMEN(
+            `biospecimens` = Set(BIOSPECIMEN(
               `fhir_id` = "111",
               `participant_fhir_id` = "1"
             ))
           )),
           `sequencing_experiment` = SEQUENCING_EXPERIMENT()
-        ),
-        FILE_CENTRIC(`fhir_id` = "12", `participant_fhir_ids` = Seq("1"),
+        )
+      )
+    file_centric.find(_.`fhir_id` == "12") shouldBe Some(
+        FILE_CENTRIC(`fhir_id` = "12",
           `participants` = Seq(PARTICIPANT_WITH_BIOSPECIMEN(`fhir_id` = "1",
-            `biospecimens` = Seq.empty[BIOSPECIMEN])),
+            `biospecimens` = Set.empty[BIOSPECIMEN])),
           `sequencing_experiment` = SEQUENCING_EXPERIMENT()
-        ),
-        FILE_CENTRIC(`fhir_id` = "21", `participant_fhir_ids` = Seq("2"),
+        )
+    )
+    file_centric.find(_.`fhir_id` == "21") shouldBe Some(
+        FILE_CENTRIC(`fhir_id` = "21",
           `participants` = Seq(PARTICIPANT_WITH_BIOSPECIMEN(`fhir_id` = "2",
-            `biospecimens` = Seq(BIOSPECIMEN(
+            `biospecimens` = Set(BIOSPECIMEN(
+              `fhir_id` = "222",
+              `participant_fhir_id` = "2",
+            ))
+          )),
+          `sequencing_experiment` = SEQUENCING_EXPERIMENT()
+        )
+    )
+    file_centric.find(_.`fhir_id` == "44") shouldBe Some(
+      FILE_CENTRIC(`fhir_id` = "44",
+        `participants` = Seq(
+          PARTICIPANT_WITH_BIOSPECIMEN(`fhir_id` = "1",
+            `biospecimens` = Set(
+              BIOSPECIMEN(
+                `fhir_id` = "111",
+                `participant_fhir_id` = "1"
+              ),
+              BIOSPECIMEN(
+                `fhir_id` = "112",
+                `participant_fhir_id` = "1"
+              )
+
+
+            )
+          ),
+          PARTICIPANT_WITH_BIOSPECIMEN(`fhir_id` = "2",
+            `biospecimens` = Set(BIOSPECIMEN(
+              `fhir_id` = "222",
+              `participant_fhir_id` = "2",
+            ))
+          )
+        ),
+        `sequencing_experiment` = SEQUENCING_EXPERIMENT()
+      )
+    )
+
+    file_centric.find(_.`fhir_id` == "33") shouldBe Some(
+        FILE_CENTRIC(`fhir_id` = "33",
+          `participants` = Seq(
+            PARTICIPANT_WITH_BIOSPECIMEN(`fhir_id` = "1",
+              `biospecimens` = Set(
+                BIOSPECIMEN(
+                `fhir_id` = "111",
+                `participant_fhir_id` = "1"
+                ),
+                BIOSPECIMEN(
+                  `fhir_id` = "112",
+                  `participant_fhir_id` = "1"
+                )
+              )
+            ),
+            PARTICIPANT_WITH_BIOSPECIMEN(`fhir_id` = "2",
+            `biospecimens` = Set(BIOSPECIMEN(
               `fhir_id` = "222",
               `participant_fhir_id` = "2",
             ))
@@ -62,9 +121,9 @@ class FileCentricSpec extends FlatSpec with Matchers with WithSparkSession {
   "transform" should "ignore file linked to no participant" in {
     val data: Map[String, DataFrame] = Map(
       "normalized_document_reference" -> Seq(
-        DOCUMENTREFERENCE(`fhir_id` = "11", `participant_fhir_ids` = Seq("1"), `specimen_fhir_ids` = Seq("111")),
-        DOCUMENTREFERENCE(`fhir_id` = "12", `participant_fhir_ids` = Seq("1")),
-        DOCUMENTREFERENCE(`fhir_id` = "21", `participant_fhir_ids` = Seq("2"), `specimen_fhir_ids` = Seq("222"))).toDF(),
+        DOCUMENTREFERENCE(`fhir_id` = "11", `participant_fhir_id` = "1", `specimen_fhir_ids` = Seq("111")),
+        DOCUMENTREFERENCE(`fhir_id` = "12", `participant_fhir_id` = "1"),
+        DOCUMENTREFERENCE(`fhir_id` = "21", `participant_fhir_id` = "2", `specimen_fhir_ids` = Seq("222"))).toDF(),
       "normalized_specimen" -> Seq(
         BIOSPECIMEN(`fhir_id` = "111", `participant_fhir_id` = "1"),
         BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2")
@@ -80,12 +139,12 @@ class FileCentricSpec extends FlatSpec with Matchers with WithSparkSession {
 
     val file_centric = output("es_index_file_centric").as[FILE_CENTRIC].collect()
     file_centric.find(_.`fhir_id` == "11") shouldBe Some(
-      FILE_CENTRIC(`fhir_id` = "11", `participant_fhir_ids` = Seq("1"),
+      FILE_CENTRIC(`fhir_id` = "11",
         `participants` = Seq(PARTICIPANT_WITH_BIOSPECIMEN(`fhir_id` = "1",
-          `biospecimens` = Seq(BIOSPECIMEN(`fhir_id` = "111", `participant_fhir_id` = "1"))))))
+          `biospecimens` = Set(BIOSPECIMEN(`fhir_id` = "111", `participant_fhir_id` = "1"))))))
     file_centric.find(_.`fhir_id` == "12") shouldBe Some(
-      FILE_CENTRIC(`fhir_id` = "12", `participant_fhir_ids` = Seq("1"),
+      FILE_CENTRIC(`fhir_id` = "12",
         `participants` = Seq(PARTICIPANT_WITH_BIOSPECIMEN(`fhir_id` = "1",
-          `biospecimens` = Seq.empty[BIOSPECIMEN]))))
+          `biospecimens` = Set.empty[BIOSPECIMEN]))))
   }
 }

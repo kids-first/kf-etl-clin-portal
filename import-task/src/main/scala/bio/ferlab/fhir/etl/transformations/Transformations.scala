@@ -179,7 +179,6 @@ object Transformations {
     Custom(_
       .select("fhir_id", "study_id", "release_id", "category", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus")
       .withColumn("access_urls", col("content")("attachment")("url")(0))
-      // TODO availability
       .withColumn("acl", extractAclFromList(col("securityLabel")("text"), col("study_id")))
       .withColumn("controlled_access", col("securityLabel")(0)("text"))
       .withColumn("data_type", col("type")("text"))
@@ -199,7 +198,7 @@ object Transformations {
       .withColumn("repository", retrieveRepository(col("content")("attachment")("url")(0)))
       .withColumn("size", retrieveSize(col("content")(1)("attachment")("fileSize")))
       .withColumn("urls", col("content")(1)("attachment")("url"))
-      .withColumn("participant_fhir_ids", array(extractReferenceId(col("subject")("reference"))))
+      .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
       .withColumn("specimen_fhir_ids", extractReferencesId(col("context")("related")("reference")))
       .withColumnRenamed("docStatus", "status")
     ),

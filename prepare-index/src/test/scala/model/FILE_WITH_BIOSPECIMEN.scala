@@ -17,9 +17,7 @@ case class FILE_WITH_BIOSPECIMEN(
                                   `size`: Option[BigInt] = Some(BigInt.apply(2610321004L)),
                                   `urls`: Option[String] = Some("s3://kf-study-us-east-1-prd-sd-z6mwd3h0/harmonized-data/raw-gvcf/4db9adf4-94f7-4800-a360-49eda89dfb62.g.vcf.gz"),
                                   `study_id`: Option[String] = Some("SD_Z6MWD3H0"),
-                                  `participant_fhir_ids`: Seq[String] = Seq("39167"),
                                   `release_id`: Option[String] = Some("re_000001"),
-                                  `specimen_fhir_ids`: Option[Seq[String]] = None,
                                   `biospecimens`: Seq[BIOSPECIMEN] = Seq.empty,
                                   `sequencing_experiment`: Option[SEQUENCING_EXPERIMENT] = None
                                 )

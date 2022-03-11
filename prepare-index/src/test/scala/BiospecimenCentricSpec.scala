@@ -17,9 +17,13 @@ class BiospecimenCentricSpec extends FlatSpec with Matchers with WithSparkSessio
         SIMPLE_PARTICIPANT(`fhir_id` = "2")
       ).toDF(),
       "normalized_document_reference" -> Seq(
-        DOCUMENTREFERENCE(`fhir_id` = "11", `participant_fhir_ids` = Seq("1"), `specimen_fhir_ids` = Seq("111")),
-        DOCUMENTREFERENCE(`fhir_id` = "12", `participant_fhir_ids` = Seq("1")),
-        DOCUMENTREFERENCE(`fhir_id` = "21", `participant_fhir_ids` = Seq("2"), `specimen_fhir_ids` = Seq("222"))).toDF(),
+        DOCUMENTREFERENCE(`fhir_id` = "11", `participant_fhir_id` = "1", `specimen_fhir_ids` = Seq("111")),
+        DOCUMENTREFERENCE(`fhir_id` = "12", `participant_fhir_id` = "1"),
+        DOCUMENTREFERENCE(`fhir_id` = "21", `participant_fhir_id` = "2", `specimen_fhir_ids` = Seq("222")),
+        DOCUMENTREFERENCE(`fhir_id` = "33", `participant_fhir_id` = null, `specimen_fhir_ids` = Seq("111","222")),
+        DOCUMENTREFERENCE(`fhir_id` = "44", `participant_fhir_id` = "1", `specimen_fhir_ids` = Seq("111","222"))
+      ).toDF(),
+
       "normalized_specimen" -> Seq(
         BIOSPECIMEN(`fhir_id` = "111", `participant_fhir_id` = "1"),
         BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2")
@@ -42,8 +46,14 @@ class BiospecimenCentricSpec extends FlatSpec with Matchers with WithSparkSessio
           `files` = Seq(
             DOCUMENTREFERENCE_WITH_SEQ_EXP(
               `fhir_id` = "11",
-              `participant_fhir_ids` = Seq("1"),
-              `specimen_fhir_ids` = Seq("111"),
+              `sequencing_experiment` = SEQUENCING_EXPERIMENT()
+            ),
+            DOCUMENTREFERENCE_WITH_SEQ_EXP(
+              `fhir_id` = "33",
+              `sequencing_experiment` = SEQUENCING_EXPERIMENT()
+            ),
+            DOCUMENTREFERENCE_WITH_SEQ_EXP(
+              `fhir_id` = "44",
               `sequencing_experiment` = SEQUENCING_EXPERIMENT()
             )
           )
@@ -55,10 +65,18 @@ class BiospecimenCentricSpec extends FlatSpec with Matchers with WithSparkSessio
           `files` = Seq(
             DOCUMENTREFERENCE_WITH_SEQ_EXP(
               `fhir_id` = "21",
-              `participant_fhir_ids` = Seq("2"),
-              `specimen_fhir_ids` = Seq("222"),
               `sequencing_experiment` = SEQUENCING_EXPERIMENT()
-            ))))
+            ),
+            DOCUMENTREFERENCE_WITH_SEQ_EXP(
+              `fhir_id` = "33",
+              `sequencing_experiment` = SEQUENCING_EXPERIMENT()
+            ),
+            DOCUMENTREFERENCE_WITH_SEQ_EXP(
+              `fhir_id` = "44",
+              `sequencing_experiment` = SEQUENCING_EXPERIMENT()
+            )
+          )
+        ))
   }
 }
 
