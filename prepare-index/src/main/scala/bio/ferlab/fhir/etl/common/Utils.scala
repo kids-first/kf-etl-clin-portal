@@ -101,13 +101,13 @@ object Utils {
           .join(observedPhenotypes, Seq("participant_fhir_id"), "left_outer")
           .join(nonObservedPhenotypes, Seq("participant_fhir_id"), "left_outer")
 
-      val diseases = addDiseases(diagnosesDF)
+      val diseases = addDiseases(diagnosesDF, mondoTerms)
       val commonColumns = Seq("participant_fhir_id", "study_id")
 
       val diseaseColumns = diseases.columns.filter(col => !commonColumns.contains(col))
 
       val diseasesWithMondoTerms =
-        mapObservableTerms(diseases, "mondo_id_diagnosis")(mondoTerms)
+        mapObservableTerms(diseases, "mondo_id")(mondoTerms)
           .withColumn("mondo", explode_outer(col("observable_with_ancestors")))
           .drop("observable_with_ancestors", "study_id")
           .groupBy("participant_fhir_id")
@@ -119,7 +119,7 @@ object Utils {
               )
             ) as "diagnosis",
             collect_set(col("mondo")) as "mondo"
-          )
+          ).drop("mondo_id")
 
       val diseasesExplodedWithMondoTerms = diseasesWithMondoTerms
         .withColumn("mondo", explode(col("mondo")))

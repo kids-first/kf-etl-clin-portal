@@ -21,10 +21,11 @@ class OntologyUtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     ).toDF("participant_id", "diagnosis_id", "condition_profile", "condition_coding", "age_at_event")
       .withColumn("condition_coding", col("condition_coding").cast(SCHEMA_CONDITION_CODING))
 
-    val result = addDiseases(df)
+    val mondoTerms = Seq(("mondo", "Mondo")).toDF("id", "name")
+    val result = addDiseases(df, mondoTerms)
     val resultParticipant1 = result.filter(col("diagnosis_id") === "diag1").select("icd_id_diagnosis", "mondo_id_diagnosis").collect().head
 
-    resultParticipant1 shouldBe Row("icd", "mondo")
+    resultParticipant1 shouldBe Row("icd", "Mondo (mondo)")
   }
 
   "firstCategory" should "return the first found category" in {
