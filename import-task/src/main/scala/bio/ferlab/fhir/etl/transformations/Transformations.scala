@@ -3,6 +3,7 @@ package bio.ferlab.fhir.etl.transformations
 import bio.ferlab.datalake.spark3.transformation.{Custom, Drop, Transformation}
 import bio.ferlab.fhir.etl.Utils._
 import bio.ferlab.fhir.etl._
+
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.{col, collect_list, explode, filter, regexp_extract, struct, _}
 import org.apache.spark.sql.types.BooleanType
@@ -35,6 +36,8 @@ object Transformations {
     Drop("identifier")
   )
 
+  val age_at_bio_collection_on_set_intervals = Seq((0, 5), (5, 10), (10, 20), (20, 30), (30, 40), (40, 50), (50, 60), (60, 70), (70, 80))
+
   val specimenMappings: List[Transformation] = List(
     Custom { input =>
       val specimen = input
@@ -44,6 +47,8 @@ object Transformations {
         .withColumn("laboratory_procedure", col("processing")(0)("description"))
         .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
         .withColumn("age_at_biospecimen_collection", col("collection._collectedDateTime.relativeDateTime.offset.value"))
+        .withColumn("age_at_biospecimen_collection_years", floor(col("age_at_biospecimen_collection") / 365).cast("int"))
+        .withColumn("age_at_biospecimen_collection_onset", age_on_set(col("age_at_biospecimen_collection_years"), age_at_bio_collection_on_set_intervals))
         .withColumn("container", explode_outer(col("container")))
         .withColumn("container_id", col("container")("identifier")(0)("value"))
         .withColumn("volume", col("container")("specimenQuantity")("value"))

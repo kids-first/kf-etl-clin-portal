@@ -12,6 +12,12 @@
         "age_at_biospecimen_collection": {
           "type": "integer"
         },
+        "age_at_biospecimen_collection_years": {
+          "type": "integer"
+        },
+        "age_at_biospecimen_collection_onset": {
+          "type": "keyword"
+        },
         "sample_id": {
           "type": "keyword"
         },

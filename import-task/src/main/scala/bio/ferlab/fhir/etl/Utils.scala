@@ -3,7 +3,7 @@ package bio.ferlab.fhir.etl
 //import bio.ferlab.fhir.etl.ImportTask.expReleaseId
 
 import org.apache.spark.sql.expressions.UserDefinedFunction
-import org.apache.spark.sql.functions.{coalesce, col, exists, filter, last, lit, regexp_extract, regexp_replace, slice, split, udf, when}
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Column, functions}
 
 object Utils {
@@ -70,4 +70,11 @@ object Utils {
   val extractStudyExternalId: UserDefinedFunction = udf((s: Option[String]) => s.map(_.split('.').head))
 
   val sanitizeFilename: Column => Column = fileName => slice(split(fileName, "/"), -1, 1)(0)
+
+  val age_on_set: (Column, Seq[(Int, Int)]) => Column = (c, intervals) => {
+    val (_, lastHigh) = intervals.last
+    intervals.foldLeft(when(c > lastHigh, s"$lastHigh+")) { case (column, (low, high)) =>
+      column.when(c >= low && c < high, s"$low - $high")
+    }
+  }
 }

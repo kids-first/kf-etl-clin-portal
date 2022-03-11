@@ -1,6 +1,6 @@
 package bio.ferlab.fhir.etl
 
-import bio.ferlab.fhir.etl.Utils.{retrieveRepository, sanitizeFilename}
+import bio.ferlab.fhir.etl.Utils.{age_on_set, retrieveRepository, sanitizeFilename}
 import org.apache.spark.sql.functions.col
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -20,5 +20,16 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     df.select(sanitizeFilename($"filename")).as[String].collect() should contain theSameElementsAs Seq("P7339_N.cram", "156a028f-106b-4341-974b-bbe6a92a1b0f.vardict_somatic.PASS.vep.vcf.gz")
   }
 
+  "age_on_set" should "return on set interval adequately" in {
+    val df = Seq(0, 12, 38, 50).toDF("age")
+    val intervals = Seq((0, 20), (20, 30), (30, 40))
+    df.select(age_on_set(col("age"), intervals)).as[String].collect() should contain theSameElementsAs Seq(
+      "0 - 20",
+      "0 - 20",
+      "30 - 40",
+      "40+",
+    )
+
+  }
 
 }
