@@ -187,7 +187,7 @@ object Transformations {
       .withColumn("experiment_strategy", col("category")(0)("text"))
       .withColumn("external_id", col("content")(1)("attachment")("url"))
       .withColumn("file_format", firstNonNull(col("content")("format")("display")))
-      .withColumn("file_name", firstNonNull(col("content")("attachment")("title")))
+      .withColumn("file_name", sanitizeFilename(firstNonNull(col("content")("attachment")("title"))))
       .withColumn("file_id", officialIdentifier)
       .withColumn("hashes", extractHashes(col("content")(1)("attachment")("hashes")))
       // TODO instrument_models
