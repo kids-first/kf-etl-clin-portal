@@ -191,20 +191,21 @@ object Transformations {
       .withColumn("data_type", col("type")("text"))
       .withColumn("data_category", when(size(col("category")) > 1, col("category")(1)("text")).otherwise(null))
       .withColumn("experiment_strategy", col("category")(0)("text"))
-      .withColumn("external_id", col("content")(1)("attachment")("url"))
+      .withColumn("external_id", col("content")(0)("attachment")("url"))
       .withColumn("file_format", firstNonNull(col("content")("format")("display")))
       .withColumn("file_name", sanitizeFilename(firstNonNull(col("content")("attachment")("title"))))
       .withColumn("file_id", officialIdentifier)
-      .withColumn("hashes", extractHashes(col("content")(1)("attachment")("hashes")))
+      .withColumn("hashes", extractHashes(col("content")(0)("attachment")("hashes")))
       // TODO instrument_models
-      .withColumn("is_harmonized", retrieveIsHarmonized(col("content")(1)("attachment")("url")))
+      //TODO this is not working anymore : url contains drs uri, not s3 uri
+      .withColumn("is_harmonized", retrieveIsHarmonized(col("content")(0)("attachment")("url")))
       // TODO is_paired_end
       .withColumn("latest_did", split(col("content")("attachment")("url")(0), "\\/\\/")(2))
       // TODO platforms
       // TODO reference_genome
       .withColumn("repository", retrieveRepository(col("content")("attachment")("url")(0)))
-      .withColumn("size", retrieveSize(col("content")(1)("attachment")("fileSize")))
-      .withColumn("urls", col("content")(1)("attachment")("url"))
+      .withColumn("size", retrieveSize(col("content")(0)("attachment")("fileSize")))
+      .withColumn("urls", col("content")(0)("attachment")("url"))
       .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
       .withColumn("specimen_fhir_ids", extractReferencesId(col("context")("related")("reference")))
       .withColumnRenamed("docStatus", "status")
