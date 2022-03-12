@@ -63,7 +63,6 @@ object Transformations {
         val joined = specimen.select(struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(i) as "level") as s"parent_$i")
         s.join(joined, s(s"parent_${i - 1}.parent_id") === joined(s"parent_$i.fhir_id"), "left")
       }
-      df
         .withColumn("parent_sample_type", col("parent_1.sample_type"))
         .withColumn("parent_sample_id", col("parent_1.sample_id"))
         .withColumn("parent_fhir_id", col("parent_1.fhir_id"))
@@ -72,9 +71,15 @@ object Transformations {
         .withColumn("collection_sample_type", col("collection_sample.sample_type"))
         .withColumn("collection_fhir_id", col("collection_sample.fhir_id"))
         .where(col("collection_fhir_id") =!= col("fhir_id")) //Filter out collection sample
+        .drop(parentRange.map(p => s"parent_$p"): _*)
+      val grouped = df.select(struct(col("*")) as "specimen")
+        .groupBy("specimen.fhir_id", "specimen.container_id")
+        .agg(first("specimen") as "specimen")
+        .select("specimen.*")
+      grouped
     },
     Drop("type", "identifier", "collection", "subject",
-      "parent", "parent_5", "parent_4", "parent_3", "parent_2", "parent_1", "parent_0",
+      "parent",
       "container", "collection_sample")
   )
 
