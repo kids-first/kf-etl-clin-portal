@@ -1,9 +1,8 @@
 package bio.ferlab.fhir.etl.transformations
 
 import bio.ferlab.datalake.spark3.transformation.{Custom, Drop, Transformation}
-import bio.ferlab.fhir.etl.Utils._
+import bio.ferlab.fhir.etl.Utils.{extractFirstForSystem, _}
 import bio.ferlab.fhir.etl._
-
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.{col, collect_list, explode, filter, regexp_extract, struct, _}
 import org.apache.spark.sql.types.BooleanType
@@ -193,9 +192,9 @@ object Transformations {
       .withColumn("access_urls", col("content")("attachment")("url")(0))
       .withColumn("acl", extractAclFromList(col("securityLabel")("text"), col("study_id")))
       .withColumn("controlled_access", col("securityLabel")(0)("text"))
-      .withColumn("data_type", col("type")("text"))
-      .withColumn("data_category", when(size(col("category")) > 1, col("category")(1)("text")).otherwise(null))
-      .withColumn("experiment_strategy", col("category")(0)("text"))
+      .withColumn("data_type", extractFirstForSystem(col("category")("coding"), SYS_DATA_TYPES)("display"))
+      .withColumn("data_category", extractFirstForSystem(col("category")("coding"), SYS_DATA_CATEGORIES)("display"))
+      .withColumn("experiment_strategy", extractFirstForSystem(col("category")("coding"), SYS_EXP_STRATEGY)("display"))
       .withColumn("external_id", col("content")(0)("attachment")("url"))
       .withColumn("file_format", firstNonNull(col("content")("format")("display")))
       .withColumn("file_name", sanitizeFilename(firstNonNull(col("content")("attachment")("title"))))
@@ -214,8 +213,9 @@ object Transformations {
       .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
       .withColumn("specimen_fhir_ids", extractReferencesId(col("context")("related")("reference")))
       .withColumnRenamed("docStatus", "status")
-    ),
-    Drop("securityLabel", "content", "type", "identifier", "subject", "context")
+  )
+  ,
+  Drop("securityLabel", "content", "type", "identifier", "subject", "context")
   )
 
   val groupMappings: List[Transformation] = List(

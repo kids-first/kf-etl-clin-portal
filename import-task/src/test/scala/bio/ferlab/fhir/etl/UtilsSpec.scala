@@ -1,6 +1,6 @@
 package bio.ferlab.fhir.etl
 
-import bio.ferlab.fhir.etl.Utils.{age_on_set, retrieveRepository, sanitizeFilename}
+import bio.ferlab.fhir.etl.Utils.{age_on_set, extractFirstForSystem, retrieveRepository, sanitizeFilename}
 import org.apache.spark.sql.functions.col
 import org.scalatest.{FlatSpec, Matchers}
 
