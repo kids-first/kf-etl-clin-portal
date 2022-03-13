@@ -191,7 +191,7 @@ object Transformations {
       .select("fhir_id", "study_id", "release_id", "category", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus")
       .withColumn("access_urls", col("content")("attachment")("url")(0))
       .withColumn("acl", extractAclFromList(col("securityLabel")("text"), col("study_id")))
-      .withColumn("controlled_access", col("securityLabel")(0)("text"))
+      .withColumn("controlled_access", initcap(col("securityLabel")(0)("text")))
       .withColumn("data_type", extractFirstForSystem(col("category")("coding"), SYS_DATA_TYPES)("display"))
       .withColumn("data_category", extractFirstForSystem(col("category")("coding"), SYS_DATA_CATEGORIES)("display"))
       .withColumn("experiment_strategy", extractFirstForSystem(col("category")("coding"), SYS_EXP_STRATEGY)("display"))
