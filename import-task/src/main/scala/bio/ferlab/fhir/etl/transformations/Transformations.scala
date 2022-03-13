@@ -95,7 +95,7 @@ object Transformations {
       ))
       // TODO external_id
     ),
-    Drop("subject", "valueCodeableConcept", "identifier", "_effectiveDateTime")
+    Drop("subject", "valueCodeableConcept", "identifier", "_effectiveDateTime", "parent_0")
   )
 
   val observationFamilyRelationshipMappings: List[Transformation] = List(
@@ -192,9 +192,9 @@ object Transformations {
       .withColumn("access_urls", col("content")("attachment")("url")(0))
       .withColumn("acl", extractAclFromList(col("securityLabel")("text"), col("study_id")))
       .withColumn("controlled_access", initcap(col("securityLabel")(0)("text")))
-      .withColumn("data_type", extractFirstForSystem(col("category")("coding"), SYS_DATA_TYPES)("display"))
-      .withColumn("data_category", extractFirstForSystem(col("category")("coding"), SYS_DATA_CATEGORIES)("display"))
-      .withColumn("experiment_strategy", extractFirstForSystem(col("category")("coding"), SYS_EXP_STRATEGY)("display"))
+      .withColumn("data_type", firstSystemEquals(col("type")("coding"), SYS_DATA_TYPES)("display"))
+      .withColumn("data_category", firstSystemEquals(col("category")(0)("coding"), SYS_DATA_CATEGORIES)("display"))
+      .withColumn("experiment_strategy", firstSystemEquals(col("category")(0)("coding"), SYS_EXP_STRATEGY)("display"))
       .withColumn("external_id", col("content")(0)("attachment")("url"))
       .withColumn("file_format", firstNonNull(col("content")("format")("display")))
       .withColumn("file_name", sanitizeFilename(firstNonNull(col("content")("attachment")("title"))))

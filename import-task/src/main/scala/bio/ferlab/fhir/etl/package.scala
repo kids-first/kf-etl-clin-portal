@@ -21,8 +21,8 @@ package object etl {
 
   val URN_UNIQUE_ID = "urn:kids-first:unique-string"
 
-val SYS_DATA_TYPES = Seq("https://includedcc.org/fhir/code-systems/data_types")
-val SYS_EXP_STRATEGY = Seq("https://includedcc.org/fhir/code-systems/experimental_strategies")
-val SYS_DATA_CATEGORIES = Seq( "https://includedcc.org/fhir/code-systems/data_categories")
+val SYS_DATA_TYPES = "https://includedcc.org/fhir/code-systems/data_types"
+val SYS_EXP_STRATEGY = "https://includedcc.org/fhir/code-systems/experimental_strategies"
+val SYS_DATA_CATEGORIES =  "https://includedcc.org/fhir/code-systems/data_categories"
 
 }
