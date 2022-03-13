@@ -48,6 +48,41 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     patient2._2.isEmpty shouldBe true
   }
 
+  "addDownSyndromeDiagnosis" should "add down syndrome diagnosis to dataframe" in {
+    val inputPatients = Seq(
+      PATIENT(`fhir_id` = "P1"),
+      PATIENT(`fhir_id` = "P2"),
+      PATIENT(`fhir_id` = "P3")
+    ).toDF()
+
+    val mondoTerms = Seq(
+      ("MONDO:0000000", "Another Term", Nil),
+      ("MONDO:0008608", "Down Syndrome", Nil),
+      ("MONDO:0008609", "Down Syndrome level 2", Seq("Down Syndrome (MONDO:0008608)"))
+    ).toDF("id", "name", "parents")
+    val inputDiseases = Seq(
+      CONDITION_DISEASE(`fhir_id` = "O1", `participant_fhir_id` = "P1", `mondo_id` = Some("MONDO:0008608")),
+      CONDITION_DISEASE(`fhir_id` = "O2", `participant_fhir_id` = "P1", `mondo_id` = Some("MONDO:0008609")),
+      CONDITION_DISEASE(`fhir_id` = "O3", `participant_fhir_id` = "P2", `mondo_id` = Some("MONDO:0008609")),
+      CONDITION_DISEASE(`fhir_id` = "O4", `participant_fhir_id` = "P2", `mondo_id` = Some("MONDO:0000000")),
+      CONDITION_DISEASE(`fhir_id` = "O5", `participant_fhir_id` = "P3", `mondo_id` = Some("MONDO:0000000"))
+    ).toDF()
+
+    val output = inputPatients.addDownSyndromeDiagnosis(inputDiseases, mondoTerms)
+
+    val patientWithDS = output.select("fhir_id", "down_syndrome_status", "down_syndrome_diagnosis").as[(String, String, Seq[String])].collect()
+
+    patientWithDS.find(_._1 == "P1") shouldBe Some(
+      ("P1", "T21", Seq("Down Syndrome (MONDO:0008608)", "Down Syndrome level 2 (MONDO:0008609)"))
+    )
+    patientWithDS.find(_._1 == "P2") shouldBe Some(
+      ("P2", "T21", Seq("Down Syndrome level 2 (MONDO:0008609)"))
+    )
+    patientWithDS.find(_._1 == "P3") shouldBe Some(
+      ("P3", "Other", null)
+    )
+  }
+
   "addFamily" should "add families to patients" in {
     val inputPatients = Seq(
       PATIENT(`fhir_id` = "11"),
@@ -196,6 +231,7 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
         diagnosis_id = "diag1",
         participant_fhir_id = "A",
         condition_coding = Seq(CONDITION_CODING(`category` = "MONDO", `code` = "MONDO_0002051")),
+        mondo_id = Some("MONDO:0002051"),
         age_at_event = AGE_AT_EVENT(5),
       ),
       CONDITION_DISEASE(
@@ -203,6 +239,7 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
         diagnosis_id = "diag2",
         participant_fhir_id = "A",
         condition_coding = Seq(CONDITION_CODING(`category` = "MONDO", `code` = "MONDO_0024458")),
+        mondo_id = Some("MONDO:0024458"),
         age_at_event = AGE_AT_EVENT(10),
       ),
       CONDITION_DISEASE(fhir_id = "3d", diagnosis_id = "diag3", participant_fhir_id = "A")
@@ -364,18 +401,13 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     val output = inputParticipant.addParticipantFilesWithBiospecimen(inputDocumentReference, inputBiospecimen)
 
     //B11 and B12 should be attached to P1
-    val participant1AndSpecimen = output.select("fhir_id","files.biospecimens").filter(col("fhir_id") === "P1").as[(String, Seq[Seq[BIOSPECIMEN]])].collect()
+    val participant1AndSpecimen = output.select("fhir_id", "files.biospecimens").filter(col("fhir_id") === "P1").as[(String, Seq[Seq[BIOSPECIMEN]])].collect()
     participant1AndSpecimen.head._2.flatten.map(_.fhir_id) should contain theSameElementsAs Seq("B11", "B12")
 
     //P1 should contain one file and one dummy file
-    val participantWithFile = output.select("fhir_id","files.file_name").filter(col("fhir_id") === "P1").as[(String, Seq[String])].collect()
+    val participantWithFile = output.select("fhir_id", "files.file_name").filter(col("fhir_id") === "P1").as[(String, Seq[String])].collect()
     participantWithFile.head._2 should contain theSameElementsAs Seq("4db9adf4-94f7-4800-a360-49eda89dfb62.g.vcf.gz", "dummy_file")
   }
 
-  "downsyndromeStatusExtract" should "return T21 if at least diagnosis contain down syndrome" in {
-
-    val df = Seq(Seq("this is down syndrome diagnosis", "another syndrome"), Seq("leukemia"), Seq(null)).toDF("diagnoses")
-    df.select(downsyndromeStatusExtract(col("diagnoses"))).as[String].collect() should contain theSameElementsAs Seq("T21", "Other", "Other")
-  }
 
 }

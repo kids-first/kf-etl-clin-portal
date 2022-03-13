@@ -12,13 +12,13 @@ class OntologyUtilsSpec extends FlatSpec with Matchers with WithSparkSession {
 
   val SCHEMA_CONDITION_CODING = "array<struct<category:string,code:string>>"
 
-  "addDiagnosysPhenotypes" should "add diseases to dataframe" in {
+  "addDiseases" should "add diseases to dataframe" in {
 
     val df = Seq(
-      ("part1", "diag1", "disease", Seq(("ICD", "icd"), ("MONDO", "mondo")), AGE_AT_EVENT()),
-      ("part1", "diag2", "disease", Seq(("ICD", "icd")), AGE_AT_EVENT()),
-      ("part2", "diag3", "disease", Seq(("ICD", "icd")), AGE_AT_EVENT()),
-    ).toDF("participant_id", "diagnosis_id", "condition_profile", "condition_coding", "age_at_event")
+      ("part1", "diag1", "disease", Seq(("ICD", "icd")), Some("mondo"), AGE_AT_EVENT()),
+      ("part1", "diag2", "disease", Seq(("ICD", "icd")), None, AGE_AT_EVENT()),
+      ("part2", "diag3", "disease", Seq(("ICD", "icd")), None, AGE_AT_EVENT()),
+    ).toDF("participant_id", "diagnosis_id", "condition_profile", "condition_coding", "mondo_id", "age_at_event")
       .withColumn("condition_coding", col("condition_coding").cast(SCHEMA_CONDITION_CODING))
 
     val mondoTerms = Seq(("mondo", "Mondo")).toDF("id", "name")

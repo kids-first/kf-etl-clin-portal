@@ -9,6 +9,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits._
+import bio.ferlab.fhir.etl.common.OntologyUtils.firstCategory
 
 class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETL {
 
@@ -40,19 +41,20 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
                          lastRunDateTime: LocalDateTime = minDateTime,
                          currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     val patientDF = data(normalized_patient.id)
-
+    val diseaseDF = data(normalized_disease.id).withColumn("mondo_id", observableTitleStandard(firstCategory("MONDO", col("condition_coding"))))
     val transformedParticipant =
       patientDF
         .addStudy(data(es_index_study_centric.id))
         .addDiagnosisPhenotypes(
           data(normalized_phenotype.id),
-          data(normalized_disease.id)
+          diseaseDF
         )(data(hpo_terms.id), data(mondo_terms.id))
+        .addDownSyndromeDiagnosis(diseaseDF,data(mondo_terms.id))
         .addOutcomes(data(normalized_vital_status.id))
         .addFamily(data(normalized_group.id), data(normalized_family_relationship.id))
         .withColumnRenamed("gender", "sex")
-        .withColumn("down_syndrome_status", downsyndromeStatusExtract(col("diagnosis.source_text")))
-        .withColumn("down_syndrome_diagnosis", lit("TODO"))
+//        .withColumn("down_syndrome_status", downsyndromeStatusExtract(col("diagnosis.source_text")))
+//        .withColumn("down_syndrome_diagnosis", lit("TODO"))
         .withColumn("is_proband", lit(false)) // TODO
         .withColumn("age_at_data_collection", lit(111)) // TODO
         .withColumn("study_external_id", col("study")("external_id"))

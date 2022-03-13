@@ -29,19 +29,18 @@ object OntologyUtils {
   val firstCategory: (String, Column) => Column = (category, codes) => filter(codes, code => code("category") === lit(category))(0)("code")
 
   def addDiseases(df: DataFrame, mondoTerms: DataFrame): DataFrame = {
-    val mondoTermsIdName = mondoTerms.select(col("id") as "mondo_id", col("name") as "mondo_name")
+    val mondoTermsIdName = mondoTerms.select(col("id") as "mondo_term_id", col("name") as "mondo_name")
     df
       //filter out disease with empty code
       .where(size(col("condition_coding")) > 0)
       .withColumn("icd_id_diagnosis", firstCategory("ICD", col("condition_coding")))
       .withColumn("ncit_id_diagnosis", firstCategory("NCIT", col("condition_coding")))
-      .withColumn("mondo_id_diagnosis", observableTitleStandard(firstCategory("MONDO", col("condition_coding"))))
       //Assumption -> age_at_event is in days from birth
       .withColumn("age_at_event_days", col("age_at_event.value"))
       .drop("condition_coding", "release_id")
-      .join(mondoTermsIdName, col("mondo_id_diagnosis") === col("mondo_id"), "left_outer")
+      .join(mondoTermsIdName, col("mondo_id") === mondoTermsIdName("mondo_term_id"), "left_outer")
       .withColumn("mondo_id_diagnosis", displayTerm(col("mondo_id"), col("mondo_name")))
-      .drop("mondo_name")
+      .drop("mondo_term_id","mondo_name")
   }
 
   def addPhenotypes(df: DataFrame): DataFrame = {

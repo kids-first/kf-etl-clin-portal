@@ -6,6 +6,7 @@ import org.apache.spark.sql.expressions.{UserDefinedFunction, Window}
 import org.apache.spark.sql.functions._
 
 object Utils {
+  val DOWN_SYNDROM_MONDO_TERM = "MONDO:0008608"
 
   val observableTitleStandard: Column => Column = term => trim(regexp_replace(term, "_", ":"))
 
@@ -16,8 +17,6 @@ object Utils {
       case l if l.isEmpty => "proband-only"
       case _ => "other"
     })
-
-  val downsyndromeStatusExtract: Column => Column = diagnoses => when(diagnoses.isNotNull && exists(diagnoses, d => trim(lower(d)) like "%down syndrome%"), "T21").otherwise("Other")
 
   val sequencingExperimentCols = Seq("fhir_id", "sequencing_experiment_id", "experiment_strategy",
     "instrument_model", "library_name", "library_strand", "platform")
@@ -58,6 +57,24 @@ object Utils {
         .join(reformatObservation, col("fhir_id") === col("participant_fhir_id"), "left_outer")
         .withColumn("outcomes", coalesce(col("outcomes"), array()))
         .drop("participant_fhir_id")
+    }
+
+    def addDownSyndromeDiagnosis(diseases: DataFrame, mondoTerms: DataFrame): DataFrame = {
+      val mondoDownSyndrome = mondoTerms.where(
+        exists(col("parents"), p=> p like s"%$DOWN_SYNDROM_MONDO_TERM%") || col("id") === DOWN_SYNDROM_MONDO_TERM).select(col("id") as "mondo_down_syndrome_id", col("name") as "mondo_down_syndrome_name")
+
+      val downSyndromeDiagnosis = diseases.join(mondoDownSyndrome, col("mondo_id") === col("mondo_down_syndrome_id"))
+        .select(
+          col("participant_fhir_id"),
+          when(col("mondo_down_syndrome_id").isNotNull, displayTerm(col("mondo_down_syndrome_id"), col("mondo_down_syndrome_name")))
+            .otherwise(null) as "down_syndrome_diagnosis"
+        )
+        .groupBy("participant_fhir_id")
+        .agg(collect_set("down_syndrome_diagnosis") as "down_syndrome_diagnosis")
+      df.join(downSyndromeDiagnosis, col("fhir_id") === col("participant_fhir_id"), "left_outer")
+        .withColumn("down_syndrome_status", when(size(col("down_syndrome_diagnosis")) > 0, "T21").otherwise("Other"))
+        .drop("participant_fhir_id")
+
     }
 
     def addDiagnosisPhenotypes(phenotypeDF: DataFrame, diagnosesDF: DataFrame)(hpoTerms: DataFrame, mondoTerms: DataFrame): DataFrame = {
@@ -132,6 +149,7 @@ object Utils {
         diseasesWithMondoTerms
           .drop("mondo")
           .join(diseasesWithMondoTermsGrouped, Seq("participant_fhir_id"), "left_outer")
+          .drop("mondo_down_syndrome_id", "mondo_down_syndrome_name", "mondo_id")
 
       df
         .join(phenotypesWithHPOTermsGroupedByEvent, col("fhir_id") === col("participant_fhir_id"), "left_outer")
