@@ -183,15 +183,18 @@ object Utils {
             filesWithSeqExpDF.columns.filter(c => !c.equals("fhir_id") && !c.equals("participant_fhir_id")).map(c => first(c).as(c)): _*)
           .drop("specimen_fhir_ids")
 
+
+
       val filesWithBiospecimenGroupedByParticipantIdDf =
         filesWithBiospecimenDf
           .withColumn("file", struct(filesWithBiospecimenDf.columns.filterNot(c => c.equals("participant_fhir_id")).map(col): _*))
-          .select("participant_fhir_id", "file")
+          .withColumn("biospecimens_unique_ids", transform(col("file.biospecimens"), c => concat_ws("_", c("fhir_id"), c("container_id"))))
+          .select("participant_fhir_id", "file", "biospecimens_unique_ids")
           .groupBy("participant_fhir_id")
           .agg(
             count(col("file.file_id")) as "nb_files",
             collect_list(col("file")) as "files",
-            size(flatten(collect_set(col("file.biospecimens.fhir_id")))) as "nb_biospecimens"
+            size(array_distinct(flatten(collect_set(col("biospecimens_unique_ids"))))) as "nb_biospecimens"
           )
 
       df
@@ -211,8 +214,9 @@ object Utils {
         .select(struct(col("*")) as "file")
         .join(biospecimensDfReformat, col("file.specimen_fhir_id") === biospecimensDfReformat("specimen_fhir_id"), "left_outer")
         .withColumn("participant_file_fhir_id", when(biospecimensDfReformat("specimen_participant_fhir_id").isNotNull, biospecimensDfReformat("specimen_participant_fhir_id")).otherwise(col("file.participant_fhir_id")))
+        .withColumn("biospecimen_unique_id", when(col("biospecimen.fhir_id").isNotNull, concat_ws("_", col("biospecimen.fhir_id"), col("biospecimen.container_id"))).otherwise(null))
         .groupBy("file.fhir_id", "participant_file_fhir_id")
-        .agg(collect_list(col("biospecimen")) as "biospecimens", first("file") as "file", count(col("biospecimen.fhir_id")) as "nb_biospecimens")
+        .agg(collect_list(col("biospecimen")) as "biospecimens", first("file") as "file", count(col("biospecimen_unique_id")) as "nb_biospecimens")
 
       val participantReformat = participantDf.select(struct(col("*")) as "participant")
       fileWithBiospecimen

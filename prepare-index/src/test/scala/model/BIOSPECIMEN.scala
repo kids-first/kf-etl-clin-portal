@@ -8,6 +8,7 @@ case class BIOSPECIMEN(
                         `participant_fhir_id`: String = "38986",
                         `volume_ul`: Long = 11,
                         `volume_ul_unit`: String = null,
+                        container_id: Option[String] = None,
                         `study_id`: String = "SD_Z6MWD3H0",
                         `release_id`: String = "re_000001"
                       )

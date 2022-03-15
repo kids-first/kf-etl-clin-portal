@@ -255,9 +255,6 @@
             "study_id": {
               "type": "keyword"
             },
-            "type_of_omics": {
-              "type": "keyword"
-            },
             "urls": {
               "type": "keyword"
             }

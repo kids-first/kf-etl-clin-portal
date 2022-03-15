@@ -11,13 +11,13 @@ case class LIGHT_STUDY_CENTRIC (
                            `study_id`: String = "SD_Z6MWD3H0",
                            `study_code`: String = "KF-CHDALL",
                            `program`: String = "Kids First",
-                           `type_of_omics`: Seq[String] = Seq("TODO"),
-                           `experimental_strategy`: Seq[String] = Seq("TODO"),
-                           `data_access`: Seq[String] = Seq("TODO"),
+                           data_category: Seq[String] = Seq("Genomics"),
+                           `experimental_strategy`: Seq[String] = Seq("WGS"),
+                           `controlled_access`: Seq[String] = Seq("Controlled"),
                            `participant_count`: Long = 0,
                            `file_count`: Long = 0,
                            `family_count`: Long = 0,
-                           `family_data`: Boolean = false,
+                           `family_data`: Boolean = false
                          )
 
 case class STUDY_CENTRIC (

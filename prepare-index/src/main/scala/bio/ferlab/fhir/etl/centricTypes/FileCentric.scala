@@ -34,7 +34,6 @@ class FileCentric(releaseId: String, studyIds: List[String])(implicit configurat
       fileDF
         .addStudy(data(es_index_study_centric.id))
         .addFileParticipantsWithBiospecimen(data(simple_participant.id), data(normalized_specimen.id))
-        .withColumn("type_of_omics", lit("TODO"))
 
     Map(mainDestination.id -> transformedFile)
   }

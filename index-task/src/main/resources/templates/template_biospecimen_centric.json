@@ -158,9 +158,6 @@
             "study_id": {
               "type": "keyword"
             },
-            "type_of_omics": {
-              "type": "keyword"
-            },
             "urls" : {
               "type": "keyword"
             }
@@ -452,9 +449,6 @@
               "type": "keyword"
             },
             "study_name" : {
-              "type": "keyword"
-            },
-            "type_of_omics" : {
               "type": "keyword"
             },
             "version" : {
