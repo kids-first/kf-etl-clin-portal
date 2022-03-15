@@ -79,4 +79,10 @@ object Utils {
       column.when(c >= low && c < high, s"$low - $high")
     }
   }
+
+  val upperFirstLetter : Column => Column = c =>  concat(upper(substring(c, 1, 1)), lower(substring(c, 2, 10000)))
+
+  val ignoredOmbCategoryCodes = Seq("UNK", "NAVU", "NI")
+
+  val ombCategory: Column => Column = c =>  when(c("code").isin(ignoredOmbCategoryCodes: _*), lit(null)).otherwise(c("display"))
 }

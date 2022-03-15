@@ -4,7 +4,7 @@ import bio.ferlab.datalake.spark3.transformation.{Custom, Drop, Transformation}
 import bio.ferlab.fhir.etl.Utils.{extractFirstForSystem, _}
 import bio.ferlab.fhir.etl._
 import org.apache.spark.sql.Column
-import org.apache.spark.sql.functions.{col, collect_list, explode, filter, regexp_extract, struct, _}
+import org.apache.spark.sql.functions.{col, collect_list, explode, filter, regexp_extract, struct, when, _}
 import org.apache.spark.sql.types.BooleanType
 
 object Transformations {
@@ -17,13 +17,14 @@ object Transformations {
   val patientMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id", "study_id", "release_id", "gender", "ethnicity", "identifier", "race")
-      .withColumn("ethnicity", col("ethnicity.text"))
       .withColumn("external_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
       // TODO is_proband
       .withColumn("participant_id", officialIdentifier)
-      .withColumn("race", col("race.text"))
+      .withColumn("race_omb", ombCategory(col("race.ombCategory")))
+      .withColumn("ethnicity", ombCategory(col("ethnicity.ombCategory")))
+      .withColumn("race", when(col("race_omb").isNull && lower(col("race.text")) === "more than one race", upperFirstLetter(col("race.text"))).otherwise(col("race_omb")))
     ),
-    Drop("identifier")
+    Drop("identifier", "race_omb")
   )
 
   val researchSubjectMappings: List[Transformation] = List(
@@ -213,9 +214,9 @@ object Transformations {
       .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
       .withColumn("specimen_fhir_ids", extractReferencesId(col("context")("related")("reference")))
       .withColumnRenamed("docStatus", "status")
-  )
-  ,
-  Drop("securityLabel", "content", "type", "identifier", "subject", "context")
+    )
+    ,
+    Drop("securityLabel", "content", "type", "identifier", "subject", "context")
   )
 
   val groupMappings: List[Transformation] = List(

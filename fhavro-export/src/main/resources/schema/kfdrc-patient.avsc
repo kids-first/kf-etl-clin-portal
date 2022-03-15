@@ -979,6 +979,14 @@
               "ext:text"
             ],
             "default": null
+          },
+          {
+            "name": "ombCategory",
+            "type": "bio.ferlab.fhir.Coding",
+            "aliases": [
+              "ext:ombCategory"
+            ],
+            "default": {}
           }
         ]
       },
@@ -1003,6 +1011,14 @@
               "ext:text"
             ],
             "default": null
+          },
+          {
+            "name": "ombCategory",
+            "type": "bio.ferlab.fhir.Coding",
+            "aliases": [
+              "ext:ombCategory"
+            ],
+            "default": {}
           }
         ]
       },
