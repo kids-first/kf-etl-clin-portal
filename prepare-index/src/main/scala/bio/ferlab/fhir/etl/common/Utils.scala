@@ -61,7 +61,7 @@ object Utils {
 
     def addDownSyndromeDiagnosis(diseases: DataFrame, mondoTerms: DataFrame): DataFrame = {
       val mondoDownSyndrome = mondoTerms.where(
-        exists(col("parents"), p=> p like s"%$DOWN_SYNDROM_MONDO_TERM%") || col("id") === DOWN_SYNDROM_MONDO_TERM).select(col("id") as "mondo_down_syndrome_id", col("name") as "mondo_down_syndrome_name")
+        exists(col("parents"), p => p like s"%$DOWN_SYNDROM_MONDO_TERM%") || col("id") === DOWN_SYNDROM_MONDO_TERM).select(col("id") as "mondo_down_syndrome_id", col("name") as "mondo_down_syndrome_name")
 
       val downSyndromeDiagnosis = diseases.join(mondoDownSyndrome, col("mondo_id") === col("mondo_down_syndrome_id"))
         .select(
@@ -183,8 +183,6 @@ object Utils {
             filesWithSeqExpDF.columns.filter(c => !c.equals("fhir_id") && !c.equals("participant_fhir_id")).map(c => first(c).as(c)): _*)
           .drop("specimen_fhir_ids")
 
-
-
       val filesWithBiospecimenGroupedByParticipantIdDf =
         filesWithBiospecimenDf
           .withColumn("file", struct(filesWithBiospecimenDf.columns.filterNot(c => c.equals("participant_fhir_id")).map(col): _*))
@@ -192,9 +190,9 @@ object Utils {
           .select("participant_fhir_id", "file", "biospecimens_unique_ids")
           .groupBy("participant_fhir_id")
           .agg(
-            count(col("file.file_id")) as "nb_files",
+            coalesce(count(col("file.file_id")), lit(0)) as "nb_files",
             collect_list(col("file")) as "files",
-            size(array_distinct(flatten(collect_set(col("biospecimens_unique_ids"))))) as "nb_biospecimens"
+            coalesce(size(array_distinct(flatten(collect_set(col("biospecimens_unique_ids"))))), lit(0)) as "nb_biospecimens"
           )
 
       df
@@ -244,7 +242,7 @@ object Utils {
       df
         .join(reformatFile, df("fhir_id") === reformatFile("biospecimen_fhir_id"), "left_outer")
         .withColumn("files", coalesce(col("files"), array()))
-        .withColumn("nb_files", size(col("files")))
+        .withColumn("nb_files", coalesce(size(col("files")), lit(0)))
         .drop("biospecimen_fhir_id")
     }
 
