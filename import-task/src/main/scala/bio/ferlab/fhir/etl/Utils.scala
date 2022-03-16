@@ -29,7 +29,7 @@ object Utils {
   }
 
   val extractAclFromList: UserDefinedFunction =
-    udf((arr: Seq[String], studyId: String) => arr.filter(e => (e matches actCodeR) || (e == studyId)))
+    udf((arr: Seq[String], studyId: String) => arr.filter(e => e != null && ((e matches actCodeR) || (e == studyId))))
 
   val extractReferencesId: Column => Column = (column: Column) => functions.transform(column, c => functions.split(c, "/")(1))
 
@@ -80,9 +80,9 @@ object Utils {
     }
   }
 
-  val upperFirstLetter : Column => Column = c =>  concat(upper(substring(c, 1, 1)), lower(substring(c, 2, 10000)))
+  val upperFirstLetter: Column => Column = c => concat(upper(substring(c, 1, 1)), lower(substring(c, 2, 10000)))
 
   val ignoredOmbCategoryCodes = Seq("UNK", "NAVU", "NI")
 
-  val ombCategory: Column => Column = c =>  when(c("code").isin(ignoredOmbCategoryCodes: _*), lit(null)).otherwise(c("display"))
+  val ombCategory: Column => Column = c => when(c("code").isin(ignoredOmbCategoryCodes: _*), lit(null)).otherwise(c("display"))
 }
