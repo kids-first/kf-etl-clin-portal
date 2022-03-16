@@ -167,11 +167,11 @@ object Transformations {
     Drop("identifier", "name")
   )
 
+
   val researchstudyMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id", "keyword", "release_id", "study_id", "title", "identifier", "principalInvestigator", "status")
       .withColumn("attribution", extractFirstForSystem(col("identifier"), Seq(SYS_NCBI_URL))("value"))
-      // TODO data_access_authority
       .withColumn("external_id", extractStudyExternalId(extractFirstForSystem(col("identifier"), Seq(SYS_NCBI_URL))("value")))
       .withColumnRenamed("title", "name")
       .withColumn("version", extractStudyVersion(extractFirstForSystem(col("identifier"), Seq(SYS_NCBI_URL))("value")))
@@ -179,10 +179,8 @@ object Transformations {
         "investigator_id",
         regexp_extract(col("principalInvestigator")("reference"), patternPractitionerRoleResearchStudy, 1)
       )
-      // TODO short_name
       .withColumn("study_code", col("keyword")(1)("coding")(0)("code"))
-      // TODO domain
-      .withColumn("program", col("keyword")(0)("coding")(0)("code"))
+      .withColumn("program", firstSystemEquals(flatten(col("keyword.coding")), SYS_PROGRAMS)("display"))
     ),
     Drop("title", "identifier", "principalInvestigator", "keyword")
   )
@@ -192,7 +190,7 @@ object Transformations {
       .select("fhir_id", "study_id", "release_id", "category", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus")
       .withColumn("access_urls", col("content")("attachment")("url")(0))
       .withColumn("acl", extractAclFromList(col("securityLabel")("text"), col("study_id")))
-      .withColumn("controlled_access", initcap(col("securityLabel")(0)("text")))
+      .withColumn("controlled_access", firstSystemEquals(flatten(col("securityLabel.coding")), SYS_DATA_ACCESS_TYPES)("display"))
       .withColumn("data_type", firstSystemEquals(col("type")("coding"), SYS_DATA_TYPES)("display"))
       .withColumn("data_category", firstSystemEquals(flatten(col("category")("coding")), SYS_DATA_CATEGORIES)("display"))
       .withColumn("experiment_strategy", firstSystemEquals(flatten(col("category")("coding")), SYS_EXP_STRATEGY)("display"))

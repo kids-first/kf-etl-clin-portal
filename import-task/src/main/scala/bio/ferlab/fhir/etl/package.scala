@@ -21,8 +21,10 @@ package object etl {
 
   val URN_UNIQUE_ID = "urn:kids-first:unique-string"
 
-val SYS_DATA_TYPES = "https://includedcc.org/fhir/code-systems/data_types"
-val SYS_EXP_STRATEGY = "https://includedcc.org/fhir/code-systems/experimental_strategies"
-val SYS_DATA_CATEGORIES =  "https://includedcc.org/fhir/code-systems/data_categories"
+  val SYS_DATA_TYPES = "https://includedcc.org/fhir/code-systems/data_types"
+  val SYS_EXP_STRATEGY = "https://includedcc.org/fhir/code-systems/experimental_strategies"
+  val SYS_DATA_CATEGORIES = "https://includedcc.org/fhir/code-systems/data_categories"
+  val SYS_PROGRAMS = "https://includedcc.org/fhir/code-systems/programs"
+  val SYS_DATA_ACCESS_TYPES = "https://includedcc.org/fhir/code-systems/data_access_types"
 
 }
