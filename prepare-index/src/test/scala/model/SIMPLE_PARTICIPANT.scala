@@ -19,7 +19,7 @@ case class SIMPLE_PARTICIPANT(
                                `study`: LIGHT_STUDY_CENTRIC = LIGHT_STUDY_CENTRIC(),
                                `family`: FAMILY = null,
                                `family_type`: String = "probant_only",
-                               `down_syndrome_status`: String = "Other",
+                               `down_syndrome_status`: String = "D21",
                                `down_syndrome_diagnosis`: Seq[String] = null,
                                `is_proband`: Boolean = false, // TODO
                                `age_at_data_collection`: Int = 111 // TODO

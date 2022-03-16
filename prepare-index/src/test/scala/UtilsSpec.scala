@@ -79,7 +79,7 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
       ("P2", "T21", Seq("Down Syndrome level 2 (MONDO:0008609)"))
     )
     patientWithDS.find(_._1 == "P3") shouldBe Some(
-      ("P3", "Other", null)
+      ("P3", "D21", null)
     )
   }
 
