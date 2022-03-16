@@ -72,7 +72,7 @@ object Utils {
         .groupBy("participant_fhir_id")
         .agg(collect_set("down_syndrome_diagnosis") as "down_syndrome_diagnosis")
       df.join(downSyndromeDiagnosis, col("fhir_id") === col("participant_fhir_id"), "left_outer")
-        .withColumn("down_syndrome_status", when(size(col("down_syndrome_diagnosis")) > 0, "T21").otherwise("Other"))
+        .withColumn("down_syndrome_status", when(size(col("down_syndrome_diagnosis")) > 0, "T21").otherwise("D21"))
         .drop("participant_fhir_id")
 
     }
