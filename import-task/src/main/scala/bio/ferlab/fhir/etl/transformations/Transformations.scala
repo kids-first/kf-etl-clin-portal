@@ -188,7 +188,7 @@ object Transformations {
   val documentreferenceMappings: List[Transformation] = List(
     Custom { input =>
       val df = input
-        .select("fhir_id", "study_id", "release_id", "category", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus")
+        .select("fhir_id", "study_id", "release_id", "category", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus", "relatesTo")
         .withColumn("access_urls", col("content")("attachment")("url")(0))
         .withColumn("acl", extractAclFromList(col("securityLabel")("text"), col("study_id")))
         .withColumn("controlled_access", firstSystemEquals(flatten(col("securityLabel.coding")), SYS_DATA_ACCESS_TYPES)("display"))
@@ -208,23 +208,30 @@ object Transformations {
         .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
         .withColumn("specimen_fhir_ids", extractReferencesId(col("context")("related")("reference")))
         .withColumnRenamed("docStatus", "status")
+        .withColumn("relate_to", extractReferencesId(col("relatesTo.target.reference"))(0))
 
       val indexes = df.as("index").where(col("file_format").isin("crai", "tbi"))
       val files = df.as("file").where(not(col("file_format").isin("crai", "tbi")))
 
-      files.join(indexes, col("index.file_name").startsWith(col("file.file_name")), "left_outer"  )
+      files
+        .join(indexes, col("index.relate_to") === col("file.fhir_id"), "left_outer")
         .select(
           col("file.*"),
-          struct(col("index.fhir_id") as "fhir_id", col("index.file_name") as "file_name",
-            col("index.file_id") as "file_id", col("index.hashes") as "hashes",
-            col("index.urls") as "urls", col("index.file_format") as "file_format",
-            col("index.size") as "size"
-          ) as "index"
+          when(
+            col("index.relate_to").isNull, lit(null)
+          )
+          .otherwise(
+            struct(col("index.fhir_id") as "fhir_id", col("index.file_name") as "file_name",
+              col("index.file_id") as "file_id", col("index.hashes") as "hashes",
+              col("index.urls") as "urls", col("index.file_format") as "file_format",
+              col("index.size") as "size"
+            )
+          )  as "index"
         )
 
     }
     ,
-    Drop("securityLabel", "content", "type", "identifier", "subject", "context")
+    Drop("securityLabel", "content", "type", "identifier", "subject", "context", "relates_to", "relate_to")
   )
 
   val groupMappings: List[Transformation] = List(

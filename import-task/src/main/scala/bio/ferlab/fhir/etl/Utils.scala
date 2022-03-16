@@ -31,7 +31,7 @@ object Utils {
   val extractAclFromList: UserDefinedFunction =
     udf((arr: Seq[String], studyId: String) => arr.filter(e => e != null && ((e matches actCodeR) || (e == studyId))))
 
-  val extractReferencesId: Column => Column = (column: Column) => functions.transform(column, c => functions.split(c, "/")(1))
+  val extractReferencesId: Column => Column = (column: Column) => functions.transform(column, extractReferenceId)
 
   val extractReferenceId: Column => Column = (column: Column) => functions.split(column, "/")(1)
 
