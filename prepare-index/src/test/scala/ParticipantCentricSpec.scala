@@ -17,12 +17,17 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
         SIMPLE_PARTICIPANT(`fhir_id` = "2")
       ).toDF(),
       "normalized_document_reference" -> Seq(
-        DOCUMENTREFERENCE(`fhir_id` = "11", `participant_fhir_ids` = Seq("1"), `specimen_fhir_ids` = Seq("111")),
-        DOCUMENTREFERENCE(`fhir_id` = "12", `participant_fhir_ids` = Seq("1")),
-        DOCUMENTREFERENCE(`fhir_id` = "21", `participant_fhir_ids` = Seq("2"), `specimen_fhir_ids` = Seq("222"))).toDF(),
+        DOCUMENTREFERENCE(`fhir_id` = "11", `participant_fhir_id` = "1", `specimen_fhir_ids` = Seq("111")),
+        DOCUMENTREFERENCE(`fhir_id` = "12", `participant_fhir_id` = "1"),
+        DOCUMENTREFERENCE(`fhir_id` = "21", `participant_fhir_id` = "2", `specimen_fhir_ids` = Seq("222")),
+        DOCUMENTREFERENCE(`fhir_id` = "33", `participant_fhir_id` = null, `specimen_fhir_ids` = Seq("111","222"))
+      ).toDF(),
+
       "normalized_specimen" -> Seq(
         BIOSPECIMEN(`fhir_id` = "111", `participant_fhir_id` = "1"),
-        BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2")
+        BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("1")),
+        BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("2")),
+        BIOSPECIMEN(`fhir_id` = "333", `participant_fhir_id` = "1")
       ).toDF(),
       "normalized_task" -> Seq(
         TASK(fhir_id = "1", biospecimen_fhir_ids = Seq("111"), document_reference_fhir_ids = Seq("11", "12")),
@@ -35,42 +40,90 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
 
     output.keys should contain("es_index_participant_centric")
 
-    val participant_centric = output("es_index_participant_centric")
-
-    participant_centric.as[PARTICIPANT_CENTRIC].collect() should contain theSameElementsAs
-      Seq(
-        PARTICIPANT_CENTRIC(
-          `fhir_id` = "1",
-          `files` = Seq(
-            FILE_WITH_BIOSPECIMEN(
-              `fhir_id` = "11",
-              `participant_fhir_ids` = Seq("1"),
-              `specimen_fhir_ids` = Seq("111"),
-              `biospecimens` = Seq(
-                BIOSPECIMEN(
-                  `fhir_id` = "111",
-                  `participant_fhir_id` = "1",
-                )),
-            `sequencing_experiment` = SEQUENCING_EXPERIMENT()
+    val participant_centric = output("es_index_participant_centric").as[PARTICIPANT_CENTRIC].collect()
+    participant_centric.find(_.`fhir_id` == "2") shouldBe Some(
+      PARTICIPANT_CENTRIC(
+        `fhir_id` = "2",
+        `nb_files` = 2,
+        `nb_biospecimens` = 2,
+        `files` = Seq(
+          FILE_WITH_BIOSPECIMEN(
+            `fhir_id` = Some("21"),
+            `biospecimens` = Seq(
+              BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("1")),
+              BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("2"))
             ),
-            FILE_WITH_BIOSPECIMEN(
-              `fhir_id` = "12",
-              `participant_fhir_ids` = Seq("1"),
-              `specimen_fhir_ids` = Seq.empty,
-              `biospecimens` = Seq.empty,
-              `sequencing_experiment` = SEQUENCING_EXPERIMENT()
-            ))
-        ),
-        PARTICIPANT_CENTRIC(
-          `fhir_id` = "2",
-          `files` = Seq(
-            FILE_WITH_BIOSPECIMEN(
-              `fhir_id` = "21",
-              `participant_fhir_ids` = Seq("2"),
-              `specimen_fhir_ids` = Seq("222"),
-              `biospecimens` = Seq(
-                BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2")),
-              `sequencing_experiment` = SEQUENCING_EXPERIMENT()
-            ))))
+            `sequencing_experiment` = Some(SEQUENCING_EXPERIMENT())
+          ),
+          FILE_WITH_BIOSPECIMEN(
+            `fhir_id` = Some("33"),
+            `biospecimens` = Seq(
+              BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("1")),
+              BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("2"))
+            ),
+            `sequencing_experiment` = Some(SEQUENCING_EXPERIMENT())
+          ),
+        )
+      )
+    )
+
+    participant_centric.find(_.`fhir_id` == "1").map(p=> p.copy(files =  p.files.sortBy(_.`fhir_id`).reverse)) shouldBe Some(
+      PARTICIPANT_CENTRIC(
+        `fhir_id` = "1",
+        `nb_files` = 3,
+        `nb_biospecimens` = 2,
+        `files` = Seq(
+          FILE_WITH_BIOSPECIMEN(
+            `fhir_id` = Some("33"),
+            `biospecimens` = Seq(
+              BIOSPECIMEN(
+                `fhir_id` = "111",
+                `participant_fhir_id` = "1",
+              )),
+            `sequencing_experiment` = Some(SEQUENCING_EXPERIMENT())
+          ),
+          FILE_WITH_BIOSPECIMEN(
+            `fhir_id` = Some("12"),
+            `biospecimens` = Seq.empty,
+            `sequencing_experiment` = Some(SEQUENCING_EXPERIMENT())
+          ),
+          FILE_WITH_BIOSPECIMEN(
+            `fhir_id` = Some("11"),
+            `biospecimens` = Seq(
+              BIOSPECIMEN(
+                `fhir_id` = "111",
+                `participant_fhir_id` = "1",
+              )),
+            `sequencing_experiment` = Some(SEQUENCING_EXPERIMENT())
+          ),
+
+          FILE_WITH_BIOSPECIMEN(
+            `fhir_id` = None,
+            `acl` = None,
+            `access_urls` = None,
+            `controlled_access` = None,
+            `data_type` = None,
+            `external_id` = None,
+            `file_format` = None,
+            `file_id` = None,
+            `hashes` = None,
+            `is_harmonized` = None,
+            `latest_did` = None,
+            `repository` = None,
+            `size` = None,
+            `urls` = None,
+            `study_id` = None,
+            `file_name` = Some("dummy_file"),
+            `release_id` = None,
+            `biospecimens` = Seq(
+              BIOSPECIMEN(
+                `fhir_id` = "333",
+                `participant_fhir_id` = "1",
+              )),
+            `sequencing_experiment` = None
+          ))
+      )
+    )
+
   }
 }

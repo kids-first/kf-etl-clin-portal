@@ -10,6 +10,7 @@ case class CONDITION_DISEASE(
                               `uberon_id_tumor_location`: Seq[String] = Seq.empty,
                               `affected_status`: Boolean = false,
                               `affected_status_text`: String = null,
+                              `mondo_id`: Option[String] = None,
                               `age_at_event`: AGE_AT_EVENT = AGE_AT_EVENT(),
                               `study_id`: String = "SD_Z6MWD3H0",
                               `release_id`: String = "re_000001"

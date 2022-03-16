@@ -6,9 +6,10 @@ import org.apache.spark.sql.functions._
 
 object OntologyUtils {
 
+  val displayTerm: (Column, Column) => Column = (id, name) => concat(name, lit(" ("), id, lit(")"))
   val transformAncestors: (Column, Column) => Column = (ancestors, age) => transform(ancestors, a =>
     struct(
-      concat(a("name"), lit(" ("), a("id"), lit(")")) as "name",
+      displayTerm(a("id"), a("name")) as "name",
       a("parents") as "parents",
       lit(false) as "is_tagged",
       lit(false) as "is_leaf",
@@ -18,7 +19,7 @@ object OntologyUtils {
 
   val transformTaggedTerm: (Column, Column, Column, Column, Column) => Column = (id, name, parents, is_leaf, age) =>
     struct(
-      concat(name, lit(" ("), id, lit(")")) as "name",
+      displayTerm(id, name) as "name",
       parents as "parents",
       lit(true) as "is_tagged",
       is_leaf as "is_leaf",
@@ -27,16 +28,19 @@ object OntologyUtils {
 
   val firstCategory: (String, Column) => Column = (category, codes) => filter(codes, code => code("category") === lit(category))(0)("code")
 
-  def addDiseases(df: DataFrame): DataFrame = {
+  def addDiseases(df: DataFrame, mondoTerms: DataFrame): DataFrame = {
+    val mondoTermsIdName = mondoTerms.select(col("id") as "mondo_term_id", col("name") as "mondo_name")
     df
       //filter out disease with empty code
       .where(size(col("condition_coding")) > 0)
       .withColumn("icd_id_diagnosis", firstCategory("ICD", col("condition_coding")))
       .withColumn("ncit_id_diagnosis", firstCategory("NCIT", col("condition_coding")))
-      .withColumn("mondo_id_diagnosis", observableTitleStandard(firstCategory("MONDO", col("condition_coding"))))
       //Assumption -> age_at_event is in days from birth
       .withColumn("age_at_event_days", col("age_at_event.value"))
       .drop("condition_coding", "release_id")
+      .join(mondoTermsIdName, col("mondo_id") === mondoTermsIdName("mondo_term_id"), "left_outer")
+      .withColumn("mondo_id_diagnosis", displayTerm(col("mondo_id"), col("mondo_name")))
+      .drop("mondo_term_id","mondo_name")
   }
 
   def addPhenotypes(df: DataFrame): DataFrame = {

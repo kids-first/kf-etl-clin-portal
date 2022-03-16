@@ -58,6 +58,12 @@
         "participant_fhir_ids" : {
           "type": "keyword"
         },
+        "nb_participants": {
+          "type": "integer"
+        },
+        "nb_biospecimens": {
+          "type": "integer"
+        },
         "participants": {
           "type": "nested",
           "properties": {
@@ -69,6 +75,12 @@
               "properties": {
                 "age_at_biospecimen_collection": {
                   "type": "integer"
+                },
+                "age_at_biospecimen_collection_years": {
+                  "type": "integer"
+                },
+                "age_at_biospecimen_collection_onset": {
+                  "type": "keyword"
                 },
                 "sample_id": {
                   "type": "keyword"
@@ -326,9 +338,6 @@
                 "study_name" : {
                   "type": "keyword"
                 },
-                "type_of_omics" : {
-                  "type": "keyword"
-                },
                 "version" : {
                   "type": "keyword"
                 }
@@ -387,7 +396,7 @@
             "attribution" : {
               "type": "keyword"
             },
-            "data_access" : {
+            "controlled_access" : {
               "type": "keyword"
             },
             "experimental_strategy" : {
@@ -429,7 +438,7 @@
             "study_name" : {
               "type": "keyword"
             },
-            "type_of_omics" : {
+            "data_category" : {
               "type": "keyword"
             },
             "version" : {
@@ -438,9 +447,6 @@
           }
         },
         "study_id": {
-          "type": "keyword"
-        },
-        "type_of_omics": {
           "type": "keyword"
         },
         "urls" : {

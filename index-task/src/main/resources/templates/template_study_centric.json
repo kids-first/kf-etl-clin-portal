@@ -10,7 +10,7 @@
         "attribution": {
           "type": "keyword"
         },
-        "data_access": {
+        "controlled_access": {
           "type": "keyword"
         },
         "experimental_strategy": {
@@ -52,7 +52,7 @@
         "study_name": {
           "type": "keyword"
         },
-        "type_of_omics": {
+        "data_category": {
           "type": "keyword"
         },
         "version": {

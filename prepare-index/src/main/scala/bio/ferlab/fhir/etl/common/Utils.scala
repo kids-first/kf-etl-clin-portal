@@ -2,10 +2,11 @@ package bio.ferlab.fhir.etl.common
 
 import bio.ferlab.fhir.etl.common.OntologyUtils._
 import org.apache.spark.sql.{Column, DataFrame}
-import org.apache.spark.sql.expressions.UserDefinedFunction
+import org.apache.spark.sql.expressions.{UserDefinedFunction, Window}
 import org.apache.spark.sql.functions._
 
 object Utils {
+  val DOWN_SYNDROM_MONDO_TERM = "MONDO:0008608"
 
   val observableTitleStandard: Column => Column = term => trim(regexp_replace(term, "_", ":"))
 
@@ -16,8 +17,6 @@ object Utils {
       case l if l.isEmpty => "proband-only"
       case _ => "other"
     })
-
-  val downsyndromeStatusExtract: Column => Column = diagnoses => when(diagnoses.isNotNull && exists(diagnoses, d => trim(lower(d)) like "%down syndrome%"), "T21").otherwise("Other")
 
   val sequencingExperimentCols = Seq("fhir_id", "sequencing_experiment_id", "experiment_strategy",
     "instrument_model", "library_name", "library_strand", "platform")
@@ -58,6 +57,24 @@ object Utils {
         .join(reformatObservation, col("fhir_id") === col("participant_fhir_id"), "left_outer")
         .withColumn("outcomes", coalesce(col("outcomes"), array()))
         .drop("participant_fhir_id")
+    }
+
+    def addDownSyndromeDiagnosis(diseases: DataFrame, mondoTerms: DataFrame): DataFrame = {
+      val mondoDownSyndrome = mondoTerms.where(
+        exists(col("parents"), p => p like s"%$DOWN_SYNDROM_MONDO_TERM%") || col("id") === DOWN_SYNDROM_MONDO_TERM).select(col("id") as "mondo_down_syndrome_id", col("name") as "mondo_down_syndrome_name")
+
+      val downSyndromeDiagnosis = diseases.join(mondoDownSyndrome, col("mondo_id") === col("mondo_down_syndrome_id"))
+        .select(
+          col("participant_fhir_id"),
+          when(col("mondo_down_syndrome_id").isNotNull, displayTerm(col("mondo_down_syndrome_id"), col("mondo_down_syndrome_name")))
+            .otherwise(null) as "down_syndrome_diagnosis"
+        )
+        .groupBy("participant_fhir_id")
+        .agg(collect_set("down_syndrome_diagnosis") as "down_syndrome_diagnosis")
+      df.join(downSyndromeDiagnosis, col("fhir_id") === col("participant_fhir_id"), "left_outer")
+        .withColumn("down_syndrome_status", when(size(col("down_syndrome_diagnosis")) > 0, "T21").otherwise("Other"))
+        .drop("participant_fhir_id")
+
     }
 
     def addDiagnosisPhenotypes(phenotypeDF: DataFrame, diagnosesDF: DataFrame)(hpoTerms: DataFrame, mondoTerms: DataFrame): DataFrame = {
@@ -101,13 +118,13 @@ object Utils {
           .join(observedPhenotypes, Seq("participant_fhir_id"), "left_outer")
           .join(nonObservedPhenotypes, Seq("participant_fhir_id"), "left_outer")
 
-      val diseases = addDiseases(diagnosesDF)
+      val diseases = addDiseases(diagnosesDF, mondoTerms)
       val commonColumns = Seq("participant_fhir_id", "study_id")
 
       val diseaseColumns = diseases.columns.filter(col => !commonColumns.contains(col))
 
       val diseasesWithMondoTerms =
-        mapObservableTerms(diseases, "mondo_id_diagnosis")(mondoTerms)
+        mapObservableTerms(diseases, "mondo_id")(mondoTerms)
           .withColumn("mondo", explode_outer(col("observable_with_ancestors")))
           .drop("observable_with_ancestors", "study_id")
           .groupBy("participant_fhir_id")
@@ -119,7 +136,7 @@ object Utils {
               )
             ) as "diagnosis",
             collect_set(col("mondo")) as "mondo"
-          )
+          ).drop("mondo_id")
 
       val diseasesExplodedWithMondoTerms = diseasesWithMondoTerms
         .withColumn("mondo", explode(col("mondo")))
@@ -132,6 +149,7 @@ object Utils {
         diseasesWithMondoTerms
           .drop("mondo")
           .join(diseasesWithMondoTermsGrouped, Seq("participant_fhir_id"), "left_outer")
+          .drop("mondo_down_syndrome_id", "mondo_down_syndrome_name", "mondo_id")
 
       df
         .join(phenotypesWithHPOTermsGroupedByEvent, col("fhir_id") === col("participant_fhir_id"), "left_outer")
@@ -146,28 +164,36 @@ object Utils {
       val biospecimenDfReformat = reformatBiospecimen(biospecimensDf)
 
       val filesWithSeqExpDF = reformatSequencingExperiment(filesDf)
+
       val filesWithBiospecimenDf =
         filesWithSeqExpDF
-          .withColumn("participant_fhir_id", explode_outer(col("participant_fhir_ids")))
           .withColumn("specimen_fhir_id_file", explode_outer(col("specimen_fhir_ids")))
           .join(biospecimenDfReformat,
-            col("specimen_fhir_id_file") === biospecimenDfReformat("specimen_fhir_id") &&
-              biospecimenDfReformat("specimen_participant_fhir_id") === col("participant_fhir_id"),
+            col("specimen_fhir_id_file") === biospecimenDfReformat("specimen_fhir_id"),
             "full")
+          .withColumnRenamed("participant_fhir_id", "participant_fhir_id_file")
           .withColumn("file_name", when(col("fhir_id").isNull, "dummy_file").otherwise(col("file_name")))
           .withColumn("participant_fhir_id",
-            when(col("fhir_id").isNull, col("biospecimen.participant_fhir_id"))
-              .otherwise(col("participant_fhir_id"))
+            when(col("biospecimen.participant_fhir_id").isNotNull, col("biospecimen.participant_fhir_id"))
+              .otherwise(col("participant_fhir_id_file"))
           )
+          .drop("participant_fhir_id_file")
           .groupBy("fhir_id", "participant_fhir_id")
-          .agg(collect_list(col("biospecimen")) as "biospecimens", filesWithSeqExpDF.columns.filter(!_.equals("fhir_id")).map(c => first(c).as(c)): _*)
+          .agg(collect_list(col("biospecimen")) as "biospecimens",
+            filesWithSeqExpDF.columns.filter(c => !c.equals("fhir_id") && !c.equals("participant_fhir_id")).map(c => first(c).as(c)): _*)
+          .drop("specimen_fhir_ids")
 
       val filesWithBiospecimenGroupedByParticipantIdDf =
         filesWithBiospecimenDf
           .withColumn("file", struct(filesWithBiospecimenDf.columns.filterNot(c => c.equals("participant_fhir_id")).map(col): _*))
-          .select("participant_fhir_id", "file")
+          .withColumn("biospecimens_unique_ids", transform(col("file.biospecimens"), c => concat_ws("_", c("fhir_id"), c("container_id"))))
+          .select("participant_fhir_id", "file", "biospecimens_unique_ids")
           .groupBy("participant_fhir_id")
-          .agg(collect_list(col("file")) as "files")
+          .agg(
+            coalesce(count(col("file.file_id")), lit(0)) as "nb_files",
+            collect_list(col("file")) as "files",
+            coalesce(size(array_distinct(flatten(collect_set(col("biospecimens_unique_ids"))))), lit(0)) as "nb_biospecimens"
+          )
 
       df
         .join(filesWithBiospecimenGroupedByParticipantIdDf, df("fhir_id") === filesWithBiospecimenGroupedByParticipantIdDf("participant_fhir_id"), "left_outer")
@@ -177,60 +203,38 @@ object Utils {
 
     def addFileParticipantsWithBiospecimen(participantDf: DataFrame, biospecimensDf: DataFrame): DataFrame = {
 
+      val fileWithSeqExp = reformatSequencingExperiment(df)
+        .withColumn("specimen_fhir_id", explode_outer(col("specimen_fhir_ids")))
+
       val biospecimensDfReformat = reformatBiospecimen(biospecimensDf)
 
-      def buildMappingTable(): DataFrame = {
-        // Link file - biospecimen
-        val fileIdBiospecimenId = df
-          .withColumn("specimen_fhir_id", explode(col("specimen_fhir_ids")))
-          .withColumnRenamed("fhir_id", "file_fhir_id")
-          .select("file_fhir_id", "specimen_fhir_id")
+      val fileWithBiospecimen = fileWithSeqExp
+        .select(struct(col("*")) as "file")
+        .join(biospecimensDfReformat, col("file.specimen_fhir_id") === biospecimensDfReformat("specimen_fhir_id"), "left_outer")
+        .withColumn("participant_file_fhir_id", when(biospecimensDfReformat("specimen_participant_fhir_id").isNotNull, biospecimensDfReformat("specimen_participant_fhir_id")).otherwise(col("file.participant_fhir_id")))
+        .withColumn("biospecimen_unique_id", when(col("biospecimen.fhir_id").isNotNull, concat_ws("_", col("biospecimen.fhir_id"), col("biospecimen.container_id"))).otherwise(null))
+        .groupBy("file.fhir_id", "participant_file_fhir_id")
+        .agg(collect_list(col("biospecimen")) as "biospecimens", first("file") as "file", count(col("biospecimen_unique_id")) as "nb_biospecimens")
 
-        // Link file - biospecimen - participant
-        val fileIdBiospecimenIdParticipantId = fileIdBiospecimenId
-          .join(biospecimensDf, fileIdBiospecimenId("specimen_fhir_id") === biospecimensDf("fhir_id"), "left_outer")
-          .select("file_fhir_id", "specimen_fhir_id", "participant_fhir_id")
+      val participantReformat = participantDf.select(struct(col("*")) as "participant")
+      fileWithBiospecimen
+        .join(participantReformat, col("participant_file_fhir_id") === col("participant.fhir_id"))
+        .withColumn("participant", struct(col("participant.*"), col("biospecimens")))
+        .drop("biospecimens")
+        .groupBy(col("fhir_id"))
+        .agg(collect_list(col("participant")) as "participants", first("file") as "file", count(lit(1)) as "nb_participants", sum("nb_biospecimens") as "nb_biospecimens")
+        .select(col("file.*"), col("participants"), col("nb_participants"), col("nb_biospecimens"))
 
-        // Link file - participant (useful for file without biospecimen)
-        val fileIdParticipantId = df
-          .withColumn("participant_fhir_id", explode(col("participant_fhir_ids")))
-          .withColumnRenamed("fhir_id", "file_fhir_id")
-          .select("file_fhir_id", "participant_fhir_id")
 
-        // Mapping table with: file - (biospecimen) - participant
-        fileIdParticipantId
-          .join(fileIdBiospecimenIdParticipantId, Seq("file_fhir_id", "participant_fhir_id"), "left_outer")
-      }
-
-      // Mapping table with: file - (biospecimen) - participant
-      val mappingTable = buildMappingTable()
-
-      // |file_fhir_id|participant_fhir_id|biospecimens|
-      val mappingTableWithBiospecimens = mappingTable
-        .join(biospecimensDfReformat, mappingTable("specimen_fhir_id") === biospecimensDfReformat("specimen_fhir_id"), "left_outer")
-        .drop("specimen_fhir_ids", "specimen_fhir_id")
-        .groupBy("file_fhir_id", "participant_fhir_id")
-        .agg(collect_list(col("biospecimen")) as "biospecimens")
-
-      // |file_fhir_id|participants|
-      val mappingTableWithParticipants = mappingTableWithBiospecimens
-        .join(participantDf, mappingTableWithBiospecimens("participant_fhir_id") === participantDf("fhir_id"))
-        .withColumn("participant", struct((participantDf.columns :+ "biospecimens").map(col): _*))
-        .select("file_fhir_id", "participant")
-        .groupBy("file_fhir_id")
-        .agg(collect_list(col("participant")) as "participants")
-
-      reformatSequencingExperiment(df)
-        .join(mappingTableWithParticipants, df("fhir_id") === mappingTableWithParticipants("file_fhir_id"))
-        .drop("file_fhir_id", "document_reference_fhir_id")
     }
 
     def addBiospecimenFiles(filesDf: DataFrame): DataFrame = {
       val filesWithSeqExperiments = reformatSequencingExperiment(filesDf)
+      val fileColumns = filesWithSeqExperiments.columns.collect { case c if c != "specimen_fhir_ids" => col(c) }
       val reformatFile = filesWithSeqExperiments
         .withColumn("biospecimen_fhir_id", explode(col("specimen_fhir_ids")))
         .drop("document_reference_fhir_id")
-        .withColumn("file", struct((filesWithSeqExperiments.columns).map(col): _*))
+        .withColumn("file", struct(fileColumns: _*))
         .select("biospecimen_fhir_id", "file")
         .groupBy("biospecimen_fhir_id")
         .agg(collect_list(col("file")) as "files")
@@ -238,6 +242,7 @@ object Utils {
       df
         .join(reformatFile, df("fhir_id") === reformatFile("biospecimen_fhir_id"), "left_outer")
         .withColumn("files", coalesce(col("files"), array()))
+        .withColumn("nb_files", coalesce(size(col("files")), lit(0)))
         .drop("biospecimen_fhir_id")
     }
 

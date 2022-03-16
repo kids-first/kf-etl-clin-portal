@@ -11,5 +11,6 @@ case class BIOSPECIMEN_CENTRIC(
                                 `release_id`: String = "re_000001",
                                 `study`: LIGHT_STUDY_CENTRIC = LIGHT_STUDY_CENTRIC(),
                                 `participant`: SIMPLE_PARTICIPANT = SIMPLE_PARTICIPANT(),
-                                `files`: Seq[DOCUMENTREFERENCE_WITH_SEQ_EXP] = Seq.empty
+                                `files`: Seq[DOCUMENTREFERENCE_WITH_SEQ_EXP] = Seq.empty,
+                                `nb_files`: Long
                               )

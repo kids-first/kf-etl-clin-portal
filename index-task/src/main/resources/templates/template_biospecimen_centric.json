@@ -12,6 +12,12 @@
         "age_at_biospecimen_collection": {
           "type": "integer"
         },
+        "age_at_biospecimen_collection_years": {
+          "type": "integer"
+        },
+        "age_at_biospecimen_collection_onset": {
+          "type": "keyword"
+        },
         "sample_id": {
           "type": "keyword"
         },
@@ -50,6 +56,9 @@
         },
         "status" : {
           "type": "keyword"
+        },
+        "nb_files": {
+          "type": "integer"
         },
         "files": {
           "type": "nested",
@@ -147,9 +156,6 @@
               "type": "keyword"
             },
             "study_id": {
-              "type": "keyword"
-            },
-            "type_of_omics": {
               "type": "keyword"
             },
             "urls" : {
@@ -331,7 +337,7 @@
                 "attribution" : {
                   "type": "keyword"
                 },
-                "data_access" : {
+                "controlled_access" : {
                   "type": "keyword"
                 },
                 "experimental_strategy" : {
@@ -373,7 +379,7 @@
                 "study_name" : {
                   "type": "keyword"
                 },
-                "type_of_omics" : {
+                "data_category" : {
                   "type": "keyword"
                 },
                 "version" : {
@@ -443,9 +449,6 @@
               "type": "keyword"
             },
             "study_name" : {
-              "type": "keyword"
-            },
-            "type_of_omics" : {
               "type": "keyword"
             },
             "version" : {

@@ -19,10 +19,12 @@ case class PARTICIPANT_CENTRIC(
                                 `family`: FAMILY = null,
                                 `family_type`: String = "probant_only",
                                 `down_syndrome_status`: String = "Other",
-                                `down_syndrome_diagnosis`: String = "TODO",
+                                `down_syndrome_diagnosis`: Seq[String] = null,
                                 `is_proband`: Boolean = false, // TODO
                                 `age_at_data_collection`: Int = 111, // TODO
                                 `study`: LIGHT_STUDY_CENTRIC = LIGHT_STUDY_CENTRIC(),
                                 `files`: Seq[FILE_WITH_BIOSPECIMEN] = Seq.empty,
-                                `study_external_id`: String = "phs002330"
+                                `study_external_id`: String = "phs002330",
+                                `nb_files`: Long = 0,
+                                `nb_biospecimens`: Long = 0
                               )

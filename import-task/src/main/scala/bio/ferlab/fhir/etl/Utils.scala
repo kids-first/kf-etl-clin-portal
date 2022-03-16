@@ -3,7 +3,7 @@ package bio.ferlab.fhir.etl
 //import bio.ferlab.fhir.etl.ImportTask.expReleaseId
 
 import org.apache.spark.sql.expressions.UserDefinedFunction
-import org.apache.spark.sql.functions.{coalesce, col, exists, filter, lit, regexp_extract, udf, when}
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Column, functions}
 
 object Utils {
@@ -29,7 +29,7 @@ object Utils {
   }
 
   val extractAclFromList: UserDefinedFunction =
-    udf((arr: Seq[String], studyId: String) => arr.filter(e => (e matches actCodeR) || (e == studyId)))
+    udf((arr: Seq[String], studyId: String) => arr.filter(e => e != null && ((e matches actCodeR) || (e == studyId))))
 
   val extractReferencesId: Column => Column = (column: Column) => functions.transform(column, c => functions.split(c, "/")(1))
 
@@ -38,6 +38,8 @@ object Utils {
   val extractStudyId: () => Column = () => regexp_extract(extractFirstForSystem(col("identifier"), Seq(URN_UNIQUE_ID))("value"), patternUrnUniqueIdStudy, 1)
 
   val extractFirstForSystem: (Column, Seq[String]) => Column = (column: Column, system: Seq[String]) => filter(column, c => regexp_extract(c("system"), extractSystemUrl, 1).isin(system: _*))(0)
+
+  val firstSystemEquals: (Column, String) => Column = (column: Column, system: String) => filter(column, c => c("system") === system)(0)
 
   val extractOfficial: Column => Column = (identifiers: Column) => coalesce(filter(identifiers, identifier => identifier("use") === "official")(0)("value"), identifiers(0)("value"))
 
@@ -57,7 +59,7 @@ object Utils {
       (arr: Seq[(Option[String], Seq[(Option[String], Option[String], Option[String], Option[String], Option[String], Option[Boolean])], Option[String])])
       => arr.map(r => r._2.head._5 -> r._3).toMap)
 
-  val retrieveIsHarmonized: Column => Column = url => url.isNotNull && url like "harmonized-data"
+  val retrieveIsHarmonized: Column => Column = url => url.isNotNull && (url like "harmonized-data")
 
   val retrieveRepository: Column => Column = url => when(url like s"%$gen3Host%", "gen3")
     .when(url like s"%$dcfHost%", "dcf")
@@ -68,4 +70,19 @@ object Utils {
   val extractStudyVersion: UserDefinedFunction = udf((s: Option[String]) => s.map(_.split('.').tail.mkString(".")))
 
   val extractStudyExternalId: UserDefinedFunction = udf((s: Option[String]) => s.map(_.split('.').head))
+
+  val sanitizeFilename: Column => Column = fileName => slice(split(fileName, "/"), -1, 1)(0)
+
+  val age_on_set: (Column, Seq[(Int, Int)]) => Column = (c, intervals) => {
+    val (_, lastHigh) = intervals.last
+    intervals.foldLeft(when(c > lastHigh, s"$lastHigh+")) { case (column, (low, high)) =>
+      column.when(c >= low && c < high, s"$low - $high")
+    }
+  }
+
+  val upperFirstLetter: Column => Column = c => concat(upper(substring(c, 1, 1)), lower(substring(c, 2, 10000)))
+
+  val ignoredOmbCategoryCodes = Seq("UNK", "NAVU", "NI")
+
+  val ombCategory: Column => Column = c => when(c("code").isin(ignoredOmbCategoryCodes: _*), lit(null)).otherwise(c("display"))
 }

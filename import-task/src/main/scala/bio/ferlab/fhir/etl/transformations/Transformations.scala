@@ -1,10 +1,10 @@
 package bio.ferlab.fhir.etl.transformations
 
 import bio.ferlab.datalake.spark3.transformation.{Custom, Drop, Transformation}
-import bio.ferlab.fhir.etl.Utils._
+import bio.ferlab.fhir.etl.Utils.{extractFirstForSystem, _}
 import bio.ferlab.fhir.etl._
 import org.apache.spark.sql.Column
-import org.apache.spark.sql.functions.{col, collect_list, explode, filter, regexp_extract, struct, _}
+import org.apache.spark.sql.functions.{col, collect_list, explode, filter, regexp_extract, struct, when, _}
 import org.apache.spark.sql.types.BooleanType
 
 object Transformations {
@@ -17,13 +17,14 @@ object Transformations {
   val patientMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id", "study_id", "release_id", "gender", "ethnicity", "identifier", "race")
-      .withColumn("ethnicity", col("ethnicity.text"))
       .withColumn("external_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
       // TODO is_proband
       .withColumn("participant_id", officialIdentifier)
-      .withColumn("race", col("race.text"))
+      .withColumn("race_omb", ombCategory(col("race.ombCategory")))
+      .withColumn("ethnicity", ombCategory(col("ethnicity.ombCategory")))
+      .withColumn("race", when(col("race_omb").isNull && lower(col("race.text")) === "more than one race", upperFirstLetter(col("race.text"))).otherwise(col("race_omb")))
     ),
-    Drop("identifier")
+    Drop("identifier", "race_omb")
   )
 
   val researchSubjectMappings: List[Transformation] = List(
@@ -35,6 +36,8 @@ object Transformations {
     Drop("identifier")
   )
 
+  val age_at_bio_collection_on_set_intervals = Seq((0, 5), (5, 10), (10, 20), (20, 30), (30, 40), (40, 50), (50, 60), (60, 70), (70, 80))
+
   val specimenMappings: List[Transformation] = List(
     Custom { input =>
       val specimen = input
@@ -44,6 +47,8 @@ object Transformations {
         .withColumn("laboratory_procedure", col("processing")(0)("description"))
         .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
         .withColumn("age_at_biospecimen_collection", col("collection._collectedDateTime.relativeDateTime.offset.value"))
+        .withColumn("age_at_biospecimen_collection_years", floor(col("age_at_biospecimen_collection") / 365).cast("int"))
+        .withColumn("age_at_biospecimen_collection_onset", age_on_set(col("age_at_biospecimen_collection_years"), age_at_bio_collection_on_set_intervals))
         .withColumn("container", explode_outer(col("container")))
         .withColumn("container_id", col("container")("identifier")(0)("value"))
         .withColumn("volume", col("container")("specimenQuantity")("value"))
@@ -53,21 +58,28 @@ object Transformations {
         .withColumn("parent_id", extractReferenceId(col("parent.reference")))
         .withColumn("parent_0", struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(0) as "level"))
 
-      val df = (1 to 5).foldLeft(specimen) { case (s, i) =>
+      val parentRange = 1 to 10
+      val df = parentRange.foldLeft(specimen) { case (s, i) =>
         val joined = specimen.select(struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(i) as "level") as s"parent_$i")
         s.join(joined, s(s"parent_${i - 1}.parent_id") === joined(s"parent_$i.fhir_id"), "left")
       }
-      df
         .withColumn("parent_sample_type", col("parent_1.sample_type"))
         .withColumn("parent_sample_id", col("parent_1.sample_id"))
         .withColumn("parent_fhir_id", col("parent_1.fhir_id"))
-        .withColumn("collection_sample", coalesce(col("parent_5"), col("parent_4"), col("parent_3"), col("parent_2"), col("parent_1"), col("parent_0")))
+        .withColumn("collection_sample", coalesce(parentRange.map(p => col(s"parent_$p")): _*))
         .withColumn("collection_sample_id", col("collection_sample.sample_id"))
         .withColumn("collection_sample_type", col("collection_sample.sample_type"))
         .withColumn("collection_fhir_id", col("collection_sample.fhir_id"))
+        .where(col("collection_fhir_id") =!= col("fhir_id")) //Filter out collection sample
+        .drop(parentRange.map(p => s"parent_$p"): _*)
+      val grouped = df.select(struct(col("*")) as "specimen")
+        .groupBy("specimen.fhir_id", "specimen.container_id")
+        .agg(first("specimen") as "specimen")
+        .select("specimen.*")
+      grouped
     },
     Drop("type", "identifier", "collection", "subject",
-      "parent", "parent_5", "parent_4", "parent_3", "parent_2", "parent_1", "parent_0",
+      "parent",
       "container", "collection_sample")
   )
 
@@ -84,7 +96,7 @@ object Transformations {
       ))
       // TODO external_id
     ),
-    Drop("subject", "valueCodeableConcept", "identifier", "_effectiveDateTime")
+    Drop("subject", "valueCodeableConcept", "identifier", "_effectiveDateTime", "parent_0")
   )
 
   val observationFamilyRelationshipMappings: List[Transformation] = List(
@@ -155,11 +167,11 @@ object Transformations {
     Drop("identifier", "name")
   )
 
+
   val researchstudyMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id", "keyword", "release_id", "study_id", "title", "identifier", "principalInvestigator", "status")
       .withColumn("attribution", extractFirstForSystem(col("identifier"), Seq(SYS_NCBI_URL))("value"))
-      // TODO data_access_authority
       .withColumn("external_id", extractStudyExternalId(extractFirstForSystem(col("identifier"), Seq(SYS_NCBI_URL))("value")))
       .withColumnRenamed("title", "name")
       .withColumn("version", extractStudyVersion(extractFirstForSystem(col("identifier"), Seq(SYS_NCBI_URL))("value")))
@@ -167,10 +179,8 @@ object Transformations {
         "investigator_id",
         regexp_extract(col("principalInvestigator")("reference"), patternPractitionerRoleResearchStudy, 1)
       )
-      // TODO short_name
       .withColumn("study_code", col("keyword")(1)("coding")(0)("code"))
-      // TODO domain
-      .withColumn("program", col("keyword")(0)("coding")(0)("code"))
+      .withColumn("program", firstSystemEquals(flatten(col("keyword.coding")), SYS_PROGRAMS)("display"))
     ),
     Drop("title", "identifier", "principalInvestigator", "keyword")
   )
@@ -179,30 +189,31 @@ object Transformations {
     Custom(_
       .select("fhir_id", "study_id", "release_id", "category", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus")
       .withColumn("access_urls", col("content")("attachment")("url")(0))
-      // TODO availability
       .withColumn("acl", extractAclFromList(col("securityLabel")("text"), col("study_id")))
-      .withColumn("controlled_access", col("securityLabel")(0)("text"))
-      .withColumn("data_type", col("type")("text"))
-      .withColumn("data_category", when(size(col("category")) > 1, col("category")(1)("text")).otherwise(null))
-      .withColumn("experiment_strategy", col("category")(0)("text"))
-      .withColumn("external_id", col("content")(1)("attachment")("url"))
+      .withColumn("controlled_access", firstSystemEquals(flatten(col("securityLabel.coding")), SYS_DATA_ACCESS_TYPES)("display"))
+      .withColumn("data_type", firstSystemEquals(col("type")("coding"), SYS_DATA_TYPES)("display"))
+      .withColumn("data_category", firstSystemEquals(flatten(col("category")("coding")), SYS_DATA_CATEGORIES)("display"))
+      .withColumn("experiment_strategy", firstSystemEquals(flatten(col("category")("coding")), SYS_EXP_STRATEGY)("display"))
+      .withColumn("external_id", col("content")(0)("attachment")("url"))
       .withColumn("file_format", firstNonNull(col("content")("format")("display")))
-      .withColumn("file_name", firstNonNull(col("content")("attachment")("title")))
+      .withColumn("file_name", sanitizeFilename(firstNonNull(col("content")("attachment")("title"))))
       .withColumn("file_id", officialIdentifier)
-      .withColumn("hashes", extractHashes(col("content")(1)("attachment")("hashes")))
+      .withColumn("hashes", extractHashes(col("content")(0)("attachment")("hashes")))
       // TODO instrument_models
-      .withColumn("is_harmonized", retrieveIsHarmonized(col("content")(1)("attachment")("url")))
+      //TODO this is not working anymore : url contains drs uri, not s3 uri
+      .withColumn("is_harmonized", retrieveIsHarmonized(col("content")(0)("attachment")("url")))
       // TODO is_paired_end
       .withColumn("latest_did", split(col("content")("attachment")("url")(0), "\\/\\/")(2))
       // TODO platforms
       // TODO reference_genome
       .withColumn("repository", retrieveRepository(col("content")("attachment")("url")(0)))
-      .withColumn("size", retrieveSize(col("content")(1)("attachment")("fileSize")))
-      .withColumn("urls", col("content")(1)("attachment")("url"))
-      .withColumn("participant_fhir_ids", array(extractReferenceId(col("subject")("reference"))))
+      .withColumn("size", retrieveSize(col("content")(0)("attachment")("fileSize")))
+      .withColumn("urls", col("content")(0)("attachment")("url"))
+      .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
       .withColumn("specimen_fhir_ids", extractReferencesId(col("context")("related")("reference")))
       .withColumnRenamed("docStatus", "status")
-    ),
+    )
+    ,
     Drop("securityLabel", "content", "type", "identifier", "subject", "context")
   )
 

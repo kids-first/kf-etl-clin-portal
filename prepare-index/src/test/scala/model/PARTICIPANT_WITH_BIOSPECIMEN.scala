@@ -18,8 +18,8 @@ case class PARTICIPANT_WITH_BIOSPECIMEN(
                                          `family`: FAMILY = null,
                                          `family_type`: String = "probant_only",
                                          `down_syndrome_status`: String = "Other",
-                                         `down_syndrome_diagnosis`: String = "TODO",
+                                         `down_syndrome_diagnosis`: Seq[String] = null,
                                          `is_proband`: Boolean = false, // TODO
                                          `age_at_data_collection`: Int = 111, // TODO
-                                         `biospecimens`: Seq[BIOSPECIMEN] = Seq.empty
+                                         `biospecimens`: Set[BIOSPECIMEN] = Set.empty
                                        )
