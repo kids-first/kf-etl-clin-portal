@@ -186,33 +186,43 @@ object Transformations {
   )
 
   val documentreferenceMappings: List[Transformation] = List(
-    Custom(_
-      .select("fhir_id", "study_id", "release_id", "category", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus")
-      .withColumn("access_urls", col("content")("attachment")("url")(0))
-      .withColumn("acl", extractAclFromList(col("securityLabel")("text"), col("study_id")))
-      .withColumn("controlled_access", firstSystemEquals(flatten(col("securityLabel.coding")), SYS_DATA_ACCESS_TYPES)("display"))
-      .withColumn("data_type", firstSystemEquals(col("type")("coding"), SYS_DATA_TYPES)("display"))
-      .withColumn("data_category", firstSystemEquals(flatten(col("category")("coding")), SYS_DATA_CATEGORIES)("display"))
-      .withColumn("experiment_strategy", firstSystemEquals(flatten(col("category")("coding")), SYS_EXP_STRATEGY)("display"))
-      .withColumn("external_id", col("content")(0)("attachment")("url"))
-      .withColumn("file_format", firstNonNull(col("content")("format")("display")))
-      .withColumn("file_name", sanitizeFilename(firstNonNull(col("content")("attachment")("title"))))
-      .withColumn("file_id", officialIdentifier)
-      .withColumn("hashes", extractHashes(col("content")(0)("attachment")("hashes")))
-      // TODO instrument_models
-      //TODO this is not working anymore : url contains drs uri, not s3 uri
-      .withColumn("is_harmonized", retrieveIsHarmonized(col("content")(0)("attachment")("url")))
-      // TODO is_paired_end
-      .withColumn("latest_did", split(col("content")("attachment")("url")(0), "\\/\\/")(2))
-      // TODO platforms
-      // TODO reference_genome
-      .withColumn("repository", retrieveRepository(col("content")("attachment")("url")(0)))
-      .withColumn("size", retrieveSize(col("content")(0)("attachment")("fileSize")))
-      .withColumn("urls", col("content")(0)("attachment")("url"))
-      .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
-      .withColumn("specimen_fhir_ids", extractReferencesId(col("context")("related")("reference")))
-      .withColumnRenamed("docStatus", "status")
-    )
+    Custom { input =>
+      val df = input
+        .select("fhir_id", "study_id", "release_id", "category", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus")
+        .withColumn("access_urls", col("content")("attachment")("url")(0))
+        .withColumn("acl", extractAclFromList(col("securityLabel")("text"), col("study_id")))
+        .withColumn("controlled_access", firstSystemEquals(flatten(col("securityLabel.coding")), SYS_DATA_ACCESS_TYPES)("display"))
+        .withColumn("data_type", firstSystemEquals(col("type")("coding"), SYS_DATA_TYPES)("display"))
+        .withColumn("data_category", firstSystemEquals(flatten(col("category")("coding")), SYS_DATA_CATEGORIES)("display"))
+        .withColumn("experiment_strategy", firstSystemEquals(flatten(col("category")("coding")), SYS_EXP_STRATEGY)("display"))
+        .withColumn("external_id", col("content")(0)("attachment")("url"))
+        .withColumn("file_format", firstNonNull(col("content")("format")("display")))
+        .withColumn("file_name", sanitizeFilename(firstNonNull(col("content")("attachment")("title"))))
+        .withColumn("file_id", officialIdentifier)
+        .withColumn("hashes", extractHashes(col("content")(0)("attachment")("hashes")))
+        .withColumn("is_harmonized", retrieveIsHarmonized(col("content")(0)("attachment")("url")))
+        .withColumn("latest_did", split(col("content")("attachment")("url")(0), "\\/\\/")(2))
+        .withColumn("repository", retrieveRepository(col("content")("attachment")("url")(0)))
+        .withColumn("size", retrieveSize(col("content")(0)("attachment")("fileSize")))
+        .withColumn("urls", col("content")(0)("attachment")("url"))
+        .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
+        .withColumn("specimen_fhir_ids", extractReferencesId(col("context")("related")("reference")))
+        .withColumnRenamed("docStatus", "status")
+
+      val indexes = df.as("index").where(col("file_format").isin("crai", "tbi"))
+      val files = df.as("file").where(not(col("file_format").isin("crai", "tbi")))
+
+      files.join(indexes, col("index.file_name").startsWith(col("file.file_name")), "left_outer"  )
+        .select(
+          col("file.*"),
+          struct(col("index.fhir_id") as "fhir_id", col("index.file_name") as "file_name",
+            col("index.file_id") as "file_id", col("index.hashes") as "hashes",
+            col("index.urls") as "urls", col("index.file_format") as "file_format",
+            col("index.size") as "size"
+          ) as "index"
+        )
+
+    }
     ,
     Drop("securityLabel", "content", "type", "identifier", "subject", "context")
   )
