@@ -257,37 +257,37 @@
             },
             "urls": {
               "type": "keyword"
-            }
-          },
-          "index": {
-            "properties": {
-              "fhir_id": {
-                "type": "keyword"
-              },
-              "file_format": {
-                "type": "keyword"
-              },
-              "file_id": {
-                "type": "keyword"
-              },
-              "file_name": {
-                "type": "keyword"
-              },
-              "hashes": {
-                "properties": {
-                  "etag": {
-                    "type": "keyword"
-                  },
-                  "md5": {
-                    "type": "keyword"
+            },
+            "index": {
+              "properties": {
+                "fhir_id": {
+                  "type": "keyword"
+                },
+                "file_format": {
+                  "type": "keyword"
+                },
+                "file_id": {
+                  "type": "keyword"
+                },
+                "file_name": {
+                  "type": "keyword"
+                },
+                "hashes": {
+                  "properties": {
+                    "etag": {
+                      "type": "keyword"
+                    },
+                    "md5": {
+                      "type": "keyword"
+                    }
                   }
+                },
+                "urls": {
+                  "type": "keyword"
+                },
+                "size": {
+                  "type": "long"
                 }
-              },
-              "urls" : {
-                "type": "keyword"
-              },
-              "size": {
-                "type": "long"
               }
             }
           }
