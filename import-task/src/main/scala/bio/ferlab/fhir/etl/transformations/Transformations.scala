@@ -170,7 +170,7 @@ object Transformations {
 
   val researchstudyMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "keyword", "release_id", "study_id", "title", "identifier", "principalInvestigator", "status")
+      .select("fhir_id", "keyword", "release_id", "study_id", "title", "identifier", "principalInvestigator", "status", "relatedArtifact")
       .withColumn("attribution", extractFirstForSystem(col("identifier"), Seq(SYS_NCBI_URL))("value"))
       .withColumn("external_id", extractStudyExternalId(extractFirstForSystem(col("identifier"), Seq(SYS_NCBI_URL))("value")))
       .withColumnRenamed("title", "name")
@@ -183,7 +183,7 @@ object Transformations {
       .withColumn("program", firstSystemEquals(flatten(col("keyword.coding")), SYS_PROGRAMS)("display"))
       .withColumn("website", extractDocUrl(col("relatedArtifact"))("url"))
     ),
-    Drop("title", "identifier", "principalInvestigator", "keyword")
+    Drop("title", "identifier", "principalInvestigator", "keyword","relatedArtifact")
   )
 
   val documentreferenceMappings: List[Transformation] = List(
