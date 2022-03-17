@@ -66,7 +66,7 @@ object Transformations {
         .withColumn("parent_sample_type", col("parent_1.sample_type"))
         .withColumn("parent_sample_id", col("parent_1.sample_id"))
         .withColumn("parent_fhir_id", col("parent_1.fhir_id"))
-        .withColumn("collection_sample", coalesce(parentRange.map(p => col(s"parent_$p")): _*))
+        .withColumn("collection_sample", coalesce(parentRange.reverse.map(p => col(s"parent_$p")): _*))
         .withColumn("collection_sample_id", col("collection_sample.sample_id"))
         .withColumn("collection_sample_type", col("collection_sample.sample_type"))
         .withColumn("collection_fhir_id", col("collection_sample.fhir_id"))
