@@ -44,7 +44,7 @@ class ParticipantCentric(releaseId: String, studyIds: List[String])(implicit con
                     lastRunDateTime: LocalDateTime = minDateTime,
                     currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     val dataToLoad = Map(mainDestination.id -> data(mainDestination.id)
-      .sortWithinPartitions("fhir_id")
+      .coalesce(20)
       .toDF())
     super.load(dataToLoad)
   }

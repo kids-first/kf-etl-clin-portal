@@ -42,7 +42,7 @@ class FileCentric(releaseId: String, studyIds: List[String])(implicit configurat
                     lastRunDateTime: LocalDateTime = minDateTime,
                     currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     val dataToLoad = Map(mainDestination.id -> data(mainDestination.id)
-      .sortWithinPartitions("fhir_id").toDF())
+      .coalesce(20).toDF())
     super.load(dataToLoad)
   }
 }
