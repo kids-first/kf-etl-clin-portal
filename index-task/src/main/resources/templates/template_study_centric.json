@@ -57,6 +57,9 @@
         },
         "version": {
           "type": "keyword"
+        },
+        "website": {
+          "type": "keyword"
         }
       }
     }

@@ -181,6 +181,7 @@ object Transformations {
       )
       .withColumn("study_code", col("keyword")(1)("coding")(0)("code"))
       .withColumn("program", firstSystemEquals(flatten(col("keyword.coding")), SYS_PROGRAMS)("display"))
+      .withColumn("website", extractDocUrl(col("relatedArtifact"))("url"))
     ),
     Drop("title", "identifier", "principalInvestigator", "keyword")
   )
@@ -220,13 +221,13 @@ object Transformations {
           when(
             col("index.relate_to").isNull, lit(null)
           )
-          .otherwise(
-            struct(col("index.fhir_id") as "fhir_id", col("index.file_name") as "file_name",
-              col("index.file_id") as "file_id", col("index.hashes") as "hashes",
-              col("index.urls") as "urls", col("index.file_format") as "file_format",
-              col("index.size") as "size"
-            )
-          )  as "index"
+            .otherwise(
+              struct(col("index.fhir_id") as "fhir_id", col("index.file_name") as "file_name",
+                col("index.file_id") as "file_id", col("index.hashes") as "hashes",
+                col("index.urls") as "urls", col("index.file_format") as "file_format",
+                col("index.size") as "size"
+              )
+            ) as "index"
         )
 
     }
