@@ -211,8 +211,8 @@ object Transformations {
         .withColumnRenamed("docStatus", "status")
         .withColumn("relate_to", extractReferencesId(col("relatesTo.target.reference"))(0))
 
-      val indexes = df.as("index").where(col("file_format").isin("crai", "tbi"))
-      val files = df.as("file").where(not(col("file_format").isin("crai", "tbi")))
+      val indexes = df.as("index").where(col("file_format").isin("crai", "tbi", "bai"))
+      val files = df.as("file").where(not(col("file_format").isin("crai", "tbi", "bai")))
 
       files
         .join(indexes, col("index.relate_to") === col("file.fhir_id"), "left_outer")
