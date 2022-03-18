@@ -11,6 +11,9 @@ then
 else
   subnet="subnet-0f1161ac2ee2fba5b"
 fi
+sg_service=$(aws ec2 describe-security-groups --filters Name=group-name,Values=ElasticMapReduce-ServiceAccess-${env}-* --query "SecurityGroups[*].{Name:GroupName,ID:GroupId}" | jq -r '.[0].ID')
+sg_master=$(aws ec2 describe-security-groups --filters Name=group-name,Values=ElasticMapReduce-Master-Private-${env}-* --query "SecurityGroups[*].{Name:GroupName,ID:GroupId}" | jq -r '.[0].ID')
+sg_slave=$(aws ec2 describe-security-groups --filters Name=group-name,Values=ElasticMapReduce-Slave-Private-${env}-* --query "SecurityGroups[*].{Name:GroupName,ID:GroupId}" | jq -r '.[0].ID')
 
 steps=$(cat <<EOF
 [
@@ -41,7 +44,7 @@ EOF
 
 aws emr create-cluster \
   --applications Name=Hadoop Name=Spark \
-  --ec2-attributes "{\"KeyName\":\"flintrock_include\",\"InstanceProfile\":\"include-ec2-${env}-profile\",\"SubnetId\":\"${subnet}\"}" \
+  --ec2-attributes "{\"KeyName\":\"flintrock_include\",\"InstanceProfile\":\"include-ec2-${env}-profile\",\"SubnetId\":\"${subnet}\", \"ServiceAccessSecurityGroup\":\"${sg_service}\", \"EmrManagedMasterSecurityGroup\":\"${sg_master}\", \"EmrManagedSlaveSecurityGroup\":\"${sg_slave}\"}" \
   --service-role include-datalake-emr-$env-role \
   --enable-debugging \
   --release-label emr-6.5.0 \
