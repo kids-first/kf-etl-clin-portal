@@ -238,6 +238,7 @@ object Transformations {
   val groupMappings: List[Transformation] = List(
     Custom(_
       .select("*")
+      .where(exists(col("identifier"), identifier => identifier("system") === "https://kf-api-dataservice.kidsfirstdrc.org/families/" ) || exists(col("code.coding"), code => code("code") === "FAMMEMB"  ) )
       .withColumn("external_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
       .withColumn("family_id", officialIdentifier)
       .withColumn("exploded_member", explode(col("member")))
