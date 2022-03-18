@@ -255,16 +255,19 @@
                 "family_id": {
                   "type": "keyword"
                 },
-                "type": {
+                "father_id": {
                   "type": "keyword"
                 },
-                "family_members_id": {
+                "mother_id": {
                   "type": "keyword"
                 },
                 "family_relations": {
                   "type": "nested",
                   "properties": {
                     "related_participant_id": {
+                      "type": "keyword"
+                    },
+                    "related_participant_fhir_id": {
                       "type": "keyword"
                     },
                     "relation": {

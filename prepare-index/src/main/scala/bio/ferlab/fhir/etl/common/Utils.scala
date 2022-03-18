@@ -3,20 +3,12 @@ package bio.ferlab.fhir.etl.common
 import bio.ferlab.fhir.etl.common.OntologyUtils._
 import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.sql.expressions.{UserDefinedFunction, Window}
-import org.apache.spark.sql.functions._
+import org.apache.spark.sql.functions.{when, _}
 
 object Utils {
   val DOWN_SYNDROM_MONDO_TERM = "MONDO:0008608"
 
   val observableTitleStandard: Column => Column = term => trim(regexp_replace(term, "_", ":"))
-
-  val getFamilyType: UserDefinedFunction =
-    udf((arr: Seq[(String, String)], members: Seq[String]) => arr.map(_._2) match {
-      case l if l.contains("mother") && l.contains("father") => if (members.length > 3) "trio+" else "trio"
-      case l if l.contains("mother") || l.contains("father") => if (members.length > 2) "duo+" else "duo"
-      case l if l.isEmpty => "proband-only"
-      case _ => "other"
-    })
 
   val sequencingExperimentCols = Seq("fhir_id", "sequencing_experiment_id", "experiment_strategy",
     "instrument_model", "library_name", "library_strand", "platform")
@@ -256,44 +248,61 @@ object Utils {
     }
 
     def addFamily(familyDf: DataFrame, familyRelationshipDf: DataFrame): DataFrame = {
-      val familyRelationshipCols = Seq("family_id", "type", "family_members", "family_members_id")
 
-      val cleanFamilyRelationshipDf = familyRelationshipDf
-        .drop("study_id", "release_id", "fhir_id")
+      val participantIdMapping = df.select(col("fhir_id") as "participant_fhir_id", col("participant_id"))
+
+      val reformatFamilyRelationship = familyRelationshipDf
+        .join(participantIdMapping, col("participant1_fhir_id") === col("participant_fhir_id"))
+        .withColumnRenamed("participant_id", "participant1_id")
+        .select("participant1_fhir_id", "participant1_id", "participant2_fhir_id", "participant1_to_participant_2_relationship")
 
       val reformatFamily = familyDf
-        .withColumn(s"family_members_id_exp", explode(col("family_members_id")))
-        .join(cleanFamilyRelationshipDf, col("participant1_fhir_id") === col("family_members_id_exp"), "left_outer")
-        .drop("observation_id", "participant1_fhir_id", "fam_relationship_fhir_id", "study_id", "release_id", "external_id")
-        .withColumnRenamed("family_members_id_exp", "participant1_fhir_id")
-        .withColumnRenamed("fhir_id", "family_fhir_id")
+        .select(col("family_members_id"), col("fhir_id") as "family_fhir_id", col("family_id"))
 
-      val cols = df.columns ++ familyRelationshipCols :+ "family_fhir_id"
+      val joinFamily = reformatFamily.join(reformatFamilyRelationship, array_contains(col("family_members_id"), col("participant1_fhir_id")), "left_outer")
 
-      df.join(reformatFamily, col("fhir_id") === col("participant2_fhir_id"), "left_outer")
-        .drop("participant2_fhir_id")
-        .groupBy(cols.map(col): _*)
-        .agg(
-          collect_list(
-            when(col("participant1_fhir_id").isNotNull,
-              struct(
-                col("participant1_fhir_id") as "related_participant_id",
-                col("participant1_to_participant_2_relationship") as "relation"
-              )
-            )
-          ) as "family_relations"
-        )
-        .withColumn("family", when(col("family_fhir_id").isNotNull,
+      val windowSpec = Window.partitionBy("family_id")
+
+      val family = joinFamily.groupBy("participant2_fhir_id", "family_id").agg(
+        collect_list(
           struct(
-            col("family_fhir_id") as "fhir_id",
-            col("family_id"),
-            col("type"),
-            col("family_members_id"),
-            col("family_relations")
+            col("participant1_fhir_id") as "related_participant_fhir_id",
+            col("participant1_id") as "related_participant_id",
+            col("participant1_to_participant_2_relationship") as "relation"
           )
+        ) as "relations",
+        first("family_members_id") as "family_members_id",
+        first("family_fhir_id") as "family_fhir_id"
+      )
+        .withColumn("all_relations", collect_set(col("relations.relation")).over(windowSpec))
+        .withColumn("has_father", exists(col("all_relations"), relation => array_contains(relation, "father")))
+        .withColumn("has_mother", exists(col("all_relations"), relation => array_contains(relation, "mother")))
+        .withColumn("has_both_parent", exists(col("all_relations"), relation => array_contains(relation, "father") && array_contains(relation, "mother")))
+        .withColumn("nb_members", size(col("family_members_id")))
+        .withColumn("family_type",
+          when(col("has_both_parent") && col("nb_members") >= 3,
+            when(col("nb_members") === 3, "trio").otherwise("trio+")
+          ).when((col("has_father") || col("has_mother")) && col("nb_members") >= 2,
+            when(col("nb_members") === 2, "duo").otherwise("duo+")
+          ).when(col("nb_members") === 0, "proband-only")
+            .otherwise("other")
+        )
+        .withColumn("family", struct(
+          filter(col("relations"), c => c("relation") === "father")(0)("related_participant_id") as "father_id",
+          filter(col("relations"), c => c("relation") === "mother")(0)("related_participant_id") as "mother_id",
+          col("relations") as "family_relations",
+          col("family_fhir_id") as "fhir_id",
+          col("family_id") as "family_id"
         ))
-        .withColumn("family_type", getFamilyType(col("family_relations"), col("family_members_id")))
-        .drop(familyRelationshipCols :+ "family_relations" :+ "family_fhir_id": _*)
+        .select("family_type", "family","participant2_fhir_id")
+
+      df.join(family, col("fhir_id") === col("participant2_fhir_id"), "left_outer")
+        .drop("participant2_fhir_id")
+        .withColumn("family_type", coalesce(col("family_type"), lit("proband-only")))
+        .join(reformatFamily, array_contains(col("family_members_id"), col("fhir_id")), "left_outer")
+        .drop("family_fhir_id", "family_members_id")
+        .withColumnRenamed("family_id", "families_id")
+
     }
   }
 }

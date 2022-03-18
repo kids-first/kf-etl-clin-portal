@@ -85,37 +85,190 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
 
   "addFamily" should "add families to patients" in {
     val inputPatients = Seq(
-      PATIENT(`fhir_id` = "11"),
-      PATIENT(`fhir_id` = "22"),
-      PATIENT(`fhir_id` = "33"),
-      PATIENT(`fhir_id` = "44")
+      PATIENT(`fhir_id` = "FTH", `participant_id` = "P1"),
+      PATIENT(`fhir_id` = "MTH", `participant_id` = "P2"),
+      PATIENT(`fhir_id` = "SON", `participant_id` = "P3"),
+      PATIENT(`fhir_id` = "44", `participant_id` = "P4")
 
     ).toDF()
 
     val inputFamilies = Seq(
-      GROUP(`fhir_id` = "111", `family_id` = "FM_111", `family_members` = Seq(("11", false), ("22", false), ("33", false)), `family_members_id` = Seq("11", "22", "33")),
+      GROUP(`fhir_id` = "111", `family_id` = "FM_111", `family_members` = Seq(("FTH", false), ("MTH", false), ("SON", false)), `family_members_id` = Seq("FTH", "MTH", "SON")),
       GROUP(`fhir_id` = "222", `family_id` = "FM_222", `family_members` = Seq(("44", false)), `family_members_id` = Seq("44"))
     ).toDF()
 
     val inputFamilyRelationship = Seq(
-      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "22", `participant2_fhir_id` = "33", `participant1_to_participant_2_relationship` = "father"),
-      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "11", `participant2_fhir_id` = "33", `participant1_to_participant_2_relationship` = "mother"),
-      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "33", `participant2_fhir_id` = "11", `participant1_to_participant_2_relationship` = "son"),
-      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "33", `participant2_fhir_id` = "22", `participant1_to_participant_2_relationship` = "son"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "MTH", `participant2_fhir_id` = "SON", `participant1_to_participant_2_relationship` = "father"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "FTH", `participant2_fhir_id` = "SON", `participant1_to_participant_2_relationship` = "mother"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "SON", `participant2_fhir_id` = "FTH", `participant1_to_participant_2_relationship` = "son"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "SON", `participant2_fhir_id` = "MTH", `participant1_to_participant_2_relationship` = "son"),
     ).toDF()
 
     val output = inputPatients.addFamily(inputFamilies, inputFamilyRelationship)
-    val patientWithFamilies = output.select("fhir_id", "family").as[(String, FAMILY)].collect()
+    val patientWithFamilies: Array[(String, FAMILY, String, String)] = output.select("fhir_id", "family", "family_type", "families_id").as[(String, FAMILY, String, String)].collect()
 
-    val patient3 = patientWithFamilies.filter(_._1 == "33").head
+    patientWithFamilies.length shouldBe 4
+
+    val patient3 = patientWithFamilies.filter(_._1 == "SON").head
     patient3._2.family_relations.map(_.`relation`) should contain theSameElementsAs Seq("mother", "father")
+    patient3._2.mother_id shouldBe Some("P1")
+    patient3._2.father_id shouldBe Some("P2")
+    patient3._3 shouldBe "trio"
+    patient3._4 shouldBe "FM_111"
 
-    val patient1 = patientWithFamilies.filter(_._1 == "11").head
+    val patient1 = patientWithFamilies.filter(_._1 == "FTH").head
     patient1._2.family_relations.map(_.`relation`) shouldBe Seq("son")
+    patient1._3 shouldBe "trio"
+    patient1._4 shouldBe "FM_111"
+
+    val patient2 = patientWithFamilies.filter(_._1 == "MTH").head
+    patient2._3 shouldBe "trio"
+    patient2._4 shouldBe "FM_111"
 
     val patient4 = patientWithFamilies.filter(_._1 == "44").head
     patient4._2 shouldBe null
+    patient4._3 shouldBe "proband-only"
+    patient4._4 shouldBe "FM_222"
   }
+
+  it should "return duo" in {
+    val inputPatients = Seq(
+      PATIENT(`fhir_id` = "FTH", `participant_id` = "P1"),
+      PATIENT(`fhir_id` = "SON", `participant_id` = "P2"),
+
+    ).toDF()
+
+    val inputFamilies = Seq(
+      GROUP(`fhir_id` = "111", `family_id` = "FM_111", `family_members` = Seq(("FTH", false), ("SON", false)), `family_members_id` = Seq("FTH", "SON"))
+    ).toDF()
+
+    val inputFamilyRelationship = Seq(
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "FTH", `participant2_fhir_id` = "SON", `participant1_to_participant_2_relationship` = "father"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "SON", `participant2_fhir_id` = "FTH", `participant1_to_participant_2_relationship` = "son"),
+    ).toDF()
+
+    val output = inputPatients.addFamily(inputFamilies, inputFamilyRelationship)
+    output.select("participant_id","family_type").as[ (String,String)].collect() should contain theSameElementsAs Seq(
+      ("P1", "duo"),
+      ("P2", "duo")
+    )
+  }
+
+  it should "return duo+" in {
+    val inputPatients = Seq(
+      PATIENT(`fhir_id` = "FTH", `participant_id` = "P1"),
+      PATIENT(`fhir_id` = "SON", `participant_id` = "P2"),
+      PATIENT(`fhir_id` = "SON2", `participant_id` = "P3")
+
+    ).toDF()
+
+    val inputFamilies = Seq(
+      GROUP(`fhir_id` = "111", `family_id` = "FM_111", `family_members` = Seq(("FTH", false), ("MTH", false), ("SON", false)), `family_members_id` = Seq("FTH", "SON2", "SON"))
+    ).toDF()
+
+    val inputFamilyRelationship = Seq(
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "FTH", `participant2_fhir_id` = "SON2", `participant1_to_participant_2_relationship` = "father"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "SON2", `participant2_fhir_id` = "FTH", `participant1_to_participant_2_relationship` = "son"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "SON", `participant2_fhir_id` = "FTH", `participant1_to_participant_2_relationship` = "son"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "FTH", `participant2_fhir_id` = "SON", `participant1_to_participant_2_relationship` = "father")
+    ).toDF()
+
+    val output = inputPatients.addFamily(inputFamilies, inputFamilyRelationship)
+    output.select("participant_id","family_type").as[ (String,String)].collect() should contain theSameElementsAs Seq(
+      ("P1", "duo+"),
+      ("P2", "duo+"),
+      ("P3", "duo+")
+    )
+  }
+
+  it should "return duo+ if there is not a participant with a mother and a father" in {
+    //Grand=Father -> Father -> Son = duo+
+    val inputPatients = Seq(
+      PATIENT(`fhir_id` = "FTH", `participant_id` = "P1"),
+      PATIENT(`fhir_id` = "GFTH", `participant_id` = "P2"),
+      PATIENT(`fhir_id` = "SON", `participant_id` = "P3")
+
+    ).toDF()
+
+    val inputFamilies = Seq(
+      GROUP(`fhir_id` = "111", `family_id` = "FM_111", `family_members` = Seq(("FTH", false), ("GFTH", false), ("SON", false)), `family_members_id` = Seq("FTH", "GFTH", "SON"))
+    ).toDF()
+
+    val inputFamilyRelationship = Seq(
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "GFTH", `participant2_fhir_id` = "FTH", `participant1_to_participant_2_relationship` = "father"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "FTH", `participant2_fhir_id` = "SON", `participant1_to_participant_2_relationship` = "father"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "SON", `participant2_fhir_id` = "FTH", `participant1_to_participant_2_relationship` = "son"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "FTH", `participant2_fhir_id` = "GFTH", `participant1_to_participant_2_relationship` = "son")
+    ).toDF()
+
+    val output = inputPatients.addFamily(inputFamilies, inputFamilyRelationship)
+    output.select("participant_id","family_type").as[ (String,String)].collect() should contain theSameElementsAs Seq(
+      ("P1", "duo+"),
+      ("P2", "duo+"),
+      ("P3", "duo+")
+    )
+  }
+
+  it should "return trio" in {
+    val inputPatients = Seq(
+      PATIENT(`fhir_id` = "FTH", `participant_id` = "P1"),
+      PATIENT(`fhir_id` = "MTH", `participant_id` = "P2"),
+      PATIENT(`fhir_id` = "SON", `participant_id` = "P3")
+
+    ).toDF()
+
+    val inputFamilies = Seq(
+      GROUP(`fhir_id` = "111", `family_id` = "FM_111", `family_members` = Seq(("FTH", false), ("MTH", false), ("SON", false)), `family_members_id` = Seq("FTH", "MTH", "SON"))
+    ).toDF()
+
+    val inputFamilyRelationship = Seq(
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "MTH", `participant2_fhir_id` = "SON", `participant1_to_participant_2_relationship` = "father"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "FTH", `participant2_fhir_id` = "SON", `participant1_to_participant_2_relationship` = "mother"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "SON", `participant2_fhir_id` = "FTH", `participant1_to_participant_2_relationship` = "son"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "SON", `participant2_fhir_id` = "MTH", `participant1_to_participant_2_relationship` = "son")
+    ).toDF()
+
+    val output = inputPatients.addFamily(inputFamilies, inputFamilyRelationship)
+    output.select("participant_id","family_type").as[ (String,String)].collect() should contain theSameElementsAs Seq(
+      ("P1", "trio"),
+      ("P2", "trio"),
+      ("P3", "trio")
+    )
+  }
+
+  it should "return trio+" in {
+    val inputPatients = Seq(
+      PATIENT(`fhir_id` = "FTH", `participant_id` = "P1"),
+      PATIENT(`fhir_id` = "MTH", `participant_id` = "P2"),
+      PATIENT(`fhir_id` = "SON", `participant_id` = "P3"),
+      PATIENT(`fhir_id` = "SON2", `participant_id` = "P4")
+
+    ).toDF()
+
+    val inputFamilies = Seq(
+      GROUP(`fhir_id` = "111", `family_id` = "FM_111", `family_members` = Seq(("FTH", false), ("MTH", false), ("SON", false), ("SON2", false)), `family_members_id` = Seq("FTH", "MTH", "SON", "SON2"))
+    ).toDF()
+
+    val inputFamilyRelationship = Seq(
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "MTH", `participant2_fhir_id` = "SON", `participant1_to_participant_2_relationship` = "father"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "FTH", `participant2_fhir_id` = "SON", `participant1_to_participant_2_relationship` = "mother"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "MTH", `participant2_fhir_id` = "SON2", `participant1_to_participant_2_relationship` = "father"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "FTH", `participant2_fhir_id` = "SON2", `participant1_to_participant_2_relationship` = "mother"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "SON", `participant2_fhir_id` = "FTH", `participant1_to_participant_2_relationship` = "son"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "SON", `participant2_fhir_id` = "MTH", `participant1_to_participant_2_relationship` = "son"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "SON2", `participant2_fhir_id` = "FTH", `participant1_to_participant_2_relationship` = "son"),
+      FAMILY_RELATIONSHIP(`participant1_fhir_id` = "SON2", `participant2_fhir_id` = "MTH", `participant1_to_participant_2_relationship` = "son")
+    ).toDF()
+
+    val output = inputPatients.addFamily(inputFamilies, inputFamilyRelationship)
+    output.select("participant_id","family_type").as[ (String,String)].collect() should contain theSameElementsAs Seq(
+      ("P1", "trio+"),
+      ("P2", "trio+"),
+      ("P3", "trio+"),
+      ("P4", "trio+")
+    )
+  }
+
 
   "addDiagnosisPhenotypes" should "group phenotypes by observed or non-observed" in {
 
