@@ -4,8 +4,8 @@ import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.v2.ETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
 import bio.ferlab.fhir.etl.common.Utils._
-import org.apache.spark.sql.functions.{col, lit}
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.functions.{col, concat, lit}
+import org.apache.spark.sql.{DataFrame, SparkSession, functions}
 
 import java.time.LocalDateTime
 
@@ -29,11 +29,12 @@ class FileCentric(releaseId: String, studyIds: List[String])(implicit configurat
                          lastRunDateTime: LocalDateTime = minDateTime,
                          currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     val fileDF = data(normalized_drs_document_reference.id)
-
+    val fhirUrl = spark.conf.get("spark.fhir.server.url")
     val transformedFile =
       fileDF
         .addStudy(data(es_index_study_centric.id))
         .addFileParticipantsWithBiospecimen(data(simple_participant.id), data(normalized_specimen.id))
+        .withColumn("fhir_document_reference", concat(lit(fhirUrl), lit("/DocumentReference?identifier="), col("file_id")))
 
     Map(mainDestination.id -> transformedFile)
   }

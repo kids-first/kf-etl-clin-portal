@@ -37,6 +37,7 @@ object ConfigurationGenerator extends App {
     "spark.sql.extensions" -> "io.delta.sql.DeltaSparkSessionExtension",
     "spark.sql.legacy.timeParserPolicy" -> "CORRECTED",
     "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN",
+    "spark.fhir.server.url" -> "https://include-api-fhir-service-dev.includedcc.org"
   )
 
   val spark_conf = Map(
@@ -46,7 +47,7 @@ object ConfigurationGenerator extends App {
     "spark.sql.extensions" -> "io.delta.sql.DeltaSparkSessionExtension",
     "spark.sql.legacy.parquet.datetimeRebaseModeInWrite" -> "CORRECTED",
     "spark.sql.legacy.timeParserPolicy" -> "CORRECTED",
-    "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN",
+    "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN"
   )
 
   private val partitionByStudyIdAndReleaseId = List("study_id", "release_id")
@@ -90,7 +91,7 @@ object ConfigurationGenerator extends App {
         loadtype = OverWritePartition,
         table = Some(TableConf("database", tableName)),
         partitionby = source.partitionBy,
-        writeoptions = WriteOptions.DEFAULT_OPTIONS ++ Map("overwriteSchema"-> "true")
+        writeoptions = WriteOptions.DEFAULT_OPTIONS ++ Map("overwriteSchema" -> "true")
       )
     )
   })
@@ -158,14 +159,14 @@ object ConfigurationGenerator extends App {
     storages = qa_storage,
     sources = sources.map(ds => ds.copy(table = ds.table.map(t => TableConf(qa_database, t.name)))),
     args = args.toList,
-    sparkconf = spark_conf
+    sparkconf = spark_conf + ("spark.fhir.server.url" -> "https://include-api-fhir-service-qa.includedcc.org")
   )
 
   val prd_conf = Configuration(
     storages = prd_storage,
     sources = sources.map(ds => ds.copy(table = ds.table.map(t => TableConf(prd_database, t.name)))),
     args = args.toList,
-    sparkconf = spark_conf
+    sparkconf = spark_conf + ("spark.fhir.server.url" -> "https://include-api-fhir-service.includedcc.org")
   )
 
   ConfigurationWriter.writeTo("config/output/config/dev.conf", local_conf)

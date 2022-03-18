@@ -39,6 +39,9 @@
         "file_id": {
           "type": "keyword"
         },
+        "fhir_document_reference": {
+          "type": "keyword"
+        },
         "file_name" : {
           "type": "keyword"
         },
