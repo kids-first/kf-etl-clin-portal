@@ -34,6 +34,9 @@
         "participant_count" : {
           "type" : "long"
         },
+        "biospecimen_count" : {
+          "type" : "long"
+        },
         "program": {
           "type": "keyword"
         },

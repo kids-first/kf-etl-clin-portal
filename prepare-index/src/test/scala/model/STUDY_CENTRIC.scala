@@ -17,7 +17,8 @@ case class LIGHT_STUDY_CENTRIC (
                            `participant_count`: Long = 0,
                            `file_count`: Long = 0,
                            `family_count`: Long = 0,
-                           `family_data`: Boolean = false
+                           `family_data`: Boolean = false,
+                           `biospecimen_count`: Long = 0,
                          )
 
 case class STUDY_CENTRIC (
@@ -38,5 +39,6 @@ case class STUDY_CENTRIC (
                            `file_count`: Long = 0,
                            `family_count`: Long = 0,
                            `family_data`: Boolean = false,
+                           `biospecimen_count`: Long = 0,
                            `release_id`: String = "re_000001"
                                )
