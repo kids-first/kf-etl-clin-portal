@@ -20,7 +20,7 @@ class StudyCentric(releaseId: String, studyIds: List[String])(implicit configura
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    Seq(normalized_researchstudy, normalized_drs_document_reference, normalized_patient, normalized_group)
+    Seq(normalized_researchstudy, normalized_drs_document_reference, normalized_patient, normalized_group, normalized_specimen)
       .map(ds => ds.id -> ds.read.where(col("release_id") === releaseId)
         .where(col("study_id").isin(studyIds: _*))
       ).toMap
