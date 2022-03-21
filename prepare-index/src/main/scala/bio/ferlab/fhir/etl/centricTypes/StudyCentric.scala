@@ -16,6 +16,7 @@ class StudyCentric(releaseId: String, studyIds: List[String])(implicit configura
   val normalized_drs_document_reference: DatasetConf = conf.getDataset("normalized_document_reference")
   val normalized_patient: DatasetConf = conf.getDataset("normalized_patient")
   val normalized_group: DatasetConf = conf.getDataset("normalized_group")
+  val normalized_specimen: DatasetConf = conf.getDataset("normalized_specimen")
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
@@ -42,11 +43,18 @@ class StudyCentric(releaseId: String, studyIds: List[String])(implicit configura
         collect_set(col("controlled_access")) as "controlled_access"
     )
 
+    val countBiospecimenDf = data(normalized_specimen.id)
+      .groupBy("study_id")
+      .agg(
+        count(lit(1)) as "biospecimen_count",
+      )
+
     val transformedStudyDf = studyDF
       .withColumnRenamed("name", "study_name")
       .join(countPatientDf, Seq("study_id"), "left_outer")
       .withColumn("participant_count", coalesce(col("participant_count"), lit(0)))
       .join(countFileDf, Seq("study_id"), "left_outer")
+      .join(countBiospecimenDf, Seq("study_id"), "left_outer")
       .withColumn("file_count", coalesce(col("file_count"), lit(0)))
       .join(countFamilyDf, Seq("study_id"), "left_outer")
       .withColumn("family_count", coalesce(col("family_count"), lit(0)))
