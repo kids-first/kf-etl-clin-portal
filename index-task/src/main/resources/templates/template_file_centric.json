@@ -47,7 +47,7 @@
         },
         "file_id": {
           "type" : "keyword",
-          "analyzer" : "custom_normalizer"
+          "normalizer" : "custom_normalizer"
         },
         "fhir_document_reference": {
           "type": "keyword"

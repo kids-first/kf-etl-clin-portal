@@ -381,7 +381,7 @@
         },
         "participant_id": {
           "type" : "keyword",
-          "analyzer" : "custom_normalizer"
+          "normalizer" : "custom_normalizer"
         },
         "phenotype": {
           "type": "nested",

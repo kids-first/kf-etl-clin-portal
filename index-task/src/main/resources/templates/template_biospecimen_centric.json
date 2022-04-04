@@ -29,7 +29,7 @@
         },
         "sample_id": {
           "type" : "keyword",
-          "analyzer" : "custom_normalizer"
+          "normalizer" : "custom_normalizer"
         },
         "sample_type": {
           "type": "keyword"
@@ -42,7 +42,7 @@
         },
         "collection_sample_id": {
           "type" : "keyword",
-          "analyzer" : "custom_normalizer"
+          "normalizer" : "custom_normalizer"
         },
         "collection_sample_type": {
           "type": "keyword"
