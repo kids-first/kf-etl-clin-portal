@@ -5,7 +5,16 @@
   "priority": 1,
   "template": {
     "settings": {
-      "number_of_shards": 5
+      "number_of_shards": 5,
+      "analysis": {
+        "normalizer": {
+          "custom_normalizer": {
+            "type": "custom",
+            "char_filter": [],
+            "filter": "lowercase"
+          }
+        }
+      }
     },
     "mappings": {
       "properties": {
@@ -37,7 +46,8 @@
           "type": "keyword"
         },
         "file_id": {
-          "type": "keyword"
+          "type" : "keyword",
+          "analyzer" : "custom_normalizer"
         },
         "fhir_document_reference": {
           "type": "keyword"
