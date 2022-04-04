@@ -5,7 +5,16 @@
   "priority": 1,
   "template": {
     "settings": {
-      "number_of_shards": 5
+      "number_of_shards": 5,
+      "analysis": {
+        "normalizer": {
+          "custom_normalizer": {
+            "type": "custom",
+            "char_filter": [],
+            "filter": "lowercase"
+          }
+        }
+      }
     },
     "mappings": {
       "properties": {
@@ -19,7 +28,8 @@
           "type": "keyword"
         },
         "sample_id": {
-          "type": "keyword"
+          "type" : "keyword",
+          "analyzer" : "custom_normalizer"
         },
         "sample_type": {
           "type": "keyword"
@@ -31,7 +41,8 @@
           "type": "keyword"
         },
         "collection_sample_id": {
-          "type": "keyword"
+          "type" : "keyword",
+          "analyzer" : "custom_normalizer"
         },
         "collection_sample_type": {
           "type": "keyword"
