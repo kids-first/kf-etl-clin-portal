@@ -4,7 +4,7 @@ set -x
 mkdir -p ~/.ivy2 ~/.sbt ~/.m2 ~/.sbt_cache
 
 echo "Cleanup project ..."
-docker run --rm -v $(pwd):/app/project \
+docker run --net host --rm -v $(pwd):/app/project \
     --user $(id -u):$(id -g) \
     -v ~/.m2:/app/.m2 \
     -v ~/.ivy2:/app/.ivy2 \
@@ -15,7 +15,7 @@ docker run --rm -v $(pwd):/app/project \
     sbt -Duser.home=/app clean
 
 echo "Generate config ..."
-docker run --rm -v $(pwd):/app/project \
+docker run --net host --rm -v $(pwd):/app/project \
     --user $(id -u):$(id -g) \
     -v ~/.m2:/app/.m2 \
     -v ~/.ivy2:/app/.ivy2 \
@@ -26,7 +26,7 @@ docker run --rm -v $(pwd):/app/project \
     sbt -Duser.home=/app config/run
 
 echo "Build jars ..."
-docker run --rm -v $(pwd):/app/project \
+docker run --net host --rm -v $(pwd):/app/project \
     --user $(id -u):$(id -g) \
     -v ~/.m2:/app/.m2 \
     -v ~/.ivy2:/app/.ivy2 \
