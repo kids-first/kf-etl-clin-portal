@@ -1,7 +1,39 @@
 #!/bin/bash
 set -e
+set -x
+mkdir -p ~/.ivy2 ~/.sbt ~/.m2 ~/.sbt_cache
 
-sbt clean
-sbt config/run
-sbt fhavro_export/assembly import_task/assembly prepare_index/assembly index_task/assembly publish_task/assembly
+echo "Cleanup project ..."
+docker run --rm -v $(pwd):/app/project \
+    --user $(id -u):$(id -g) \
+    -v ~/.m2:/app/.m2 \
+    -v ~/.ivy2:/app/.ivy2 \
+    -v ~/.sbt:/app/.sbt \
+    -v ~/.sbt_cache:/app/.cache \
+    -w /app/project \
+    hseeberger/scala-sbt:11.0.14.1_1.6.2_2.12.15 \
+    sbt -Duser.home=/app clean
+
+echo "Generate config ..."
+docker run --rm -v $(pwd):/app/project \
+    --user $(id -u):$(id -g) \
+    -v ~/.m2:/app/.m2 \
+    -v ~/.ivy2:/app/.ivy2 \
+    -v ~/.sbt:/app/.sbt \
+    -v ~/.sbt_cache:/app/.cache \
+    -w /app/project \
+    hseeberger/scala-sbt:11.0.14.1_1.6.2_2.12.15 \
+    sbt -Duser.home=/app config/run
+
+echo "Build jars ..."
+docker run --rm -v $(pwd):/app/project \
+    --user $(id -u):$(id -g) \
+    -v ~/.m2:/app/.m2 \
+    -v ~/.ivy2:/app/.ivy2 \
+    -v ~/.sbt:/app/.sbt \
+    -v ~/.sbt_cache:/app/.cache \
+    -w /app/project \
+    hseeberger/scala-sbt:11.0.14.1_1.6.2_2.12.15 \
+    sbt -Duser.home=/app fhavro_export/assembly import_task/assembly prepare_index/assembly index_task/assembly publish_task/assembly
+
 
