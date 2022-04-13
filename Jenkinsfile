@@ -16,15 +16,6 @@ pipeline {
         }
       }
     }
-    stage("Create ssh_config file") {
-      steps {
-        sh '''
-        mkdir config/
-        echo "Host *" > config/sshd_config
-        echo "SendEnv LANG LC_*\n HashKnownHosts yes \n GSSAPIAuthentication yes \n GSSAPIDelegateCredentials no \n" >> config/sshd_config
-        '''
-      }
-    }
     stage('build'){
       when {
         expression {
