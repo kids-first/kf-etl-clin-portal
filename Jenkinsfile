@@ -12,7 +12,7 @@ pipeline {
         deleteDir()
         checkout scm
         script {
-          slackResponse = slackSend (color: '#FFFF00', message: "kf-dwh-import-vcf :sweat_smile: Starting Jenkins pipeline: Branch '${env.BRANCH_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+          slackResponse = slackSend (color: '#FFFF00', message: "${env.JOB_NAME} :sweat_smile: Starting Jenkins pipeline: Branch '${env.BRANCH_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
         }
       }
     }
