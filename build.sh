@@ -16,6 +16,7 @@ docker run --net host --rm -v $(pwd):/app/project \
 
 echo "Running tests ..."
 docker run --net host --rm -v $(pwd):/app/project \
+    -v /var/run/docker.sock:/var/run/docker.sock \
     --user $(id -u):$(id -g) \
     -v ~/.m2:/app/.m2 \
     -v ~/.ivy2:/app/.ivy2 \
