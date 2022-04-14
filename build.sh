@@ -20,7 +20,7 @@ echo "Running tests ..."
 ls -al /var/run/docker.sock
 docker run --net host --rm -v $(pwd):/app/project \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    --user $(id -u):$(id -g docker) \
+    --user $(id -u):$(getent group groupname | cut -d: -f3) \
     -v ~/.m2:/app/.m2 \
     -v ~/.ivy2:/app/.ivy2 \
     -v ~/.sbt:/app/.sbt \
