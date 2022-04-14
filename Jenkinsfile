@@ -10,6 +10,7 @@ pipeline {
     stage('Get Code'){
       steps {
         sh '''
+        set +x
            sudo chown -R $(id -u):$(id -g) ./*
           '''
         deleteDir()
