@@ -16,17 +16,17 @@ docker run --net host --rm -v $(pwd):/app/project \
     hseeberger/scala-sbt:11.0.14.1_1.6.2_2.12.15 \
     sbt -Duser.home=/app clean
 
-#echo "Running tests ..."
-#docker run --net host --rm -v $(pwd):/app/project \
-#    -v /var/run/docker.sock:/var/run/docker.sock \
-#    --user $(id -u):$(id -g) \
-#    -v ~/.m2:/app/.m2 \
-#    -v ~/.ivy2:/app/.ivy2 \
-#    -v ~/.sbt:/app/.sbt \
-#    -v ~/.sbt_cache:/app/.cache \
-#    -w /app/project \
-#    hseeberger/scala-sbt:11.0.14.1_1.6.2_2.12.15 \
-#    sbt -Duser.home=/app test
+echo "Running tests ..."
+docker run --net host --rm -v $(pwd):/app/project \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    --user $(id -u):$(id -g) \
+    -v ~/.m2:/app/.m2 \
+    -v ~/.ivy2:/app/.ivy2 \
+    -v ~/.sbt:/app/.sbt \
+    -v ~/.sbt_cache:/app/.cache \
+    -w /app/project \
+    hseeberger/scala-sbt:11.0.14.1_1.6.2_2.12.15 \
+    sbt -Duser.home=/app test
 
 echo "Generate config ..."
 docker run --net host --rm -v $(pwd):/app/project \
