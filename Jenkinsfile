@@ -9,6 +9,9 @@ pipeline {
   stages {
     stage('Get Code'){
       steps {
+        sh '''
+           sudo chown -R $(id -u):$(id -g) ./*
+          '''
         deleteDir()
         checkout scm
         script {
