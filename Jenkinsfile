@@ -35,6 +35,25 @@ pipeline {
         }
       }
     }
+   stage('deploy qa'){
+     when {
+       expression {
+         return env.BRANCH_NAME == 'master';
+       }
+     }
+     steps{
+       pending("${env.JOB_NAME}","prd","${slackResponse.threadId}")
+       sh '''
+          ./deploy.sh qa
+         '''
+       success("${env.JOB_NAME}","prd","${slackResponse.threadId}")
+     }
+     post {
+       failure {
+         fail("${env.JOB_NAME}","prd","${slackResponse.threadId}")
+       }
+     }
+   }
 
   }
 }

@@ -23,3 +23,6 @@ aws s3 cp publish-task/target/scala-2.12/publish-task.jar $job_dest
 
 echo "Copy templates ..."
 aws s3 cp --recursive index-task/target/scala-2.12/classes/templates/ $template_dest
+
+echo "Publish docker images"
+
