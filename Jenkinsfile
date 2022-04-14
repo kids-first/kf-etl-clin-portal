@@ -16,7 +16,7 @@ pipeline {
         }
       }
     }
-    stage('build'){
+    stage('Build'){
       when {
         expression {
           return env.BRANCH_NAME == 'master';
@@ -35,7 +35,7 @@ pipeline {
         }
       }
     }
-   stage('deploy qa'){
+   stage('Deploy QA'){
      when {
        expression {
          return env.BRANCH_NAME == 'master';

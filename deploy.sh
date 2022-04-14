@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+set +x
+aws ecr get-login-password --region us-east-1 | docker login -u AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
+set -x
+
 env=$1
 bucket="s3://include-373997854230-datalake-${env}"
 job_dest="${bucket}/jobs/"
@@ -25,4 +29,9 @@ echo "Copy templates ..."
 aws s3 cp --recursive index-task/target/scala-2.12/classes/templates/ $template_dest
 
 echo "Publish docker images"
+docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/etl-fhavro-export:latest
+docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/etl-fhavro-export:$GIT_COMMIT
+
+docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/etl-publish-task:latest
+docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/etl-publish-task:$GIT_COMMIT
 
