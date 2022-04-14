@@ -7,12 +7,16 @@ pipeline {
   agent { label 'terraform-testing' }
 
   stages {
-    stage('Get Code'){
+    stage('Change owner'){
       steps {
         sh '''
         set +x
            sudo chown -R $(id -u):$(id -g) ./*
           '''
+      }
+    }
+    stage('Get Code'){
+      steps {
         deleteDir()
         checkout scm
         script {
