@@ -2,6 +2,7 @@ package model
 
 case class BIOSPECIMEN_CENTRIC(
                                 `fhir_id`: String = "336842",
+                                `biospecimen_fhir_id`: String = "336842",
                                 `status`: String = "available",
                                 `composition`: String = "Not Reported",
                                 `participant_fhir_id`: String = "38986",

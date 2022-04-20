@@ -107,6 +107,9 @@
         "fhir_id": {
           "type": "keyword"
         },
+        "participant_fhir_id": {
+          "type": "keyword"
+        },
         "nb_files": {
           "type": "integer"
         },

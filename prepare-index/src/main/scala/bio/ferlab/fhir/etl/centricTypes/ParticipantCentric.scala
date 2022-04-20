@@ -36,6 +36,7 @@ class ParticipantCentric(releaseId: String, studyIds: List[String])(implicit con
           data(normalized_drs_document_reference.id),
           data(normalized_specimen.id)
         )
+        .withColumn("participant_fhir_id", col("fhir_id"))
 
     Map(mainDestination.id -> transformedParticipant)
   }

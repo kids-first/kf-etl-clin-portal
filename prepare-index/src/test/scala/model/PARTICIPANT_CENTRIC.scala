@@ -3,6 +3,7 @@ package model
 
 case class PARTICIPANT_CENTRIC(
                                 `fhir_id`: String = "38734",
+                                `participant_fhir_id`: String = "38734",
                                 `sex`: String = "male",
                                 `ethnicity`: String = "Not Reported",
                                 `race`: String = "Not Reported",

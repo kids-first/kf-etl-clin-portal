@@ -65,6 +65,9 @@
         "fhir_id": {
           "type": "keyword"
         },
+        "biospecimen_fhir_id": {
+          "type": "keyword"
+        },
         "status": {
           "type": "keyword"
         },
