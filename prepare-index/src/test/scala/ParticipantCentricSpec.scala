@@ -44,6 +44,7 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
     participant_centric.find(_.`fhir_id` == "2") shouldBe Some(
       PARTICIPANT_CENTRIC(
         `fhir_id` = "2",
+        `participant_fhir_id` = "2",
         `nb_files` = 2,
         `nb_biospecimens` = 2,
         `files` = Seq(
@@ -70,6 +71,7 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
     participant_centric.find(_.`fhir_id` == "1").map(p=> p.copy(files =  p.files.sortBy(_.`fhir_id`).reverse)) shouldBe Some(
       PARTICIPANT_CENTRIC(
         `fhir_id` = "1",
+        `participant_fhir_id` = "1",
         `nb_files` = 3,
         `nb_biospecimens` = 2,
         `files` = Seq(

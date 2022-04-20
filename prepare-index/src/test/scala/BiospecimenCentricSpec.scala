@@ -41,6 +41,7 @@ class BiospecimenCentricSpec extends FlatSpec with Matchers with WithSparkSessio
       Seq(
         BIOSPECIMEN_CENTRIC(
           `fhir_id` = "111",
+          `biospecimen_fhir_id` = "111",
           `participant_fhir_id` = "1",
           `participant` = SIMPLE_PARTICIPANT(`fhir_id` = "1"),
           `nb_files` = 3,
@@ -61,6 +62,7 @@ class BiospecimenCentricSpec extends FlatSpec with Matchers with WithSparkSessio
         ),
         BIOSPECIMEN_CENTRIC(
           `fhir_id` = "222",
+          `biospecimen_fhir_id` = "222",
           `participant_fhir_id` = "2",
           `participant` = SIMPLE_PARTICIPANT(`fhir_id` = "2"),
           `nb_files` = 3,
