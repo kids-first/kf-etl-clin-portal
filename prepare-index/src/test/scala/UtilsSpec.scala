@@ -460,16 +460,16 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val inputBiospecimen = Seq(
-      BIOSPECIMEN(`participant_fhir_id` = "P1", `fhir_id` = "B11"),
-      BIOSPECIMEN(`participant_fhir_id` = "P1", `fhir_id` = "B12"),
-      BIOSPECIMEN(`participant_fhir_id` = "P1", `fhir_id` = "B13"),
-      BIOSPECIMEN(`participant_fhir_id` = "P2", `fhir_id` = "B21"),
-      BIOSPECIMEN(`participant_fhir_id` = "P2", `fhir_id` = "B22"),
-      BIOSPECIMEN(`participant_fhir_id` = "P3", `fhir_id` = "B31"),
-      BIOSPECIMEN(`participant_fhir_id` = "P3", `fhir_id` = "B32"),
-      BIOSPECIMEN(`participant_fhir_id` = "P3", `fhir_id` = "B33"),
+      BIOSPECIMEN_INPUT(`participant_fhir_id` = "P1", `fhir_id` = "B11"),
+      BIOSPECIMEN_INPUT(`participant_fhir_id` = "P1", `fhir_id` = "B12"),
+      BIOSPECIMEN_INPUT(`participant_fhir_id` = "P1", `fhir_id` = "B13"),
+      BIOSPECIMEN_INPUT(`participant_fhir_id` = "P2", `fhir_id` = "B21"),
+      BIOSPECIMEN_INPUT(`participant_fhir_id` = "P2", `fhir_id` = "B22"),
+      BIOSPECIMEN_INPUT(`participant_fhir_id` = "P3", `fhir_id` = "B31"),
+      BIOSPECIMEN_INPUT(`participant_fhir_id` = "P3", `fhir_id` = "B32"),
+      BIOSPECIMEN_INPUT(`participant_fhir_id` = "P3", `fhir_id` = "B33"),
 
-      BIOSPECIMEN(`participant_fhir_id` = "P_NOT_THERE", `fhir_id` = "B_NOT_THERE1")
+      BIOSPECIMEN_INPUT(`participant_fhir_id` = "P_NOT_THERE", `fhir_id` = "B_NOT_THERE1")
     ).toDF()
 
     val inputDocumentReference = Seq(
@@ -543,8 +543,8 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val inputBiospecimen = Seq(
-      BIOSPECIMEN(`participant_fhir_id` = "P1", `fhir_id` = "B11"),
-      BIOSPECIMEN(`participant_fhir_id` = "P1", `fhir_id` = "B12"), //No file associated
+      BIOSPECIMEN_INPUT(`participant_fhir_id` = "P1", `fhir_id` = "B11"),
+      BIOSPECIMEN_INPUT(`participant_fhir_id` = "P1", `fhir_id` = "B12"), //No file associated
     ).toDF()
 
     val inputDocumentReference = Seq(

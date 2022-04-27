@@ -1,8 +1,7 @@
 package model
 
-case class BIOSPECIMEN(
+case class BIOSPECIMEN_INPUT(
                         `fhir_id`: String = "336842",
-                        `biospecimen_fhir_id`: String = "336842",
                         `status`: String = "available",
                         `composition`: String = "Not Reported",
                         `specimen_id`: String = "BS_F6NDMZCN",
