@@ -20,10 +20,10 @@ class FileCentricSpec extends FlatSpec with Matchers with WithSparkSession {
         DOCUMENTREFERENCE(`fhir_id` = "44", `participant_fhir_id` = "1", `specimen_fhir_ids` = Seq("111","112", "222"))
       ).toDF(),
       "normalized_specimen" -> Seq(
-        BIOSPECIMEN(`fhir_id` = "111", `participant_fhir_id` = "1", container_id=Some("1")),
-        BIOSPECIMEN(`fhir_id` = "111", `participant_fhir_id` = "1", container_id=Some("2")),
-        BIOSPECIMEN(`fhir_id` = "112", `participant_fhir_id` = "1"),
-        BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2")
+        BIOSPECIMEN_INPUT(`fhir_id` = "111", `participant_fhir_id` = "1", container_id=Some("1")),
+        BIOSPECIMEN_INPUT(`fhir_id` = "111", `participant_fhir_id` = "1", container_id=Some("2")),
+        BIOSPECIMEN_INPUT(`fhir_id` = "112", `participant_fhir_id` = "1"),
+        BIOSPECIMEN_INPUT(`fhir_id` = "222", `participant_fhir_id` = "2")
       ).toDF(),
       "es_index_study_centric" -> Seq(STUDY_CENTRIC()).toDF(),
       "simple_participant" -> Seq(SIMPLE_PARTICIPANT(`fhir_id` = "1", `participant_fhir_id` = "1"), SIMPLE_PARTICIPANT(`fhir_id` = "2", `participant_fhir_id` = "2")).toDF(),
@@ -47,11 +47,13 @@ class FileCentricSpec extends FlatSpec with Matchers with WithSparkSession {
             `biospecimens` = Set(
               BIOSPECIMEN(
                 `fhir_id` = "111",
+                `biospecimen_fhir_id` = "111",
                 `participant_fhir_id` = "1",
                 container_id=Some("1")
               ),
               BIOSPECIMEN(
                 `fhir_id` = "111",
+                `biospecimen_fhir_id` = "111",
                 `participant_fhir_id` = "1",
                 container_id=Some("2")
               )
@@ -81,6 +83,7 @@ class FileCentricSpec extends FlatSpec with Matchers with WithSparkSession {
             `participant_fhir_id` = "2",
             `biospecimens` = Set(BIOSPECIMEN(
               `fhir_id` = "222",
+              `biospecimen_fhir_id` = "222",
               `participant_fhir_id` = "2",
             ))
           )),
@@ -98,16 +101,19 @@ class FileCentricSpec extends FlatSpec with Matchers with WithSparkSession {
             `biospecimens` = Set(
               BIOSPECIMEN(
                 `fhir_id` = "111",
+                `biospecimen_fhir_id` = "111",
                 `participant_fhir_id` = "1",
                 container_id=Some("1")
               ),
               BIOSPECIMEN(
                 `fhir_id` = "111",
+                `biospecimen_fhir_id` = "111",
                 `participant_fhir_id` = "1",
                 container_id=Some("2")
               ),
               BIOSPECIMEN(
                 `fhir_id` = "112",
+                `biospecimen_fhir_id` = "112",
                 `participant_fhir_id` = "1"
               )
 
@@ -119,6 +125,7 @@ class FileCentricSpec extends FlatSpec with Matchers with WithSparkSession {
             `participant_fhir_id` = "2",
             `biospecimens` = Set(BIOSPECIMEN(
               `fhir_id` = "222",
+              `biospecimen_fhir_id` = "222",
               `participant_fhir_id` = "2",
             ))
           )
@@ -138,16 +145,19 @@ class FileCentricSpec extends FlatSpec with Matchers with WithSparkSession {
               `biospecimens` = Set(
                 BIOSPECIMEN(
                   `fhir_id` = "111",
+                  `biospecimen_fhir_id` = "111",
                   `participant_fhir_id` = "1",
                   container_id=Some("1")
                 ),
                 BIOSPECIMEN(
                   `fhir_id` = "111",
+                  `biospecimen_fhir_id` = "111",
                   `participant_fhir_id` = "1",
                   container_id=Some("2")
                 ),
                 BIOSPECIMEN(
                   `fhir_id` = "112",
+                  `biospecimen_fhir_id` = "112",
                   `participant_fhir_id` = "1"
                 )
               )
@@ -157,9 +167,11 @@ class FileCentricSpec extends FlatSpec with Matchers with WithSparkSession {
               `participant_fhir_id` = "2",
               `biospecimens` = Set(BIOSPECIMEN(
                 `fhir_id` = "222",
+                `biospecimen_fhir_id` = "222",
                 `participant_fhir_id` = "2",
-              ))
-            )),
+
+            ))
+          )),
           `sequencing_experiment` = SEQUENCING_EXPERIMENT()
         )
     )
@@ -172,8 +184,8 @@ class FileCentricSpec extends FlatSpec with Matchers with WithSparkSession {
         DOCUMENTREFERENCE(`fhir_id` = "12", `participant_fhir_id` = "1"),
         DOCUMENTREFERENCE(`fhir_id` = "21", `participant_fhir_id` = "2", `specimen_fhir_ids` = Seq("222"))).toDF(),
       "normalized_specimen" -> Seq(
-        BIOSPECIMEN(`fhir_id` = "111", `participant_fhir_id` = "1"),
-        BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2")
+        BIOSPECIMEN_INPUT(`fhir_id` = "111", `participant_fhir_id` = "1"),
+        BIOSPECIMEN_INPUT(`fhir_id` = "222", `participant_fhir_id` = "2")
       ).toDF(),
       "es_index_study_centric" -> Seq(STUDY_CENTRIC()).toDF(),
       "simple_participant" -> Seq(SIMPLE_PARTICIPANT(`fhir_id` = "1")).toDF(),
@@ -191,7 +203,7 @@ class FileCentricSpec extends FlatSpec with Matchers with WithSparkSession {
         `nb_participants` = 1,
         `nb_biospecimens` = 1,
         `participants` = Seq(PARTICIPANT_WITH_BIOSPECIMEN(`fhir_id` = "1",
-          `biospecimens` = Set(BIOSPECIMEN(`fhir_id` = "111", `participant_fhir_id` = "1"))))))
+          `biospecimens` = Set(BIOSPECIMEN(`fhir_id` = "111",`biospecimen_fhir_id` = "111", `participant_fhir_id` = "1"))))))
     file_centric.find(_.`fhir_id` == "12") shouldBe Some(
       FILE_CENTRIC(`fhir_id` = "12",
         `file_fhir_id` = "12",

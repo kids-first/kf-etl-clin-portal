@@ -20,7 +20,8 @@ object Utils {
 
   private def reformatBiospecimen(biospecimensDf: DataFrame) = {
     biospecimensDf
-      .withColumn("biospecimen", struct(biospecimensDf.columns.map(col): _*))
+      .withColumn("biospecimen_fhir_id", col("fhir_id"))
+      .withColumn("biospecimen", struct((biospecimensDf.columns :+ "biospecimen_fhir_id").map(col): _*))
       .withColumnRenamed("fhir_id", "specimen_fhir_id")
       .withColumnRenamed("participant_fhir_id", "specimen_participant_fhir_id")
       .select("specimen_fhir_id", "specimen_participant_fhir_id", "biospecimen")
@@ -152,7 +153,6 @@ object Utils {
     }
 
     def addParticipantFilesWithBiospecimen(filesDf: DataFrame, biospecimensDf: DataFrame): DataFrame = {
-
       val biospecimenDfReformat = reformatBiospecimen(biospecimensDf)
 
       val filesWithSeqExpDF = reformatSequencingExperiment(filesDf)

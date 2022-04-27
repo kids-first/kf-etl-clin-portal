@@ -24,10 +24,10 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
       ).toDF(),
 
       "normalized_specimen" -> Seq(
-        BIOSPECIMEN(`fhir_id` = "111", `participant_fhir_id` = "1"),
-        BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("1")),
-        BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("2")),
-        BIOSPECIMEN(`fhir_id` = "333", `participant_fhir_id` = "1")
+        BIOSPECIMEN_INPUT(`fhir_id` = "111", `participant_fhir_id` = "1"),
+        BIOSPECIMEN_INPUT(`fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("1")),
+        BIOSPECIMEN_INPUT(`fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("2")),
+        BIOSPECIMEN_INPUT(`fhir_id` = "333", `participant_fhir_id` = "1")
       ).toDF(),
       "normalized_task" -> Seq(
         TASK(fhir_id = "1", biospecimen_fhir_ids = Seq("111"), document_reference_fhir_ids = Seq("11", "12")),
@@ -51,16 +51,16 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
           FILE_WITH_BIOSPECIMEN(
             `fhir_id` = Some("21"),
             `biospecimens` = Seq(
-              BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("1")),
-              BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("2"))
+              BIOSPECIMEN(`fhir_id` = "222", `biospecimen_fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("1")),
+              BIOSPECIMEN(`fhir_id` = "222", `biospecimen_fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("2"))
             ),
             `sequencing_experiment` = Some(SEQUENCING_EXPERIMENT())
           ),
           FILE_WITH_BIOSPECIMEN(
             `fhir_id` = Some("33"),
             `biospecimens` = Seq(
-              BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("1")),
-              BIOSPECIMEN(`fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("2"))
+              BIOSPECIMEN(`fhir_id` = "222", `biospecimen_fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("1")),
+              BIOSPECIMEN(`fhir_id` = "222", `biospecimen_fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("2"))
             ),
             `sequencing_experiment` = Some(SEQUENCING_EXPERIMENT())
           ),
@@ -80,6 +80,7 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
             `biospecimens` = Seq(
               BIOSPECIMEN(
                 `fhir_id` = "111",
+                `biospecimen_fhir_id` = "111",
                 `participant_fhir_id` = "1",
               )),
             `sequencing_experiment` = Some(SEQUENCING_EXPERIMENT())
@@ -94,6 +95,7 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
             `biospecimens` = Seq(
               BIOSPECIMEN(
                 `fhir_id` = "111",
+                `biospecimen_fhir_id` = "111",
                 `participant_fhir_id` = "1",
               )),
             `sequencing_experiment` = Some(SEQUENCING_EXPERIMENT())
@@ -120,6 +122,7 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
             `biospecimens` = Seq(
               BIOSPECIMEN(
                 `fhir_id` = "333",
+                `biospecimen_fhir_id` = "333",
                 `participant_fhir_id` = "1",
               )),
             `sequencing_experiment` = None
