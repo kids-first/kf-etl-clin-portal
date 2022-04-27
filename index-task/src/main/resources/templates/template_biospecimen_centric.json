@@ -300,6 +300,9 @@
             "fhir_id": {
               "type": "keyword"
             },
+            "participant_fhir_id": {
+              "type": "keyword"
+            },
             "is_proband": {
               "type": "boolean"
             },

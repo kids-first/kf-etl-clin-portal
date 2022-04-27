@@ -56,6 +56,7 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
         .withColumn("is_proband", lit(false)) // TODO
         .withColumn("age_at_data_collection", lit(111)) // TODO
         .withColumn("study_external_id", col("study")("external_id"))
+        .withColumn("participant_fhir_id", col("fhir_id"))
 
     Map(mainDestination.id -> transformedParticipant)
   }

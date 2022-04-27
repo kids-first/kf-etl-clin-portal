@@ -417,8 +417,8 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val inputParticipant = Seq(
-      SIMPLE_PARTICIPANT(`fhir_id` = "A", `participant_id` = "P_A"),
-      SIMPLE_PARTICIPANT(`fhir_id` = "B", `participant_id` = "P_B")
+      SIMPLE_PARTICIPANT(`fhir_id` = "A", participant_fhir_id = "A", `participant_id` = "P_A"),
+      SIMPLE_PARTICIPANT(`fhir_id` = "B", participant_fhir_id = "B",`participant_id` = "P_B")
     ).toDF()
 
     val output = inputBiospecimen.addBiospecimenParticipant(inputParticipant)

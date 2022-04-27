@@ -77,6 +77,7 @@ class SimpleParticipantSpec extends FlatSpec with Matchers with WithSparkSession
 
     simple_participant.find(_.fhir_id === "P1") shouldBe Some(SIMPLE_PARTICIPANT(
       fhir_id = "P1",
+      participant_fhir_id = "P1",
       phenotype = Seq(PHENOTYPE(fhir_id = "CP1", is_observed = true)),
       observed_phenotype = expectedHPOTree,
       non_observed_phenotype = null,
@@ -92,6 +93,7 @@ class SimpleParticipantSpec extends FlatSpec with Matchers with WithSparkSession
     simple_participant.find(_.fhir_id === "P2") shouldBe Some(
       SIMPLE_PARTICIPANT(
         fhir_id = "P2",
+        participant_fhir_id = "P2",
         phenotype = Seq(PHENOTYPE(fhir_id = "CP2", is_observed = true)),
         observed_phenotype = expectedHPOTree,
         non_observed_phenotype = null,
@@ -106,6 +108,7 @@ class SimpleParticipantSpec extends FlatSpec with Matchers with WithSparkSession
     simple_participant.find(_.fhir_id === "P3") shouldBe Some(
       SIMPLE_PARTICIPANT(
         fhir_id = "P3",
+        participant_fhir_id = "P3",
         phenotype = null,
         observed_phenotype = null,
         non_observed_phenotype = null,
