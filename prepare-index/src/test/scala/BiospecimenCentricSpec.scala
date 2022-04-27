@@ -13,8 +13,8 @@ class BiospecimenCentricSpec extends FlatSpec with Matchers with WithSparkSessio
   "transform" should "prepare index biospecimen_centric" in {
     val data: Map[String, DataFrame] = Map(
       "simple_participant" -> Seq(
-        SIMPLE_PARTICIPANT(`fhir_id` = "1"),
-        SIMPLE_PARTICIPANT(`fhir_id` = "2")
+        SIMPLE_PARTICIPANT(`fhir_id` = "1", `participant_fhir_id` = "1"),
+        SIMPLE_PARTICIPANT(`fhir_id` = "2", `participant_fhir_id` = "2")
       ).toDF(),
       "normalized_document_reference" -> Seq(
         DOCUMENTREFERENCE(`fhir_id` = "11", `participant_fhir_id` = "1", `specimen_fhir_ids` = Seq("111")),
@@ -43,7 +43,7 @@ class BiospecimenCentricSpec extends FlatSpec with Matchers with WithSparkSessio
           `fhir_id` = "111",
           `biospecimen_fhir_id` = "111",
           `participant_fhir_id` = "1",
-          `participant` = SIMPLE_PARTICIPANT(`fhir_id` = "1"),
+          `participant` = SIMPLE_PARTICIPANT(`fhir_id` = "1", participant_fhir_id = "1"),
           `nb_files` = 3,
           `files` = Seq(
             DOCUMENTREFERENCE_WITH_SEQ_EXP(
@@ -64,7 +64,7 @@ class BiospecimenCentricSpec extends FlatSpec with Matchers with WithSparkSessio
           `fhir_id` = "222",
           `biospecimen_fhir_id` = "222",
           `participant_fhir_id` = "2",
-          `participant` = SIMPLE_PARTICIPANT(`fhir_id` = "2"),
+          `participant` = SIMPLE_PARTICIPANT(`fhir_id` = "2", participant_fhir_id = "2"),
           `nb_files` = 3,
           `files` = Seq(
             DOCUMENTREFERENCE_WITH_SEQ_EXP(

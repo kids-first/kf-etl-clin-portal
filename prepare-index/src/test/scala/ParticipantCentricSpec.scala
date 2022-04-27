@@ -13,8 +13,8 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
   "transform" should "prepare index participant_centric" in {
     val data: Map[String, DataFrame] = Map(
       "simple_participant" -> Seq(
-        SIMPLE_PARTICIPANT(`fhir_id` = "1"),
-        SIMPLE_PARTICIPANT(`fhir_id` = "2")
+        SIMPLE_PARTICIPANT(`fhir_id` = "1", `participant_fhir_id` = "1"),
+        SIMPLE_PARTICIPANT(`fhir_id` = "2", `participant_fhir_id` = "1")
       ).toDF(),
       "normalized_document_reference" -> Seq(
         DOCUMENTREFERENCE(`fhir_id` = "11", `participant_fhir_id` = "1", `specimen_fhir_ids` = Seq("111")),
