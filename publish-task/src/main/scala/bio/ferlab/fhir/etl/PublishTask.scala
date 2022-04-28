@@ -17,6 +17,12 @@ object PublishTask extends App {
   jobTypes, // study_centric or participant_centric or file_centric or biospecimen_centric or all. can be multivalue spearate by ,
   ) = args
 
+  val (esUsername, esPassword) = if (args.length == 7) {
+    (Some(args(5)), Some(args(6)))
+  } else {
+    (None, None)
+  }
+
   val esConfigs = Map(
     "es.index.auto.create" -> "true",
     "es.net.ssl" -> "true",
@@ -27,7 +33,7 @@ object PublishTask extends App {
     "spark.es.nodes.wan.only" -> "true",
     "es.port" -> esPort)
 
-  implicit val esClient: ElasticSearchClient = new ElasticSearchClient(esNodes.split(',').head, None, None)
+  implicit val esClient: ElasticSearchClient = new ElasticSearchClient(esNodes.split(',').head, esUsername, esPassword)
 
   val studyList = study_ids.split(",")
 
