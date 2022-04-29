@@ -104,6 +104,9 @@
             "fhir_id": {
               "type": "keyword"
             },
+            "file_fhir_id": {
+              "type": "keyword"
+            },
             "file_format": {
               "type": "keyword"
             },

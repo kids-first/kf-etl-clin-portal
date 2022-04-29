@@ -2,6 +2,7 @@ package model
 
 case class FILE_WITH_BIOSPECIMEN(
                                   `fhir_id`: Option[String] = Some("337786"),
+                                  `file_fhir_id`: Option[String] = Some("337786"),
                                   `acl`: Option[Seq[String]] = Some(Seq("phs002330.c999", "SD_Z6MWD3H0", "phs002330.c1")),
                                   `access_urls`: Option[String] = Some("drs://data.kidsfirstdrc.org//a4e15e78-de88-44d8-87f4-7f56cda2475f"),
                                   `controlled_access`: Option[String] = Some("Controlled"),

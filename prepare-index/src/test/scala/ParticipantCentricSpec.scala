@@ -50,6 +50,7 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
         `files` = Seq(
           FILE_WITH_BIOSPECIMEN(
             `fhir_id` = Some("21"),
+            `file_fhir_id` = Some("21"),
             `biospecimens` = Seq(
               BIOSPECIMEN(`fhir_id` = "222", `biospecimen_fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("1")),
               BIOSPECIMEN(`fhir_id` = "222", `biospecimen_fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("2"))
@@ -58,6 +59,7 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
           ),
           FILE_WITH_BIOSPECIMEN(
             `fhir_id` = Some("33"),
+            `file_fhir_id` = Some("33"),
             `biospecimens` = Seq(
               BIOSPECIMEN(`fhir_id` = "222", `biospecimen_fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("1")),
               BIOSPECIMEN(`fhir_id` = "222", `biospecimen_fhir_id` = "222", `participant_fhir_id` = "2", container_id=Some("2"))
@@ -77,6 +79,7 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
         `files` = Seq(
           FILE_WITH_BIOSPECIMEN(
             `fhir_id` = Some("33"),
+            `file_fhir_id` = Some("33"),
             `biospecimens` = Seq(
               BIOSPECIMEN(
                 `fhir_id` = "111",
@@ -87,11 +90,13 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
           ),
           FILE_WITH_BIOSPECIMEN(
             `fhir_id` = Some("12"),
+            `file_fhir_id` = Some("12"),
             `biospecimens` = Seq.empty,
             `sequencing_experiment` = Some(SEQUENCING_EXPERIMENT())
           ),
           FILE_WITH_BIOSPECIMEN(
             `fhir_id` = Some("11"),
+            `file_fhir_id` = Some("11"),
             `biospecimens` = Seq(
               BIOSPECIMEN(
                 `fhir_id` = "111",
@@ -103,6 +108,7 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
 
           FILE_WITH_BIOSPECIMEN(
             `fhir_id` = None,
+            `file_fhir_id` = None,
             `acl` = None,
             `access_urls` = None,
             `controlled_access` = None,

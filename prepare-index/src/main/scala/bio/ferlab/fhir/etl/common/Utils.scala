@@ -14,7 +14,9 @@ object Utils {
     "instrument_model", "library_name", "library_strand", "platform")
 
   private def reformatSequencingExperiment(documentDF: DataFrame) = {
-    documentDF.withColumn("sequencing_experiment", struct(col("experiment_strategy")))
+    documentDF
+      .withColumn("sequencing_experiment", struct(col("experiment_strategy")))
+      .withColumn("file_fhir_id", col("fhir_id"))
       .drop("experiment_strategy")
   }
 
