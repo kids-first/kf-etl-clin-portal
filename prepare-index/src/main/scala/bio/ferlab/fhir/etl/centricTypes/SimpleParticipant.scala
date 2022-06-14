@@ -2,9 +2,8 @@ package bio.ferlab.fhir.etl.centricTypes
 
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.v2.ETL
-import bio.ferlab.datalake.spark3.loader.GenericLoader.read
 import bio.ferlab.fhir.etl.common.Utils._
-import org.apache.spark.sql.functions.{col, lit}
+import org.apache.spark.sql.functions.{col, lit, struct}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
@@ -56,7 +55,7 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
         .withColumn("is_proband", lit(false)) // TODO
         .withColumn("age_at_data_collection", lit(111)) // TODO
         .withColumn("study_external_id", col("study")("external_id"))
-        .withColumn("participant_fhir_id", col("fhir_id"))
+        .withColumn("participant_facet_ids", struct(col("fhir_id") as "participant_fhir_id_1", col("fhir_id") as "participant_fhir_id_2"))
 
     Map(mainDestination.id -> transformedParticipant)
   }

@@ -2,7 +2,7 @@ package model
 
 case class FILE_WITH_BIOSPECIMEN(
                                   `fhir_id`: Option[String] = Some("337786"),
-                                  `file_fhir_id`: Option[String] = Some("337786"),
+                                  `file_facet_ids`: FILE_WITH_BIOSPECIMEN_FACET_IDS = FILE_WITH_BIOSPECIMEN_FACET_IDS(),
                                   `acl`: Option[Seq[String]] = Some(Seq("phs002330.c999", "SD_Z6MWD3H0", "phs002330.c1")),
                                   `access_urls`: Option[String] = Some("drs://data.kidsfirstdrc.org//a4e15e78-de88-44d8-87f4-7f56cda2475f"),
                                   `controlled_access`: Option[String] = Some("Controlled"),
@@ -22,3 +22,8 @@ case class FILE_WITH_BIOSPECIMEN(
                                   `biospecimens`: Seq[BIOSPECIMEN] = Seq.empty,
                                   `sequencing_experiment`: Option[SEQUENCING_EXPERIMENT] = None
                                 )
+
+case class FILE_WITH_BIOSPECIMEN_FACET_IDS(
+                          file_fhir_id_1: Option[String] = Some("337786"),
+                          file_fhir_id_2: Option[String] = Some("337786")
+                        )

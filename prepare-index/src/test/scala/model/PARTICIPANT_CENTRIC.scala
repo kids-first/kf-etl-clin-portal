@@ -3,7 +3,7 @@ package model
 
 case class PARTICIPANT_CENTRIC(
                                 `fhir_id`: String = "38734",
-                                `participant_fhir_id`: String = "38734",
+                                `participant_facet_ids`: PARTICIPANT_FACET_IDS = PARTICIPANT_FACET_IDS(),
                                 `sex`: String = "male",
                                 `ethnicity`: String = "Not Reported",
                                 `race`: String = "Not Reported",
@@ -29,3 +29,8 @@ case class PARTICIPANT_CENTRIC(
                                 `nb_files`: Long = 0,
                                 `nb_biospecimens`: Long = 0
                               )
+
+case class PARTICIPANT_FACET_IDS(
+                                 participant_fhir_id_1: String = "38734",
+                                 participant_fhir_id_2: String = "38734"
+                               )

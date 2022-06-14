@@ -107,8 +107,16 @@
         "fhir_id": {
           "type": "keyword"
         },
-        "participant_fhir_id": {
-          "type": "keyword"
+        "participant_facet_ids": {
+          "type": "nested",
+          "properties": {
+            "participant_fhir_id_1": {
+              "type": "keyword"
+            },
+            "participant_fhir_id_2": {
+              "type": "keyword"
+            }
+          }
         },
         "nb_files": {
           "type": "integer"
@@ -179,8 +187,16 @@
                 "fhir_id": {
                   "type": "keyword"
                 },
-                "biospecimen_fhir_id": {
-                  "type": "keyword"
+                "biospecimen_facet_ids": {
+                  "type": "nested",
+                  "properties": {
+                    "biospecimen_fhir_id_1": {
+                      "type": "keyword"
+                    },
+                    "biospecimen_fhir_id_2": {
+                      "type": "keyword"
+                    }
+                  }
                 },
                 "status": {
                   "type": "keyword"
@@ -202,8 +218,16 @@
             "fhir_id": {
               "type": "keyword"
             },
-            "file_fhir_id": {
-              "type": "keyword"
+            "file_facet_ids": {
+              "type": "nested",
+              "properties": {
+                "file_fhir_id_1": {
+                  "type": "keyword"
+                },
+                "file_fhir_id_2": {
+                  "type": "keyword"
+                }
+              }
             },
             "file_format": {
               "type": "keyword"
