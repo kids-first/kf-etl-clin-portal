@@ -4,7 +4,7 @@ import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.v2.ETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
 import bio.ferlab.fhir.etl.common.Utils._
-import org.apache.spark.sql.functions.{col, concat, lit}
+import org.apache.spark.sql.functions.{col, concat, lit, struct}
 import org.apache.spark.sql.{DataFrame, SparkSession, functions}
 
 import java.time.LocalDateTime
@@ -35,7 +35,7 @@ class FileCentric(releaseId: String, studyIds: List[String])(implicit configurat
         .addStudy(data(es_index_study_centric.id))
         .addFileParticipantsWithBiospecimen(data(simple_participant.id), data(normalized_specimen.id))
         .withColumn("fhir_document_reference", concat(lit(fhirUrl), lit("/DocumentReference?identifier="), col("file_id")))
-        .withColumn("file_fhir_id", col("fhir_id"))
+        .withColumn("file_facet_ids", struct(col("fhir_id") as "file_fhir_id_1", col("fhir_id") as "file_fhir_id_2"))
 
     Map(mainDestination.id -> transformedFile)
   }

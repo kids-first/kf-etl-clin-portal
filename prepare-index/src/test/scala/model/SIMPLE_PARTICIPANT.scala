@@ -3,7 +3,7 @@ package model
 
 case class SIMPLE_PARTICIPANT(
                                fhir_id: String = "38734",
-                               participant_fhir_id: String = "38734",
+                               participant_facet_ids: PARTICIPANT_FACET_IDS = PARTICIPANT_FACET_IDS(),
                                sex: String = "male",
                                ethnicity: String = "Not Reported",
                                race: String = "Not Reported",

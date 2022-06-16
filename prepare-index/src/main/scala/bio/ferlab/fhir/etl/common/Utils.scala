@@ -16,14 +16,14 @@ object Utils {
   private def reformatSequencingExperiment(documentDF: DataFrame) = {
     documentDF
       .withColumn("sequencing_experiment", struct(col("experiment_strategy")))
-      .withColumn("file_fhir_id", col("fhir_id"))
+      .withColumn("file_facet_ids", struct(col("fhir_id") as "file_fhir_id_1", col("fhir_id") as "file_fhir_id_2"))
       .drop("experiment_strategy")
   }
 
   private def reformatBiospecimen(biospecimensDf: DataFrame) = {
     biospecimensDf
-      .withColumn("biospecimen_fhir_id", col("fhir_id"))
-      .withColumn("biospecimen", struct((biospecimensDf.columns :+ "biospecimen_fhir_id").map(col): _*))
+      .withColumn("biospecimen_facet_ids", struct(col("fhir_id") as "biospecimen_fhir_id_1", col("fhir_id") as "biospecimen_fhir_id_2"))
+      .withColumn("biospecimen", struct((biospecimensDf.columns :+ "biospecimen_facet_ids").map(col): _*))
       .withColumnRenamed("fhir_id", "specimen_fhir_id")
       .withColumnRenamed("participant_fhir_id", "specimen_participant_fhir_id")
       .select("specimen_fhir_id", "specimen_participant_fhir_id", "biospecimen")
@@ -175,6 +175,7 @@ object Utils {
           .groupBy("fhir_id", "participant_fhir_id")
           .agg(collect_list(col("biospecimen")) as "biospecimens",
             filesWithSeqExpDF.columns.filter(c => !c.equals("fhir_id") && !c.equals("participant_fhir_id")).map(c => first(c).as(c)): _*)
+          .withColumn("file_facet_ids", struct(col("fhir_id") as "file_fhir_id_1", col("fhir_id") as "file_fhir_id_2"))
           .drop("specimen_fhir_ids")
 
       val filesWithBiospecimenGroupedByParticipantIdDf =
@@ -224,6 +225,7 @@ object Utils {
 
     def addBiospecimenFiles(filesDf: DataFrame): DataFrame = {
       val filesWithSeqExperiments = reformatSequencingExperiment(filesDf)
+
       val fileColumns = filesWithSeqExperiments.columns.collect { case c if c != "specimen_fhir_ids" => col(c) }
       val reformatFile = filesWithSeqExperiments
         .withColumn("biospecimen_fhir_id", explode(col("specimen_fhir_ids")))
@@ -243,6 +245,7 @@ object Utils {
     def addBiospecimenParticipant(participantsDf: DataFrame): DataFrame = {
       val reformatParticipant: DataFrame = participantsDf
         .withColumn("participant", struct(participantsDf.columns.map(col): _*))
+        .withColumn("participant_fhir_id", col("fhir_id"))
         .select("participant_fhir_id", "participant")
 
       df.join(reformatParticipant, "participant_fhir_id")

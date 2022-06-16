@@ -2,7 +2,7 @@ package model
 
 case class FILE_CENTRIC(
                          fhir_id: String = "337786",
-                         file_fhir_id: String = "337786",
+                         file_facet_ids: FILE_FACET_IDS = FILE_FACET_IDS(),
                          acl: Seq[String] = Seq("phs002330.c999", "SD_Z6MWD3H0", "phs002330.c1"),
                          access_urls: String = "drs://data.kidsfirstdrc.org//a4e15e78-de88-44d8-87f4-7f56cda2475f",
                          controlled_access: String = "Controlled",
@@ -27,3 +27,8 @@ case class FILE_CENTRIC(
                          nb_biospecimens: Long,
                          fhir_document_reference: String = "http://localhost:8080/DocumentReference?identifier=GF_067MR115"
                        )
+
+case class FILE_FACET_IDS(
+                           file_fhir_id_1: String = "337786",
+                           file_fhir_id_2: String = "337786"
+                         )
