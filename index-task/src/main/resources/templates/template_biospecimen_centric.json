@@ -66,7 +66,6 @@
           "type": "keyword"
         },
         "biospecimen_facet_ids": {
-          "type": "nested",
           "properties": {
             "biospecimen_fhir_id_1": {
               "type": "keyword"
@@ -113,7 +112,6 @@
               "type": "keyword"
             },
             "file_facet_ids": {
-              "type": "nested",
               "properties": {
                 "file_fhir_id_1": {
                   "type": "keyword"
@@ -320,7 +318,6 @@
               "type": "keyword"
             },
             "participant_facet_ids": {
-              "type": "nested",
               "properties": {
                 "participant_fhir_id_1": {
                   "type": "keyword"
