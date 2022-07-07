@@ -8,7 +8,7 @@ class StudyCentricSpec extends FlatSpec with Matchers with WithSparkSession {
 
   import spark.implicits._
 
-  implicit val conf: Configuration = ConfigurationLoader.loadFromResources("config/dev.conf")
+  implicit val conf: Configuration = ConfigurationLoader.loadFromResources("config/dev-include.conf")
 
   "transform" should "prepare index study_centric" in {
     val data: Map[String, DataFrame] = Map(

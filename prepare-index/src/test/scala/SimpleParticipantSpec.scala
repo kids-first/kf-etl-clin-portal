@@ -9,7 +9,7 @@ class SimpleParticipantSpec extends FlatSpec with Matchers with WithSparkSession
 
   import spark.implicits._
 
-  implicit val conf: Configuration = ConfigurationLoader.loadFromResources("config/dev.conf")
+  implicit val conf: Configuration = ConfigurationLoader.loadFromResources("config/dev-include.conf")
 
   "transform" should "prepare simple_participant" in {
     val data: Map[String, DataFrame] = Map(

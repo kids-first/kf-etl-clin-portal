@@ -44,7 +44,7 @@ pipeline {
      steps{
        pending("${env.JOB_NAME}","prd","${slackResponse.threadId}")
        sh '''
-          ./deploy.sh qa
+          ./deploy.sh ${env.BUCKET}
          '''
        success("${env.JOB_NAME}","prd","${slackResponse.threadId}")
      }

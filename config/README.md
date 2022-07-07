@@ -1,6 +1,6 @@
 # Config
 
-This project hold ETL config for others module.
+This project holds ETL config for others module.
 
 ## Generate configuration file
 

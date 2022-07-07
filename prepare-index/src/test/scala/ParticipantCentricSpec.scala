@@ -8,7 +8,7 @@ class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSessio
 
   import spark.implicits._
 
-  implicit val conf: Configuration = ConfigurationLoader.loadFromResources("config/dev.conf")
+  implicit val conf: Configuration = ConfigurationLoader.loadFromResources("config/dev-include.conf")
 
   "transform" should "prepare index participant_centric" in {
     val data: Map[String, DataFrame] = Map(

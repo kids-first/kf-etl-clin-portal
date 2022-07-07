@@ -34,6 +34,6 @@ Example of a setup with Minio:
 
 - Job type `study_centric` or `participant_centric` or `file_centric` or `biospecimen_centric`
 
-- Path to configuration file `config/qa.conf` or `config/prod.conf` or `config/dev.conf`
+- Path to configuration file `config/qa-[project].conf` or `config/prod-[project].conf` or `config/dev-[project].conf`
 
 Task will import data in index with name `[Job type]_[Study ID]_[Release ID]` in lowercase.

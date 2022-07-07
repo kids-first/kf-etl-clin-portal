@@ -17,7 +17,7 @@ Example of a setup with Minio:
 
 ## Arguments (Mandatory)
 
-1st argument: Path to configuration file `config/qa.conf` or `config/prod.conf` or `config/dev.conf`
+1st argument: Path to configuration file `config/qa-[project].conf` or `config/prod-[project].conf` or `config/dev-[project].conf`
 
 2nd argument: Steps to run for ETL `default`
 
@@ -25,7 +25,7 @@ Example of a setup with Minio:
 
 4th argument: Study ids separated by `,`
 
-Example : `./config/dev.conf default RE_000001 SD_Z6MWD3H0;SD_Y6PXD3F0`
+Example : `./config/dev-[project].conf default RE_000001 SD_Z6MWD3H0;SD_Y6PXD3F0`
 
 ## Launch the application
 

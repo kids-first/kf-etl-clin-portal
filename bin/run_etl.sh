@@ -1,24 +1,98 @@
 #!/bin/bash
 
-release_id=$1
-study_id=$2
-env=${3:-"qa"}
-instance_type=${4:-"m5.4xlarge"}
-instance_count=${5:-"1"}
-if [ "$env" = "prd" ]
-then
-  subnet="subnet-0cdbe9ba6231146b5"
-  es="https://vpc-arranger-es-service-ykxirqamjqxyiyfg2rruxusfg4.us-east-1.es.amazonaws.com"
-else
-  subnet="subnet-0f1161ac2ee2fba5b"
-  es="https://vpc-include-arranger-blue-es-qa-xf3ttht4hjmxjfoh5u5x4jnw34.us-east-1.es.amazonaws.com"
+source "$(pwd)/bin/commons.sh"
+
+usage() {
+  echo "Usage: $0 [arguments]"
+  echo "Run ETL for a given project (Kids-First or Include)"
+  echo
+  echo "-p, --project    project name (kf or include)"
+  echo "-r, --release    release id"
+  echo "-s, --studies    study ids separated by a comma"
+  echo "-b, --bucket    bucket name"
+  echo "-e, --environment    environment"
+  echo "--instance-type    instance type"
+  echo "--instance-count    instance count"
+  echo "--instance-profile    instance profile"
+  echo "--service-role    aws service role"
+  echo "-h, --help    display usage"
+  echo
+  echo "Example(s):"
+  echo "run_etl -p include -r re_061 -s DS-COG-ALL,DS-PCGC,DS360-CHD,HTP,DSC -e qa --instance-type m5.8xlarge --instance-count 1 -b include-373997854230-datalake-qa --instance-profile include-ec2-qa-profile --service-role include-datalake-emr-qa-role"
+  exit 1
+}
+
+PARSED_ARGUMENTS=$(getopt -a -n run_etl -o p:r:s:b:e:h --long project:,release:,studies:,bucket:,environment:,instance-type:,instance-count:,instance-profile:,service-role:,help -- "$@")
+VALID_ARGUMENTS=$?
+if [ "$VALID_ARGUMENTS" != "0" ]; then
+  usage
 fi
+eval set -- "$PARSED_ARGUMENTS"
 
-sg_service=$(aws ec2 describe-security-groups --filters Name=group-name,Values=ElasticMapReduce-ServiceAccess-${env}-* --query "SecurityGroups[*].{Name:GroupName,ID:GroupId}" | jq -r '.[0].ID')
-sg_master=$(aws ec2 describe-security-groups --filters Name=group-name,Values=ElasticMapReduce-Master-Private-${env}-* --query "SecurityGroups[*].{Name:GroupName,ID:GroupId}" | jq -r '.[0].ID')
-sg_slave=$(aws ec2 describe-security-groups --filters Name=group-name,Values=ElasticMapReduce-Slave-Private-${env}-* --query "SecurityGroups[*].{Name:GroupName,ID:GroupId}" | jq -r '.[0].ID')
+RELEASE_ID=$(unset)
+BUCKET=$(unset)
+ENV=$(unset)
+INSTANCE_TYPE=$(unset)
+INSTANCE_COUNT=$(unset)
+PROJECT=$(unset)
+STUDIES=$(unset)
+INSTANCE_PROFILE=$(unset)
+SERVICE_ROLE=$(unset)
 
-steps=$(cat <<EOF
+while :; do
+  case "$1" in
+    -p | --project)
+      PROJECT="$2"
+      shift 2
+      ;;
+    -s | --studies)
+      STUDIES="$2"
+      shift 2
+      ;;
+  -r | --release)
+    RELEASE_ID=$2
+    shift 2
+    ;;
+  -b | --bucket)
+    BUCKET=$2
+    shift 2
+    ;;
+  -e | --environment)
+    ENV="$2"
+    shift 2
+    ;;
+  --instance-type)
+    INSTANCE_TYPE="$2"
+    shift 2
+    ;;
+  --instance-count)
+    INSTANCE_COUNT="$2"
+    shift 2
+    ;;
+  --instance-profile)
+    INSTANCE_PROFILE="$2"
+    shift 2
+    ;;
+   --service-role)
+      SERVICE_ROLE="$2"
+      shift 2
+      ;;
+  --)
+    shift
+    break
+    ;;
+  *)
+    echo "Unexpected argument: $1"
+    usage
+    ;;
+  esac
+done
+
+SUBNET=$(net_conf_extractor "subnet" "${PROJECT}" "${ENV}")
+ES_ENDPOINT=$(net_conf_extractor "es" "${PROJECT}" "${ENV}")
+
+STEPS=$(
+  cat <<EOF
 [
   {
     "Type":"CUSTOM_JAR",
@@ -37,7 +111,7 @@ steps=$(cat <<EOF
     "Jar":"command-runner.jar",
     "Args":[
       "bash","-c",
-      "aws s3 cp s3://include-373997854230-datalake-${env}/jobs/fhavro-export.jar /home/hadoop; cd /home/hadoop; /usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar fhavro-export.jar ${release_id} ${study_id} include-${env}"
+      "aws s3 cp s3://${BUCKET}/jobs/fhavro-export.jar /home/hadoop; cd /home/hadoop; /usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar fhavro-export.jar ${RELEASE_ID} ${STUDIES} include-${ENV}"
     ]
   },
 
@@ -48,11 +122,11 @@ steps=$(cat <<EOF
       "client",
       "--class",
       "bio.ferlab.fhir.etl.ImportTask",
-      "s3a://include-373997854230-datalake-${env}/jobs/import-task.jar",
-      "config/${env}.conf",
+      "s3a://${BUCKET}/jobs/import-task.jar",
+      "config/${ENV}.conf",
       "default",
-      "${release_id}",
-      "${study_id}"
+      "${RELEASE_ID}",
+      "${STUDIES}"
     ],
     "Type": "CUSTOM_JAR",
     "ActionOnFailure": "TERMINATE_CLUSTER",
@@ -67,12 +141,12 @@ steps=$(cat <<EOF
        "client",
        "--class",
        "bio.ferlab.fhir.etl.PrepareIndex",
-       "s3a://include-373997854230-datalake-${env}/jobs/prepare-index.jar",
-       "config/${env}.conf",
+       "s3a://${BUCKET}/jobs/prepare-index.jar",
+       "config/${ENV}.conf",
        "default",
        "all",
-       "${release_id}",
-       "${study_id}"
+       "${RELEASE_ID}",
+       "${STUDIES}"
      ],
      "Type": "CUSTOM_JAR",
      "ActionOnFailure": "TERMINATE_CLUSTER",
@@ -87,13 +161,13 @@ steps=$(cat <<EOF
        "client",
        "--class",
        "bio.ferlab.fhir.etl.IndexTask",
-       "s3a://include-373997854230-datalake-${env}/jobs/index-task.jar",
-       "${es}",
+       "s3a://${BUCKET}/jobs/index-task.jar",
+       "${ES_ENDPOINT}",
        "443",
-       "${release_id}",
-       "${study_id}",
+       "${RELEASE_ID}",
+       "${STUDIES}",
        "study_centric",
-       "config/${env}.conf"
+       "config/${ENV}.conf"
 
      ],
      "Type": "CUSTOM_JAR",
@@ -109,13 +183,13 @@ steps=$(cat <<EOF
        "client",
        "--class",
        "bio.ferlab.fhir.etl.IndexTask",
-       "s3a://include-373997854230-datalake-${env}/jobs/index-task.jar",
-       "${es}",
+       "s3a://${BUCKET}/jobs/index-task.jar",
+       "${ES_ENDPOINT}",
        "443",
-       "${release_id}",
-       "${study_id}",
+       "${RELEASE_ID}",
+       "${STUDIES}",
        "participant_centric",
-       "config/${env}.conf"
+       "config/${ENV}.conf"
 
      ],
      "Type": "CUSTOM_JAR",
@@ -131,13 +205,13 @@ steps=$(cat <<EOF
        "client",
        "--class",
        "bio.ferlab.fhir.etl.IndexTask",
-       "s3a://include-373997854230-datalake-${env}/jobs/index-task.jar",
-       "${es}",
+       "s3a://${BUCKET}/jobs/index-task.jar",
+       "${ES_ENDPOINT}",
        "443",
-       "${release_id}",
-       "${study_id}",
+       "${RELEASE_ID}",
+       "${STUDIES}",
        "file_centric",
-       "config/${env}.conf"
+       "config/${ENV}.conf"
 
      ],
      "Type": "CUSTOM_JAR",
@@ -153,13 +227,13 @@ steps=$(cat <<EOF
        "client",
        "--class",
        "bio.ferlab.fhir.etl.IndexTask",
-       "s3a://include-373997854230-datalake-${env}/jobs/index-task.jar",
-       "${es}",
+       "s3a://${BUCKET}/jobs/index-task.jar",
+       "${ES_ENDPOINT}",
        "443",
-       "${release_id}",
-       "${study_id}",
+       "${RELEASE_ID}",
+       "${STUDIES}",
        "biospecimen_centric",
-       "config/${env}.conf"
+       "config/${ENV}.conf"
 
      ],
      "Type": "CUSTOM_JAR",
@@ -175,7 +249,7 @@ steps=$(cat <<EOF
      "Jar":"command-runner.jar",
      "Args":[
        "bash","-c",
-       "aws s3 cp s3://include-373997854230-datalake-${env}/jobs/publish-task.jar /home/hadoop; cd /home/hadoop; /usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar publish-task.jar ${es} 443 ${release_id} ${study_id} all"
+       "aws s3 cp s3://${BUCKET}/jobs/publish-task.jar /home/hadoop; cd /home/hadoop; /usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar publish-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDIES} all"
      ]
    }
 
@@ -185,19 +259,22 @@ steps=$(cat <<EOF
 EOF
 )
 
+SG_SERVICE=$(aws ec2 describe-security-groups --filters Name=group-name,Values=ElasticMapReduce-ServiceAccess-"${ENV}"-* --query "SecurityGroups[*].{Name:GroupName,ID:GroupId}" | jq -r '.[0].ID')
+SG_MASTER=$(aws ec2 describe-security-groups --filters Name=group-name,Values=ElasticMapReduce-Master-Private-"${ENV}"-* --query "SecurityGroups[*].{Name:GroupName,ID:GroupId}" | jq -r '.[0].ID')
+SG_SLAVE=$(aws ec2 describe-security-groups --filters Name=group-name,Values=ElasticMapReduce-Slave-Private-"${ENV}"-* --query "SecurityGroups[*].{Name:GroupName,ID:GroupId}" | jq -r '.[0].ID')
 
 aws emr create-cluster \
   --applications Name=Hadoop Name=Spark \
-  --ec2-attributes "{\"KeyName\":\"flintrock_include\",\"InstanceProfile\":\"include-ec2-${env}-profile\",\"SubnetId\":\"${subnet}\", \"ServiceAccessSecurityGroup\":\"${sg_service}\", \"EmrManagedMasterSecurityGroup\":\"${sg_master}\", \"EmrManagedSlaveSecurityGroup\":\"${sg_slave}\"}" \
-  --service-role include-datalake-emr-$env-role \
+  --ec2-attributes "{\"KeyName\":\"flintrock_include\",\"InstanceProfile\":\"${INSTANCE_PROFILE}\",\"SubnetId\":\"${SUBNET}\", \"ServiceAccessSecurityGroup\":\"${SG_SERVICE}\", \"EmrManagedMasterSecurityGroup\":\"${SG_MASTER}\", \"EmrManagedSlaveSecurityGroup\":\"${SG_SLAVE}\"}" \
+  --service-role "${SERVICE_ROLE}" \
   --enable-debugging \
   --release-label emr-6.5.0 \
-  --bootstrap-actions Path="s3://include-373997854230-datalake-${env}/jobs/bootstrap-actions/enable-ssm.sh" Path="s3://include-373997854230-datalake-${env}/jobs/bootstrap-actions/install-java11.sh" \
-  --steps "${steps}" \
-  --log-uri "s3n://include-373997854230-datalake-${env}/jobs/elasticmapreduce/" \
-  --name "Portal ETL - All Steps - ${env} ${release_id} ${study_id}" \
-  --instance-groups "[{\"InstanceCount\":${instance_count},\"InstanceGroupType\":\"CORE\",\"InstanceType\":\"${instance_type}\",\"Name\":\"Core - 2\"},{\"InstanceCount\":1,\"EbsConfiguration\":{\"EbsBlockDeviceConfigs\":[{\"VolumeSpecification\":{\"SizeInGB\":32,\"VolumeType\":\"gp2\"},\"VolumesPerInstance\":2}]},\"InstanceGroupType\":\"MASTER\",\"InstanceType\":\"m5.xlarge\",\"Name\":\"Master - 1\"}]" \
+  --bootstrap-actions Path="s3://${BUCKET}/jobs/bootstrap-actions/enable-ssm.sh" Path="s3://${BUCKET}/jobs/bootstrap-actions/install-java11.sh" \
+  --STEPS "${STEPS}" \
+  --log-uri "s3n://${BUCKET}/jobs/elasticmapreduce/" \
+  --name "Portal ETL - All Steps - ${ENV} ${RELEASE_ID} ${STUDIES}" \
+  --instance-groups "[{\"InstanceCount\":${INSTANCE_COUNT},\"InstanceGroupType\":\"CORE\",\"InstanceType\":\"${INSTANCE_TYPE}\",\"Name\":\"Core - 2\"},{\"InstanceCount\":1,\"EbsConfiguration\":{\"EbsBlockDeviceConfigs\":[{\"VolumeSpecification\":{\"SizeInGB\":32,\"VolumeType\":\"gp2\"},\"VolumesPerInstance\":2}]},\"InstanceGroupType\":\"MASTER\",\"InstanceType\":\"m5.xlarge\",\"Name\":\"Master - 1\"}]" \
   --scale-down-behavior TERMINATE_AT_TASK_COMPLETION \
   --configurations file://./spark-config.json \
   --auto-terminate \
- --region us-east-1
+  --region us-east-1
