@@ -41,14 +41,14 @@ SERVICE_ROLE=$(unset)
 
 while :; do
   case "$1" in
-    -p | --project)
-      PROJECT="$2"
-      shift 2
-      ;;
-    -s | --studies)
-      STUDIES="$2"
-      shift 2
-      ;;
+  -p | --project)
+    PROJECT="$2"
+    shift 2
+    ;;
+  -s | --studies)
+    STUDIES="$2"
+    shift 2
+    ;;
   -r | --release)
     RELEASE_ID=$2
     shift 2
@@ -73,10 +73,10 @@ while :; do
     INSTANCE_PROFILE="$2"
     shift 2
     ;;
-   --service-role)
-      SERVICE_ROLE="$2"
-      shift 2
-      ;;
+  --service-role)
+    SERVICE_ROLE="$2"
+    shift 2
+    ;;
   --)
     shift
     break
@@ -123,7 +123,7 @@ STEPS=$(
       "--class",
       "bio.ferlab.fhir.etl.ImportTask",
       "s3a://${BUCKET}/jobs/import-task.jar",
-      "config/${ENV}.conf",
+      "config/${ENV}-${PROJECT}.conf",
       "default",
       "${RELEASE_ID}",
       "${STUDIES}"
@@ -142,7 +142,7 @@ STEPS=$(
        "--class",
        "bio.ferlab.fhir.etl.PrepareIndex",
        "s3a://${BUCKET}/jobs/prepare-index.jar",
-       "config/${ENV}.conf",
+        "config/${ENV}-${PROJECT}.conf",
        "default",
        "all",
        "${RELEASE_ID}",
@@ -167,7 +167,7 @@ STEPS=$(
        "${RELEASE_ID}",
        "${STUDIES}",
        "study_centric",
-       "config/${ENV}.conf"
+        "config/${ENV}-${PROJECT}.conf",
 
      ],
      "Type": "CUSTOM_JAR",
@@ -189,7 +189,7 @@ STEPS=$(
        "${RELEASE_ID}",
        "${STUDIES}",
        "participant_centric",
-       "config/${ENV}.conf"
+        "config/${ENV}-${PROJECT}.conf",
 
      ],
      "Type": "CUSTOM_JAR",
@@ -211,7 +211,7 @@ STEPS=$(
        "${RELEASE_ID}",
        "${STUDIES}",
        "file_centric",
-       "config/${ENV}.conf"
+       "config/${ENV}-${PROJECT}.conf",
 
      ],
      "Type": "CUSTOM_JAR",
@@ -233,7 +233,7 @@ STEPS=$(
        "${RELEASE_ID}",
        "${STUDIES}",
        "biospecimen_centric",
-       "config/${ENV}.conf"
+        "config/${ENV}-${PROJECT}.conf",
 
      ],
      "Type": "CUSTOM_JAR",

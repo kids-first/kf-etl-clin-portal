@@ -44,7 +44,7 @@ pipeline {
      steps{
        pending("${env.JOB_NAME}","prd","${slackResponse.threadId}")
        sh '''
-          ./deploy.sh include-373997854230-datalake-qa
+          ./deploy.sh qa include-373997854230-datalake-qa
          '''
        success("${env.JOB_NAME}","prd","${slackResponse.threadId}")
      }
