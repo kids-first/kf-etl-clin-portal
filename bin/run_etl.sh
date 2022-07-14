@@ -167,8 +167,7 @@ STEPS=$(
        "${RELEASE_ID}",
        "${STUDIES}",
        "study_centric",
-        "config/${ENV}-${PROJECT}.conf",
-
+       "config/${ENV}-${PROJECT}.conf"
      ],
      "Type": "CUSTOM_JAR",
      "ActionOnFailure": "TERMINATE_CLUSTER",
@@ -189,8 +188,7 @@ STEPS=$(
        "${RELEASE_ID}",
        "${STUDIES}",
        "participant_centric",
-        "config/${ENV}-${PROJECT}.conf",
-
+        "config/${ENV}-${PROJECT}.conf"
      ],
      "Type": "CUSTOM_JAR",
      "ActionOnFailure": "TERMINATE_CLUSTER",
@@ -211,8 +209,7 @@ STEPS=$(
        "${RELEASE_ID}",
        "${STUDIES}",
        "file_centric",
-       "config/${ENV}-${PROJECT}.conf",
-
+       "config/${ENV}-${PROJECT}.conf"
      ],
      "Type": "CUSTOM_JAR",
      "ActionOnFailure": "TERMINATE_CLUSTER",
@@ -233,8 +230,7 @@ STEPS=$(
        "${RELEASE_ID}",
        "${STUDIES}",
        "biospecimen_centric",
-        "config/${ENV}-${PROJECT}.conf",
-
+        "config/${ENV}-${PROJECT}.conf"
      ],
      "Type": "CUSTOM_JAR",
      "ActionOnFailure": "TERMINATE_CLUSTER",
@@ -270,7 +266,7 @@ aws emr create-cluster \
   --enable-debugging \
   --release-label emr-6.5.0 \
   --bootstrap-actions Path="s3://${BUCKET}/jobs/bootstrap-actions/enable-ssm.sh" Path="s3://${BUCKET}/jobs/bootstrap-actions/install-java11.sh" \
-  --STEPS "${STEPS}" \
+  --steps "${STEPS}" \
   --log-uri "s3n://${BUCKET}/jobs/elasticmapreduce/" \
   --name "Portal ETL - All Steps - ${ENV} ${RELEASE_ID} ${STUDIES}" \
   --instance-groups "[{\"InstanceCount\":${INSTANCE_COUNT},\"InstanceGroupType\":\"CORE\",\"InstanceType\":\"${INSTANCE_TYPE}\",\"Name\":\"Core - 2\"},{\"InstanceCount\":1,\"EbsConfiguration\":{\"EbsBlockDeviceConfigs\":[{\"VolumeSpecification\":{\"SizeInGB\":32,\"VolumeType\":\"gp2\"},\"VolumesPerInstance\":2}]},\"InstanceGroupType\":\"MASTER\",\"InstanceType\":\"m5.xlarge\",\"Name\":\"Master - 1\"}]" \
