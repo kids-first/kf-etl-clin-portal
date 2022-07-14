@@ -18,7 +18,7 @@ object IndexTask extends App {
   release_id,       // release id
   study_ids,        // study ids separated by ;
   jobType,          // study_centric or participant_centric or file_centric or biospecimen_centric
-  configFile        // config/qa.conf or config/prod.conf or config/dev.conf
+  configFile        // config/qa-[project].conf or config/prod.conf or config/dev-[project].conf
   ) = args
 
   implicit val conf: Configuration = ConfigurationLoader.loadFromResources(configFile)
