@@ -42,15 +42,15 @@ pipeline {
        }
      }
      steps{
-       pending("${env.JOB_NAME}","prd","${slackResponse.threadId}")
+       pending("${env.JOB_NAME}","qa","${slackResponse.threadId}")
        sh '''
           ./deploy.sh qa include-373997854230-datalake-qa
          '''
-       success("${env.JOB_NAME}","prd","${slackResponse.threadId}")
+       success("${env.JOB_NAME}","qa","${slackResponse.threadId}")
      }
      post {
        failure {
-         fail("${env.JOB_NAME}","prd","${slackResponse.threadId}")
+         fail("${env.JOB_NAME}","qa","${slackResponse.threadId}")
        }
      }
    }

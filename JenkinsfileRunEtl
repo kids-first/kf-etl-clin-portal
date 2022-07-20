@@ -1,0 +1,5 @@
+@Library(value="kids-first/aws-infra-jenkins-shared-libraries", changelog=false) _
+simple_pipeline {
+   stage_name_1 = "run_etl.sh"
+   script_1 = "bin/run_etl.sh"
+}
