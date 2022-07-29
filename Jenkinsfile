@@ -43,8 +43,9 @@ pipeline {
      }
      steps{
        pending("${env.JOB_NAME}","qa","${slackResponse.threadId}")
+       //deploy.sh include-373997854230-datalake-qa OR deploy.sh kf-strides-232196027141-datalake-qa
        sh '''
-          ./deploy.sh qa include-373997854230-datalake-qa
+          ./deploy.sh include-373997854230-datalake-qa
          '''
        success("${env.JOB_NAME}","qa","${slackResponse.threadId}")
      }

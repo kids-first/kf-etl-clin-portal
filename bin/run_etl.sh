@@ -1,15 +1,10 @@
 #!/bin/bash
 
 declare -A PROJECT_TO_NET_CONF
-PROJECT_TO_NET_CONF["subnet_include_prd"]="subnet-0cdbe9ba6231146b5"
-PROJECT_TO_NET_CONF["es_include_prd"]="https://vpc-arranger-es-service-ykxirqamjqxyiyfg2rruxusfg4.us-east-1.es.amazonaws.com"
+PROJECT_TO_NET_CONF["subnet_kf-strides_prd"]="subnet-0cdbe9ba6231146b5"
+PROJECT_TO_NET_CONF["es_kf-strides_prd"]="https://vpc-kf-arranger-blue-es-service-exwupkrf4dyupg24dnfmvzcwri.us-east-1.es.amazonaws.com"
 PROJECT_TO_NET_CONF["subnet_include_qa"]="subnet-0f1161ac2ee2fba5b"
 PROJECT_TO_NET_CONF["es_include_qa"]="https://vpc-include-arranger-blue-es-qa-xf3ttht4hjmxjfoh5u5x4jnw34.us-east-1.es.amazonaws.com"
-
-PROJECT_TO_NET_CONF["subnet_kf_prd"]="subnet-todo"
-PROJECT_TO_NET_CONF["es_kf_prd"]="https://vpc-arranger-es-service-todo.us-east-1.es.amazonaws.com"
-PROJECT_TO_NET_CONF["subnet_kf_qa"]="subnet-todo"
-PROJECT_TO_NET_CONF["es_kf_qa"]="https://vpc-include-arranger-blue-es-qa-todo.us-east-1.es.amazonaws.com"
 
 net_conf_extractor() {
   local ITEM=$1
@@ -22,7 +17,7 @@ usage() {
   echo "Usage: $0 [arguments]"
   echo "Run ETL for a given project (Kids-First or Include)"
   echo
-  echo "-p, --project    project name (kf or include)"
+  echo "-p, --project    project name (kf-strides or include)"
   echo "-r, --release    release id"
   echo "-s, --studies    study ids separated by a comma"
   echo "-b, --bucket    bucket name"
@@ -103,6 +98,19 @@ while :; do
     ;;
   esac
 done
+
+
+
+case $PROJECT in
+    kf-strides|include);;
+    *)
+      echo "Project name must be equal to 'kf-strides' or 'include' but got: '${PROJECT}'"
+      exit 1
+       ;;
+esac
+
+exit 0
+
 
 SUBNET=$(net_conf_extractor "subnet" "${PROJECT}" "${ENV}")
 ES_ENDPOINT=$(net_conf_extractor "es" "${PROJECT}" "${ENV}")
@@ -253,7 +261,21 @@ STEPS=$(
      "Jar": "command-runner.jar",
      "Properties": "",
      "Name": "Index Biospecimen"
-   },
+   }
+EOF
+)
+
+if [ "${PROJECT}" = 'kf-strides' ]; then
+STEPS=$(
+  cat <<EOF
+  $STEPS
+]
+EOF
+)
+else #include
+STEPS=$(
+  cat <<EOF
+   $STEPS,
    {
      "Type":"CUSTOM_JAR",
      "Name":"Publish",
@@ -264,27 +286,31 @@ STEPS=$(
        "aws s3 cp s3://${BUCKET}/jobs/publish-task.jar /home/hadoop; cd /home/hadoop; /usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar publish-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDIES} all"
      ]
    }
-
-
-
 ]
 EOF
 )
+fi
 
 SG_SERVICE=$(aws ec2 describe-security-groups --filters Name=group-name,Values=ElasticMapReduce-ServiceAccess-"${ENV}"-* --query "SecurityGroups[*].{Name:GroupName,ID:GroupId}" | jq -r '.[0].ID')
 SG_MASTER=$(aws ec2 describe-security-groups --filters Name=group-name,Values=ElasticMapReduce-Master-Private-"${ENV}"-* --query "SecurityGroups[*].{Name:GroupName,ID:GroupId}" | jq -r '.[0].ID')
 SG_SLAVE=$(aws ec2 describe-security-groups --filters Name=group-name,Values=ElasticMapReduce-Slave-Private-"${ENV}"-* --query "SecurityGroups[*].{Name:GroupName,ID:GroupId}" | jq -r '.[0].ID')
 
+'''
+Once the emr cluster is successfully created, if one needs to access the cluster then:
+  - grab the id instance (for example, in the aws console);
+  - run this command: aws ssm start-session --target <INSTANCE ID>;
+
+'''
 aws emr create-cluster \
   --applications Name=Hadoop Name=Spark \
-  --ec2-attributes "{\"KeyName\":\"flintrock_include\",\"InstanceProfile\":\"${INSTANCE_PROFILE}\",\"SubnetId\":\"${SUBNET}\", \"ServiceAccessSecurityGroup\":\"${SG_SERVICE}\", \"EmrManagedMasterSecurityGroup\":\"${SG_MASTER}\", \"EmrManagedSlaveSecurityGroup\":\"${SG_SLAVE}\"}" \
+  --ec2-attributes "{\"InstanceProfile\":\"${INSTANCE_PROFILE}\",\"SubnetId\":\"${SUBNET}\", \"ServiceAccessSecurityGroup\":\"${SG_SERVICE}\", \"EmrManagedMasterSecurityGroup\":\"${SG_MASTER}\", \"EmrManagedSlaveSecurityGroup\":\"${SG_SLAVE}\"}" \
   --service-role "${SERVICE_ROLE}" \
   --enable-debugging \
   --release-label emr-6.5.0 \
   --bootstrap-actions Path="s3://${BUCKET}/jobs/bootstrap-actions/enable-ssm.sh" Path="s3://${BUCKET}/jobs/bootstrap-actions/install-java11.sh" \
   --steps "${STEPS}" \
   --log-uri "s3n://${BUCKET}/jobs/elasticmapreduce/" \
-  --name "Portal ETL - All Steps - ${ENV} ${RELEASE_ID} ${STUDIES}" \
+  --name "Portal ETL - All Steps - ${ENV} - ${RELEASE_ID} - ${STUDIES}" \
   --instance-groups "[{\"InstanceCount\":${INSTANCE_COUNT},\"InstanceGroupType\":\"CORE\",\"InstanceType\":\"${INSTANCE_TYPE}\",\"Name\":\"Core - 2\"},{\"InstanceCount\":1,\"EbsConfiguration\":{\"EbsBlockDeviceConfigs\":[{\"VolumeSpecification\":{\"SizeInGB\":32,\"VolumeType\":\"gp2\"},\"VolumesPerInstance\":2}]},\"InstanceGroupType\":\"MASTER\",\"InstanceType\":\"m5.xlarge\",\"Name\":\"Master - 1\"}]" \
   --scale-down-behavior TERMINATE_AT_TASK_COMPLETION \
   --configurations file://./spark-config.json \
