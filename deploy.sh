@@ -5,12 +5,7 @@ set +x
 aws ecr get-login-password --region us-east-1 | docker login -u AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
 set -x
 
-env=$1
-if [[ ! "$AWS_ACCOUNT_NAME" ]] || [[ ! "$AWS_ACCOUNT_ID" ]]; then
-  echo "missing env variables: 'AWS_ACCOUNT_NAME' and 'AWS_ACCOUNT_ID' to build bucket name. Exiting"
-  exit 1
-fi
-bucket=$2
+bucket=$1
 job_dest="s3://${bucket}/jobs/"
 template_dest="s3://${bucket}/templates/"
 

@@ -103,8 +103,8 @@ object ConfigurationGenerator extends App {
   })).toList
 
   val includeConf = Map("fhir" -> "https://include-api-fhir-service-dev.includedcc.org", "qaDbName" -> "include_portal_qa", "prdDbName" -> "include_portal_prd", "localDbName" -> "normalized", "bucketNamePrefix" -> "include-373997854230-datalake")
-  val kfConf = Map("fhir" -> "https://kf-api-fhir-service.kidsfirstdrc.org", "qaDbName" -> "include_portal_qa", "prdDbName" -> "include_portal_prd", "localDbName" -> "normalized", "bucketNamePrefix" -> "kf-373997854230-datalake")
-  val conf = Map("include" -> includeConf, "kf" -> kfConf)
+  val kfConf = Map("fhir" -> "https://kf-api-fhir-service.kidsfirstdrc.org", "qaDbName" -> "kf_portal_qa", "prdDbName" -> "kf_portal_prd", "localDbName" -> "normalized", "bucketNamePrefix" -> "kf-strides-232196027141-datalake")
+  val conf = Map("include" -> includeConf, "kf-strides" -> kfConf)
 
   conf.foreach { case (project, _) =>
     val spark_conf = Map(
