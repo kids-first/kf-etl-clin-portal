@@ -109,9 +109,6 @@ case $PROJECT in
        ;;
 esac
 
-exit 0
-
-
 SUBNET=$(net_conf_extractor "subnet" "${PROJECT}" "${ENV}")
 ES_ENDPOINT=$(net_conf_extractor "es" "${PROJECT}" "${ENV}")
 
