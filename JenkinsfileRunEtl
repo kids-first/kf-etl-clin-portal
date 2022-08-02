@@ -2,4 +2,5 @@
 simple_pipeline {
    stage_name_1 = "run_etl.sh"
    script_1 = "cd bin && ./run_etl.sh -p include -r re_062 -s DS-COG-ALL,DS-PCGC,DS360-CHD,HTP,DSC -e qa --instance-type m5.8xlarge --instance-count 1 -b include-373997854230-datalake-qa --instance-profile include-ec2-qa-profile --service-role include-datalake-emr-qa-role"
+   projectName = "kf-etl-clin-portal"
 }
