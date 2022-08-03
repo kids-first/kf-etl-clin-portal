@@ -1,0 +1,6 @@
+@Library(value="kids-first/aws-infra-jenkins-shared-libraries", changelog=false) _
+simple_pipeline {
+   stage_name_1 = "run_etl.sh"
+   script_1 = "cd bin && ./run_etl.sh -p kf-strides -r re_test_001 -s DS-COG-ALL,DS-PCGC,DS360-CHD,HTP,DSC -e qa --instance-type m5.8xlarge --instance-count 1 -b kf-strides-232196027141-datalake-qa --instance-profile kf-strides-ec2-qa-profile --service-role kf-strides-datalake-emr-qa-role"
+   projectName = "kf-etl-clin-portal"
+}
