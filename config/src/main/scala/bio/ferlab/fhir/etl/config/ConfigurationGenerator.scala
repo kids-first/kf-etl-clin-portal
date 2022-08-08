@@ -102,22 +102,11 @@ object ConfigurationGenerator extends App {
     )
   })).toList
 
-  val includeConf = Map("fhir" -> "https://include-api-fhir-service-dev.includedcc.org", "qaDbName" -> "include_portal_qa", "prdDbName" -> "include_portal_prd", "localDbName" -> "normalized", "bucketNamePrefix" -> "include-373997854230-datalake")
-  val kfConf = Map("fhir" -> "https://kf-api-fhir-service.kidsfirstdrc.org", "qaDbName" -> "kf_portal_qa", "prdDbName" -> "kf_portal_prd", "localDbName" -> "normalized", "bucketNamePrefix" -> "kf-strides-232196027141-datalake")
+  val includeConf = Map("fhir_dev" -> "https://include-api-fhir-service-dev.includedcc.org", "fhir_qa" -> "https://include-api-fhir-service-dev.includedcc.org", "fhir_prd" -> "https://include-api-fhir-service-dev.includedcc.org", "qaDbName" -> "include_portal_qa", "prdDbName" -> "include_portal_prd", "localDbName" -> "normalized", "bucketNamePrefix" -> "include-373997854230-datalake")
+  val kfConf = Map("fhir_dev" -> "https://kf-api-fhir-service-qa.kidsfirstdrc.org", "fhir_qa" -> "https://kf-api-fhir-service-qa.kidsfirstdrc.org", "fhir_prd" -> "https://kf-api-fhir-service.kidsfirstdrc.org", "qaDbName" -> "kf_portal_qa", "prdDbName" -> "kf_portal_prd", "localDbName" -> "normalized", "bucketNamePrefix" -> "kf-strides-232196027141-datalake")
   val conf = Map("include" -> includeConf, "kf-strides" -> kfConf)
 
   conf.foreach { case (project, _) =>
-    val spark_conf = Map(
-      "spark.databricks.delta.retentionDurationCheck.enabled" -> "false",
-      "spark.delta.merge.repartitionBeforeWrite" -> "true",
-      "spark.sql.catalog.spark_catalog" -> "org.apache.spark.sql.delta.catalog.DeltaCatalog",
-      "spark.sql.extensions" -> "io.delta.sql.DeltaSparkSessionExtension",
-      "spark.sql.legacy.parquet.datetimeRebaseModeInWrite" -> "CORRECTED",
-      "spark.sql.legacy.timeParserPolicy" -> "CORRECTED",
-      "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN",
-      "spark.fhir.server.url" -> conf(project)("fhir")
-    )
-
     ConfigurationWriter.writeTo(s"config/output/config/dev-${project}.conf", Configuration(
       storages = List(
         StorageConf(storage, "s3a://storage", S3)
@@ -137,9 +126,19 @@ object ConfigurationGenerator extends App {
         "spark.sql.extensions" -> "io.delta.sql.DeltaSparkSessionExtension",
         "spark.sql.legacy.timeParserPolicy" -> "CORRECTED",
         "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN",
-        "spark.fhir.server.url" -> conf(project)("fhir")
+        "spark.fhir.server.url" -> conf(project)("fhir_dev")
       )
     ))
+
+    val spark_conf = Map(
+      "spark.databricks.delta.retentionDurationCheck.enabled" -> "false",
+      "spark.delta.merge.repartitionBeforeWrite" -> "true",
+      "spark.sql.catalog.spark_catalog" -> "org.apache.spark.sql.delta.catalog.DeltaCatalog",
+      "spark.sql.extensions" -> "io.delta.sql.DeltaSparkSessionExtension",
+      "spark.sql.legacy.parquet.datetimeRebaseModeInWrite" -> "CORRECTED",
+      "spark.sql.legacy.timeParserPolicy" -> "CORRECTED",
+      "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN",
+    )
 
     ConfigurationWriter.writeTo(s"config/output/config/qa-${project}.conf", Configuration(
       storages = List(
@@ -147,7 +146,7 @@ object ConfigurationGenerator extends App {
       ),
       sources = populateTable(sources, conf(project)("qaDbName")),
       args = args.toList,
-      sparkconf = spark_conf
+      sparkconf = spark_conf.++(Map("spark.fhir.server.url" -> conf(project)("fhir_qa")))
     ))
 
     ConfigurationWriter.writeTo(s"config/output/config/prd-${project}.conf", Configuration(
@@ -156,7 +155,7 @@ object ConfigurationGenerator extends App {
       ),
       sources = populateTable(sources, conf(project)("prdDbName")),
       args = args.toList,
-      sparkconf = spark_conf
+      sparkconf = spark_conf.++(Map("spark.fhir.server.url" -> conf(project)("fhir_prd")))
     ))
   }
 }
