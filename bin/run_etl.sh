@@ -1,8 +1,8 @@
 #!/bin/bash
 
 declare -A PROJECT_TO_NET_CONF
-PROJECT_TO_NET_CONF["subnet_kf-strides_prd"]="subnet-0cdbe9ba6231146b5"
-PROJECT_TO_NET_CONF["es_kf-strides_prd"]="https://vpc-kf-arranger-blue-es-service-exwupkrf4dyupg24dnfmvzcwri.us-east-1.es.amazonaws.com"
+PROJECT_TO_NET_CONF["subnet_kf-strides_qa"]="subnet-0f0e7d831ae675200"
+PROJECT_TO_NET_CONF["es_kf-strides_qa"]="https://vpc-kf-arranger-blue-es-service-exwupkrf4dyupg24dnfmvzcwri.us-east-1.es.amazonaws.com"
 PROJECT_TO_NET_CONF["subnet_include_qa"]="subnet-0f1161ac2ee2fba5b"
 PROJECT_TO_NET_CONF["es_include_qa"]="https://vpc-include-arranger-blue-es-qa-xf3ttht4hjmxjfoh5u5x4jnw34.us-east-1.es.amazonaws.com"
 
