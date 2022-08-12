@@ -11,7 +11,7 @@ set +x
 aws ecr get-login-password --region us-east-1 | docker login -u AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
 set -x
 
-env="{$1:-:'qa'}"
+env=${1:-'qa'}
 bucket="${AWS_ACCOUNT_NAME}-${AWS_ACCOUNT_ID}-datalake-${env}"
 job_dest="s3://${bucket}/jobs/"
 template_dest="s3://${bucket}/templates/"
