@@ -13,6 +13,13 @@ net_conf_extractor() {
   echo "${PROJECT_TO_NET_CONF["${ITEM}_${PROJECT}_${ENV}"]}"
 }
 
+build_fhavro_file_arg_suffix() {
+  # needed to accommodate file conventions in fhavro-export resources.
+  # (kf-strides vs kfdrc)
+  local suffix=$1
+  echo "${suffix/"kf-strides"/"kfdrc"}"
+}
+
 usage() {
   echo "Usage: $0 [arguments]"
   echo "Run ETL for a given project (Kids-First or Include)"
@@ -132,7 +139,7 @@ STEPS=$(
     "Jar":"command-runner.jar",
     "Args":[
       "bash","-c",
-      "aws s3 cp s3://${BUCKET}/jobs/fhavro-export.jar /home/hadoop; cd /home/hadoop; /usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar fhavro-export.jar ${RELEASE_ID} ${STUDIES} ${PROJECT}-${ENV}"
+      "aws s3 cp s3://${BUCKET}/jobs/fhavro-export.jar /home/hadoop; cd /home/hadoop; /usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar fhavro-export.jar ${RELEASE_ID} ${STUDIES} $(build_fhavro_file_arg_suffix "${PROJECT}"-"${ENV}")"
     ]
   },
 
