@@ -1,17 +1,6 @@
 #!/bin/bash
 
-declare -A PROJECT_TO_NET_CONF
-PROJECT_TO_NET_CONF["subnet_kf-strides_qa"]="subnet-0f0c909ec60b377ce"
-PROJECT_TO_NET_CONF["es_kf-strides_qa"]="https://vpc-kf-arranger-blue-es-service-exwupkrf4dyupg24dnfmvzcwri.us-east-1.es.amazonaws.com"
-PROJECT_TO_NET_CONF["subnet_include_qa"]="subnet-0f1161ac2ee2fba5b"
-PROJECT_TO_NET_CONF["es_include_qa"]="https://vpc-include-arranger-blue-es-qa-xf3ttht4hjmxjfoh5u5x4jnw34.us-east-1.es.amazonaws.com"
-
-net_conf_extractor() {
-  local ITEM=$1
-  local PROJECT=$2
-  local ENV=$3
-  echo "${PROJECT_TO_NET_CONF["${ITEM}_${PROJECT}_${ENV}"]}"
-}
+source "$(dirname "$0")/utils.sh"
 
 build_fhavro_file_arg_suffix() {
   # needed to accommodate file conventions in fhavro-export resources.
@@ -106,15 +95,11 @@ while :; do
   esac
 done
 
-
-
-case $PROJECT in
-    kf-strides|include);;
-    *)
-      echo "Project name must be equal to 'kf-strides' or 'include' but got: '${PROJECT}'"
-      exit 1
-       ;;
-esac
+IS_PROJECT_NAME_OK=$(check_project "$PROJECT")
+if [ "$IS_PROJECT_NAME_OK" -eq 1 ]; then
+  echo "Project name must be equal to 'kf-strides' or 'include' but got: '${PROJECT}'"
+  exit 1
+fi
 
 SUBNET=$(net_conf_extractor "subnet" "${PROJECT}" "${ENV}")
 ES_ENDPOINT=$(net_conf_extractor "es" "${PROJECT}" "${ENV}")

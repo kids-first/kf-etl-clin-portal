@@ -34,10 +34,10 @@ aws s3 cp publish-task/target/scala-2.12/publish-task.jar $job_dest
 echo "Copy templates ..."
 aws s3 cp --recursive index-task/target/scala-2.12/classes/templates/ $template_dest
 
-echo "Publish docker images"
-docker push "$AWS_ACCOUNT_ID".dkr.ecr.us-east-1.amazonaws.com/etl-fhavro-export:latest
-docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/etl-fhavro-export:$GIT_COMMIT
+#FIXME echo "Publish docker images"
+#FIXME docker push "$AWS_ACCOUNT_ID".dkr.ecr.us-east-1.amazonaws.com/etl-fhavro-export:latest
+#FIXME docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/etl-fhavro-export:$GIT_COMMIT
 
-docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/etl-publish-task:latest
-docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/etl-publish-task:$GIT_COMMIT
+#FIXME docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/etl-publish-task:latest
+#FIXME docker push $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/etl-publish-task:$GIT_COMMIT
 
