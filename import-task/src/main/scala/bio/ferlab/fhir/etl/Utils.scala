@@ -1,6 +1,5 @@
 package bio.ferlab.fhir.etl
 
-//import bio.ferlab.fhir.etl.ImportTask.expReleaseId
 
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions._
@@ -87,4 +86,8 @@ object Utils {
   val ignoredOmbCategoryCodes = Seq("UNK", "NAVU", "NI")
 
   val ombCategory: Column => Column = c => when(c("code").isin(ignoredOmbCategoryCodes: _*), lit(null)).otherwise(c("display"))
+
+  val pInclude = "include"
+  val pKfStrides = "kf-strides"
+  val allowedProjects: Seq[String] = List(pInclude, pKfStrides)
 }

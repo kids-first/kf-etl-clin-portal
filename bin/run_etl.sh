@@ -139,7 +139,8 @@ STEPS=$(
       "config/${ENV}-${PROJECT}.conf",
       "default",
       "${RELEASE_ID}",
-      "${STUDIES}"
+      "${STUDIES}",
+      "${PROJECT}"
     ],
     "Type": "CUSTOM_JAR",
     "ActionOnFailure": "TERMINATE_CLUSTER",
