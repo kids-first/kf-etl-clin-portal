@@ -2,10 +2,12 @@ package bio.ferlab.fhir.etl
 
 import bio.ferlab.datalake.spark3.public.SparkApp
 import bio.ferlab.fhir.etl.fhavro.FhavroToNormalizedMappings
+import org.slf4j.{Logger, LoggerFactory}
 
 object ImportTask extends SparkApp {
+  val LOGGER: Logger = LoggerFactory.getLogger(getClass)
 
-  println(s"ARGS: " + args.mkString("[", ", ", "]"))
+  LOGGER.info(s"ARGS: " + args.mkString("[", ", ", "]"))
 
   val Array(_, _, releaseId, studyIds) = args
 

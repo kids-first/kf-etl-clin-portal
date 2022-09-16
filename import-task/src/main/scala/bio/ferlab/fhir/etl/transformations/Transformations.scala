@@ -38,51 +38,6 @@ object Transformations {
 
   val age_at_bio_collection_on_set_intervals = Seq((0, 5), (5, 10), (10, 20), (20, 30), (30, 40), (40, 50), (50, 60), (60, 70), (70, 80))
 
-  val specimenMappings: List[Transformation] = List(
-    Custom { input =>
-      val specimen = input
-        .select("fhir_id", "release_id", "study_id", "type", "identifier", "collection", "subject", "status", "container", "parent", "processing")
-        .withColumn("sample_type", col("type")("text"))
-        .withColumn("sample_id", officialIdentifier)
-        .withColumn("laboratory_procedure", col("processing")(0)("description"))
-        .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
-        .withColumn("age_at_biospecimen_collection", col("collection._collectedDateTime.relativeDateTime.offset.value"))
-        .withColumn("age_at_biospecimen_collection_years", floor(col("age_at_biospecimen_collection") / 365).cast("int"))
-        .withColumn("age_at_biospecimen_collection_onset", age_on_set(col("age_at_biospecimen_collection_years"), age_at_bio_collection_on_set_intervals))
-        .withColumn("container", explode_outer(col("container")))
-        .withColumn("container_id", col("container")("identifier")(0)("value"))
-        .withColumn("volume", col("container")("specimenQuantity")("value"))
-        .withColumn("volume_unit", col("container")("specimenQuantity")("unit"))
-        .withColumn("biospecimen_storage", col("container")("description"))
-        .withColumn("parent", col("parent")(0))
-        .withColumn("parent_id", extractReferenceId(col("parent.reference")))
-        .withColumn("parent_0", struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(0) as "level"))
-
-      val parentRange = 1 to 10
-      val df = parentRange.foldLeft(specimen) { case (s, i) =>
-        val joined = specimen.select(struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(i) as "level") as s"parent_$i")
-        s.join(joined, s(s"parent_${i - 1}.parent_id") === joined(s"parent_$i.fhir_id"), "left")
-      }
-        .withColumn("parent_sample_type", col("parent_1.sample_type"))
-        .withColumn("parent_sample_id", col("parent_1.sample_id"))
-        .withColumn("parent_fhir_id", col("parent_1.fhir_id"))
-        .withColumn("collection_sample", coalesce(parentRange.reverse.map(p => col(s"parent_$p")): _*))
-        .withColumn("collection_sample_id", col("collection_sample.sample_id"))
-        .withColumn("collection_sample_type", col("collection_sample.sample_type"))
-        .withColumn("collection_fhir_id", col("collection_sample.fhir_id"))
-        .where(col("collection_fhir_id") =!= col("fhir_id")) //Filter out collection sample
-        .drop(parentRange.map(p => s"parent_$p"): _*)
-      val grouped = df.select(struct(col("*")) as "specimen")
-        .groupBy("specimen.fhir_id", "specimen.container_id")
-        .agg(first("specimen") as "specimen")
-        .select("specimen.*")
-      grouped
-    },
-    Drop("type", "identifier", "collection", "subject",
-      "parent",
-      "container", "collection_sample")
-  )
-
   val observationVitalStatusMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id", "release_id", "subject", "valueCodeableConcept", "identifier", "_effectiveDateTime", "study_id")
@@ -183,7 +138,7 @@ object Transformations {
       .withColumn("program", firstSystemEquals(flatten(col("keyword.coding")), SYS_PROGRAMS)("display"))
       .withColumn("website", extractDocUrl(col("relatedArtifact"))("url"))
     ),
-    Drop("title", "identifier", "principalInvestigator", "keyword","relatedArtifact")
+    Drop("title", "identifier", "principalInvestigator", "keyword", "relatedArtifact")
   )
 
   val documentreferenceMappings: List[Transformation] = List(
@@ -238,7 +193,7 @@ object Transformations {
   val groupMappings: List[Transformation] = List(
     Custom(_
       .select("*")
-      .where(exists(col("identifier"), identifier => identifier("system") === "https://kf-api-dataservice.kidsfirstdrc.org/families/" ) || exists(col("code.coding"), code => code("code") === "FAMMEMB"  ) )
+      .where(exists(col("identifier"), identifier => identifier("system") === "https://kf-api-dataservice.kidsfirstdrc.org/families/") || exists(col("code.coding"), code => code("code") === "FAMMEMB"))
       .withColumn("external_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
       .withColumn("family_id", officialIdentifier)
       .withColumn("exploded_member", explode(col("member")))
@@ -254,9 +209,56 @@ object Transformations {
     Drop()
   )
 
-  val extractionMappings: Map[String, List[Transformation]] = Map(
+  def specimenMappings(excludeCollection: Boolean): List[Transformation] = List(
+    Custom { input =>
+      val specimen = input
+        .select("fhir_id", "release_id", "study_id", "type", "identifier", "collection", "subject", "status", "container", "parent", "processing")
+        .withColumn("sample_type", col("type")("text"))
+        .withColumn("sample_id", officialIdentifier)
+        .withColumn("laboratory_procedure", col("processing")(0)("description"))
+        .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
+        .withColumn("age_at_biospecimen_collection", col("collection._collectedDateTime.relativeDateTime.offset.value"))
+        .withColumn("age_at_biospecimen_collection_years", floor(col("age_at_biospecimen_collection") / 365).cast("int"))
+        .withColumn("age_at_biospecimen_collection_onset", age_on_set(col("age_at_biospecimen_collection_years"), age_at_bio_collection_on_set_intervals))
+        .withColumn("container", explode_outer(col("container")))
+        .withColumn("container_id", col("container")("identifier")(0)("value"))
+        .withColumn("volume", col("container")("specimenQuantity")("value"))
+        .withColumn("volume_unit", col("container")("specimenQuantity")("unit"))
+        .withColumn("biospecimen_storage", col("container")("description"))
+        .withColumn("parent", col("parent")(0))
+        .withColumn("parent_id", extractReferenceId(col("parent.reference")))
+        .withColumn("parent_0", struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(0) as "level"))
+
+      val parentRange = 1 to 10
+      val samplesWithParent = parentRange.foldLeft(specimen) { case (s, i) =>
+        val joined = specimen.select(struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(i) as "level") as s"parent_$i")
+        s.join(joined, s(s"parent_${i - 1}.parent_id") === joined(s"parent_$i.fhir_id"), "left")
+      }
+        .withColumn("parent_sample_type", col("parent_1.sample_type"))
+        .withColumn("parent_sample_id", col("parent_1.sample_id"))
+        .withColumn("parent_fhir_id", col("parent_1.fhir_id"))
+        .withColumn("collection_sample", coalesce(parentRange.reverse.map(p => col(s"parent_$p")): _*))
+        .withColumn("collection_sample_id", col("collection_sample.sample_id"))
+        .withColumn("collection_sample_type", col("collection_sample.sample_type"))
+        .withColumn("collection_fhir_id", col("collection_sample.fhir_id"))
+
+      val sampleWithParentFiltered =
+        if (excludeCollection) samplesWithParent.where(col("collection_fhir_id") =!= col("fhir_id")) else samplesWithParent
+
+      val grouped = sampleWithParentFiltered.drop(parentRange.map(p => s"parent_$p"): _*).select(struct(col("*")) as "specimen")
+        .groupBy("specimen.fhir_id", "specimen.container_id")
+        .agg(first("specimen") as "specimen")
+        .select("specimen.*")
+      grouped
+    },
+    Drop("type", "identifier", "collection", "subject",
+      "parent",
+      "container", "collection_sample")
+  )
+
+  def extractionMappingsFor(excludeSpecimenCollection: Boolean): Map[String, List[Transformation]] = Map(
     "patient" -> patientMappings,
-    "specimen" -> specimenMappings,
+    "specimen" -> specimenMappings(excludeSpecimenCollection),
     "vital_status" -> observationVitalStatusMappings,
     "family_relationship" -> observationFamilyRelationshipMappings,
     "phenotype" -> conditionPhenotypeMappings,
@@ -267,5 +269,4 @@ object Transformations {
     "document_reference" -> documentreferenceMappings,
     "organization" -> organizationMappings
   )
-
 }
