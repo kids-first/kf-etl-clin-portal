@@ -10,9 +10,14 @@ case class SourceConfig(fhirResource: String, entityType: Option[String], partit
 case class Index(name: String, partitionBy: List[String])
 
 object ConfigurationGenerator extends App {
+  val pInclude = "include"
+  val pKfStrides = "kf-strides"
+
   def populateTable(sources: List[DatasetConf], tableName: String): List[DatasetConf] = {
     sources.map(ds => ds.copy(table = ds.table.map(t => TableConf(tableName, t.name))))
   }
+
+  def excludeSpecimenCollection(project: String): String = if (project == pKfStrides) "true" else "false"
 
   private val partitionByStudyIdAndReleaseId = List("study_id", "release_id")
   val sourceNames: Seq[SourceConfig] = Seq(
@@ -104,7 +109,7 @@ object ConfigurationGenerator extends App {
 
   val includeConf = Map("fhirDev" -> "https://include-api-fhir-service-dev.includedcc.org", "fhirQa" -> "https://include-api-fhir-service-dev.includedcc.org", "fhirPrd" -> "https://include-api-fhir-service-dev.includedcc.org", "qaDbName" -> "include_portal_qa", "prdDbName" -> "include_portal_prd", "localDbName" -> "normalized", "bucketNamePrefix" -> "include-373997854230-datalake")
   val kfConf = Map("fhirDev" -> "https://kf-api-fhir-service-qa.kidsfirstdrc.org", "fhirQa" -> "https://kf-api-fhir-service-qa.kidsfirstdrc.org", "fhirPrd" -> "https://kf-api-fhir-service.kidsfirstdrc.org", "qaDbName" -> "kf_portal_qa", "prdDbName" -> "kf_portal_prd", "localDbName" -> "normalized", "bucketNamePrefix" -> "kf-strides-232196027141-datalake")
-  val conf = Map("include" -> includeConf, "kf-strides" -> kfConf)
+  val conf = Map(pInclude -> includeConf, pKfStrides -> kfConf)
 
   conf.foreach { case (project, _) =>
     ConfigurationWriter.writeTo(s"config/output/config/dev-${project}.conf", Configuration(
@@ -126,7 +131,8 @@ object ConfigurationGenerator extends App {
         "spark.sql.extensions" -> "io.delta.sql.DeltaSparkSessionExtension",
         "spark.sql.legacy.timeParserPolicy" -> "CORRECTED",
         "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN",
-        "spark.fhir.server.url" -> conf(project)("fhirDev")
+        "spark.fhir.server.url" -> conf(project)("fhirDev"),
+        "data.mappings.specimen.excludeCollection" -> excludeSpecimenCollection(project)
       )
     ))
 
@@ -138,6 +144,7 @@ object ConfigurationGenerator extends App {
       "spark.sql.legacy.parquet.datetimeRebaseModeInWrite" -> "CORRECTED",
       "spark.sql.legacy.timeParserPolicy" -> "CORRECTED",
       "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN",
+      "data.mappings.specimen.excludeCollection" -> excludeSpecimenCollection(project)
     )
 
     ConfigurationWriter.writeTo(s"config/output/config/qa-${project}.conf", Configuration(

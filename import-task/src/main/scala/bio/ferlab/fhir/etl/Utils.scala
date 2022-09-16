@@ -87,7 +87,4 @@ object Utils {
 
   val ombCategory: Column => Column = c => when(c("code").isin(ignoredOmbCategoryCodes: _*), lit(null)).otherwise(c("display"))
 
-  val pInclude = "include"
-  val pKfStrides = "kf-strides"
-  val allowedProjects: Seq[String] = List(pInclude, pKfStrides)
 }

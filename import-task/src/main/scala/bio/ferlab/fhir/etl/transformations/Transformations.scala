@@ -1,7 +1,7 @@
 package bio.ferlab.fhir.etl.transformations
 
 import bio.ferlab.datalake.spark3.transformation.{Custom, Drop, Transformation}
-import bio.ferlab.fhir.etl.Utils.{extractFirstForSystem, pInclude, pKfStrides, _}
+import bio.ferlab.fhir.etl.Utils.{extractFirstForSystem, _}
 import bio.ferlab.fhir.etl._
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.{col, collect_list, explode, filter, regexp_extract, struct, when, _}
@@ -209,7 +209,7 @@ object Transformations {
     Drop()
   )
 
-  def specimenMappings(project: String): List[Transformation] = List(
+  def specimenMappings(excludeCollection: Boolean): List[Transformation] = List(
     Custom { input =>
       val specimen = input
         .select("fhir_id", "release_id", "study_id", "type", "identifier", "collection", "subject", "status", "container", "parent", "processing")
@@ -230,7 +230,7 @@ object Transformations {
         .withColumn("parent_0", struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(0) as "level"))
 
       val parentRange = 1 to 10
-      val df = parentRange.foldLeft(specimen) { case (s, i) =>
+      val samplesWithParent = parentRange.foldLeft(specimen) { case (s, i) =>
         val joined = specimen.select(struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(i) as "level") as s"parent_$i")
         s.join(joined, s(s"parent_${i - 1}.parent_id") === joined(s"parent_$i.fhir_id"), "left")
       }
@@ -241,12 +241,11 @@ object Transformations {
         .withColumn("collection_sample_id", col("collection_sample.sample_id"))
         .withColumn("collection_sample_type", col("collection_sample.sample_type"))
         .withColumn("collection_fhir_id", col("collection_sample.fhir_id"))
-        .where(project match {
-          case `pInclude` => col("collection_fhir_id") =!= col("fhir_id")
-          case  _ => lit(true)
-        })
-        .drop(parentRange.map(p => s"parent_$p"): _*)
-      val grouped = df.select(struct(col("*")) as "specimen")
+
+      val sampleWithParentFiltered =
+        if (excludeCollection) samplesWithParent.where(col("collection_fhir_id") =!= col("fhir_id")) else samplesWithParent
+
+      val grouped = sampleWithParentFiltered.drop(parentRange.map(p => s"parent_$p"): _*).select(struct(col("*")) as "specimen")
         .groupBy("specimen.fhir_id", "specimen.container_id")
         .agg(first("specimen") as "specimen")
         .select("specimen.*")
@@ -257,9 +256,9 @@ object Transformations {
       "container", "collection_sample")
   )
 
-  def extractionMappingsFor(project: String): Map[String, List[Transformation]] = Map(
+  def extractionMappingsFor(excludeSpecimenCollection: Boolean): Map[String, List[Transformation]] = Map(
     "patient" -> patientMappings,
-    "specimen" -> specimenMappings(project),
+    "specimen" -> specimenMappings(excludeSpecimenCollection),
     "vital_status" -> observationVitalStatusMappings,
     "family_relationship" -> observationFamilyRelationshipMappings,
     "phenotype" -> conditionPhenotypeMappings,

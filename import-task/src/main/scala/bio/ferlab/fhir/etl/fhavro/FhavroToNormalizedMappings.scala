@@ -21,10 +21,11 @@ object FhavroToNormalizedMappings {
     ))
   }
 
-  def mappings(releaseId: String, project: String)(implicit c: Configuration): List[(DatasetConf, DatasetConf, List[Transformation])] = {
+  def mappings(releaseId: String)(implicit c: Configuration): List[(DatasetConf, DatasetConf, List[Transformation])] = {
     c.sources.filter(s => s.format == Format.AVRO).map(s => {
       val pattern(table) = s.id
-      val mappings = extractionMappingsFor(project)
+      val excludeSpecimenCollection = c.sparkconf.getOrElse("data.mappings.specimen.excludeCollection", "false") == "true"
+      val mappings = extractionMappingsFor(excludeSpecimenCollection)
       (s, c.getDataset(s"normalized_$table"), defaultTransformations(releaseId) ++ mappings(table))
     }
     )
