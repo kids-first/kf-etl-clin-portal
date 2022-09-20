@@ -20,17 +20,18 @@ class FhavroToNormalizedMappingsSpec
 
   "method generateFhirIdColumFromIdColum" should "extract fhir ids when specific urls" in {
     var df = Seq(
-      "http://localhost:8000/Condition/1/_history",
-      "https://fhir/a/2/_history",
-      "https://fhir/a/b/c/2a/_history",
-      "https://fhir/123/xyz"
+      "http://localhost:8000/Condition/1/_history?count=2",
+      "https://fhir/a/2/_history/2",
+      "https://fhir/a/b/c/2a/_history/4",
+      "https://fhir/123/xyz",
+      "http://localhost:8000/Patient/433003/_history/2"
     ).toDF("id")
 
     df = df.withColumn("fhir_id", generateFhirIdColumValueFromIdColum())
     df.select(col("fhir_id"))
       .as[String]
       .collect() should contain theSameElementsAs
-      Seq("1", "2", "2a", "")
+      Seq("1", "2", "2a", "", "433003")
   }
 
   "method mappings" should "not throw an exception when configs are well-formed (focus on specimen)" in {
