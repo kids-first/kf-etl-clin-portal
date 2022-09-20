@@ -15,6 +15,7 @@
       "spark.network.timeout": "1000000",
       "spark.hadoop.parquet.block.size": "1073741824",
       "spark.hadoop.dfs.block.size": "1073741824",
+      "spark.hadoop.fs.s3a.multiobjectdelete.enable": "false",
       "parquet.block.size": "1073741824",
       "spark.hadoop.fs.s3a.connection.maximum": "5000",
       "spark.sql.extensions": "io.delta.sql.DeltaSparkSessionExtension",
