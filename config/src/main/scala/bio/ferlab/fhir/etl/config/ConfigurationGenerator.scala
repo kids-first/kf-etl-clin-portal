@@ -17,7 +17,7 @@ object ConfigurationGenerator extends App {
     sources.map(ds => ds.copy(table = ds.table.map(t => TableConf(tableName, t.name))))
   }
 
-  def excludeSpecimenCollection(project: String): String = if (project == pKfStrides) "false" else "true"
+  def excludeSpecimenCollection(project: String): Boolean = project != pKfStrides
 
   private val partitionByStudyIdAndReleaseId = List("study_id", "release_id")
   val sourceNames: Seq[SourceConfig] = Seq(
@@ -112,29 +112,35 @@ object ConfigurationGenerator extends App {
   val conf = Map(pInclude -> includeConf, pKfStrides -> kfConf)
 
   conf.foreach { case (project, _) =>
-    ConfigurationWriter.writeTo(s"config/output/config/dev-${project}.conf", Configuration(
-      storages = List(
-        StorageConf(storage, "s3a://storage", S3)
-      ),
-      sources = populateTable(sources, conf(project)("localDbName")),
-      args = args.toList,
-      sparkconf = Map(
-        "spark.databricks.delta.retentionDurationCheck.enabled" -> "false",
-        "spark.delta.merge.repartitionBeforeWrite" -> "true",
-        "spark.hadoop.fs.s3a.access.key" -> "${?AWS_ACCESS_KEY}",
-        "spark.hadoop.fs.s3a.endpoint" -> "${?AWS_ENDPOINT}",
-        "spark.hadoop.fs.s3a.impl" -> "org.apache.hadoop.fs.s3a.S3AFileSystem",
-        "spark.hadoop.fs.s3a.path.style.access" -> "true",
-        "spark.hadoop.fs.s3a.secret.key" -> "${?AWS_SECRET_KEY}",
-        "spark.master" -> "local",
-        "spark.sql.catalog.spark_catalog" -> "org.apache.spark.sql.delta.catalog.DeltaCatalog",
-        "spark.sql.extensions" -> "io.delta.sql.DeltaSparkSessionExtension",
-        "spark.sql.legacy.timeParserPolicy" -> "CORRECTED",
-        "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN",
-        "spark.fhir.server.url" -> conf(project)("fhirDev"),
-        "data.mappings.specimen.excludeCollection" -> excludeSpecimenCollection(project)
+    ConfigurationWriter.writeTo(s"config/output/config/dev-${project}.conf",
+      ETLConfiguration(
+        datalake = DatalakeConf(
+          storages = List(
+            StorageConf(storage, "s3a://storage", S3)
+          ),
+          sources = populateTable(sources, conf(project)("localDbName")),
+          args = args.toList,
+          sparkconf = Map(
+            "spark.databricks.delta.retentionDurationCheck.enabled" -> "false",
+            "spark.delta.merge.repartitionBeforeWrite" -> "true",
+            "spark.hadoop.fs.s3a.access.key" -> "${?AWS_ACCESS_KEY}",
+            "spark.hadoop.fs.s3a.endpoint" -> "${?AWS_ENDPOINT}",
+            "spark.hadoop.fs.s3a.impl" -> "org.apache.hadoop.fs.s3a.S3AFileSystem",
+            "spark.hadoop.fs.s3a.path.style.access" -> "true",
+            "spark.hadoop.fs.s3a.secret.key" -> "${?AWS_SECRET_KEY}",
+            "spark.master" -> "local",
+            "spark.sql.catalog.spark_catalog" -> "org.apache.spark.sql.delta.catalog.DeltaCatalog",
+            "spark.sql.extensions" -> "io.delta.sql.DeltaSparkSessionExtension",
+            "spark.sql.legacy.timeParserPolicy" -> "CORRECTED",
+            "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN",
+            "spark.fhir.server.url" -> conf(project)("fhirDev"),
+            "data.mappings.specimen.excludeCollection" -> excludeSpecimenCollection(project).toString
+          )
+        ),
+        excludespecimencollection = excludeSpecimenCollection(project)
       )
-    ))
+    )
+
 
     val spark_conf = Map(
       "spark.databricks.delta.retentionDurationCheck.enabled" -> "false",
@@ -144,26 +150,36 @@ object ConfigurationGenerator extends App {
       "spark.sql.legacy.parquet.datetimeRebaseModeInWrite" -> "CORRECTED",
       "spark.sql.legacy.timeParserPolicy" -> "CORRECTED",
       "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN",
-      "spark.hadoop.fs.s3a.multiobjectdelete.enable" -> "false", //https://hadoop.apache.org/docs/stable/hadoop-aws/tools/hadoop-aws/troubleshooting_s3a.html#MultiObjectDeleteException_during_delete_or_rename_of_files
-      "data.mappings.specimen.excludeCollection" -> excludeSpecimenCollection(project)
+      "data.mappings.specimen.excludeCollection" -> excludeSpecimenCollection(project).toString
     )
 
-    ConfigurationWriter.writeTo(s"config/output/config/qa-${project}.conf", Configuration(
-      storages = List(
-        StorageConf(storage, s"s3a://${conf(project)("bucketNamePrefix")}-qa", S3)
-      ),
-      sources = populateTable(sources, conf(project)("qaDbName")),
-      args = args.toList,
-      sparkconf = spark_conf.++(Map("spark.fhir.server.url" -> conf(project)("fhirQa")))
-    ))
+    ConfigurationWriter.writeTo(s"config/output/config/qa-${project}.conf",
+      ETLConfiguration(
+        datalake = DatalakeConf(
+          storages = List(
+            StorageConf(storage, s"s3a://${conf(project)("bucketNamePrefix")}-qa", S3)
+          ),
+          sources = populateTable(sources, conf(project)("qaDbName")),
+          args = args.toList,
+          sparkconf = spark_conf.++(Map("spark.fhir.server.url" -> conf(project)("fhirQa"))
+          )
+        ),
+        excludespecimencollection = excludeSpecimenCollection(project)
+      )
+    )
 
-    ConfigurationWriter.writeTo(s"config/output/config/prd-${project}.conf", Configuration(
-      storages = List(
-        StorageConf(storage, s"s3a://${conf(project)("bucketNamePrefix")}-prd", S3)
-      ),
-      sources = populateTable(sources, conf(project)("prdDbName")),
-      args = args.toList,
-      sparkconf = spark_conf.++(Map("spark.fhir.server.url" -> conf(project)("fhirPrd")))
-    ))
+    ConfigurationWriter.writeTo(s"config/output/config/prd-${project}.conf",
+      ETLConfiguration(
+        datalake = DatalakeConf(
+          storages = List(
+            StorageConf(storage, s"s3a://${conf(project)("bucketNamePrefix")}-prd", S3)
+          ),
+          sources = populateTable(sources, conf(project)("prdDbName")),
+          args = args.toList,
+          sparkconf = spark_conf.++(Map("spark.fhir.server.url" -> conf(project)("fhirPrd")))
+        ),
+        excludespecimencollection = excludeSpecimenCollection(project)
+      )
+    )
   }
 }

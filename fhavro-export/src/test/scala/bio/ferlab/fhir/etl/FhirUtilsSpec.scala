@@ -1,10 +1,10 @@
 package bio.ferlab.fhir.etl
 
 import bio.ferlab.fhir.etl.fhir.FhirUtils
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.flatspec.AnyFlatSpec
 
-class FhirUtilsSpec extends FlatSpec{
+class FhirUtilsSpec extends AnyFlatSpec with Matchers {
 
   "replaceBaseUrl" should "work" in {
     val s = "https://include-api-fhir-service-qa.includedcc.org?_getpages=42a243b1-4211-4ebc-b009-3c59ba68a300&_getpagesoffset=50&_count=50&_bundletype=searchset"

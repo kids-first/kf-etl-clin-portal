@@ -1,3 +1,7 @@
+#!/usr/local/bin/bash
+
+set -e
+set -x
 declare -A PROJECT_TO_NET_CONF
 PROJECT_TO_NET_CONF["subnet_kf-strides_qa"]="subnet-0f0c909ec60b377ce"
 PROJECT_TO_NET_CONF["es_kf-strides_qa"]="https://vpc-kf-arranger-blue-es-service-exwupkrf4dyupg24dnfmvzcwri.us-east-1.es.amazonaws.com"

@@ -5,13 +5,13 @@ lazy val config = project in file("config")
 lazy val fhavro_export = project in file("fhavro-export")
 
 val sparkDepsSetting = Seq(
-  libraryDependencies ++= Seq("bio.ferlab" %% "datalake-spark31" % "0.2.20",
+  libraryDependencies ++= Seq("bio.ferlab" %% "datalake-spark3" % "3.1.0",
     "org.apache.spark" %% "spark-sql" % "3.1.2" % Provided,
     "org.apache.spark" %% "spark-hive" % "3.1.2" % Provided,
     "org.apache.hadoop" % "hadoop-client" % "3.2.0" % Provided,
     "org.apache.hadoop" % "hadoop-aws" % "3.2.0" % Provided,
     "io.delta" %% "delta-core" % "1.0.0" % Provided,
-    "org.scalatest" %% "scalatest" % "3.0.8" % Test
+    "org.scalatest" %% "scalatest" % "3.2.12" % Test
   )
 )
 
@@ -40,10 +40,10 @@ val commonSettings = Seq(
 
 
 )
-lazy val import_task = (project in file("import-task")).settings(commonSettings ++ sparkDepsSetting)
+lazy val import_task = (project in file("import-task")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
 
-lazy val prepare_index = (project in file("prepare-index")).settings(commonSettings ++ sparkDepsSetting)
+lazy val prepare_index = (project in file("prepare-index")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
 
-lazy val index_task = (project in file("index-task")).settings(commonSettings ++ sparkDepsSetting)
+lazy val index_task = (project in file("index-task")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
 
-lazy val publish_task = (project in file("publish-task")).settings(commonSettings)
+lazy val publish_task = (project in file("publish-task")).dependsOn(config).settings(commonSettings)

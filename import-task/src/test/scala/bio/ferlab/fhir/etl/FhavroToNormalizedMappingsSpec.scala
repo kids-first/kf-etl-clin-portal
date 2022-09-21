@@ -2,15 +2,17 @@ package bio.ferlab.fhir.etl
 
 import bio.ferlab.datalake.commons.config.Format.{AVRO, DELTA}
 import bio.ferlab.datalake.commons.config.LoadType.{OverWrite, OverWritePartition}
-import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf, StorageConf, TableConf}
+import bio.ferlab.datalake.commons.config.{DatalakeConf, DatasetConf, StorageConf, TableConf}
 import bio.ferlab.datalake.commons.file.FileSystemType.S3
+import bio.ferlab.fhir.etl.config.ETLConfiguration
 import bio.ferlab.fhir.etl.fhavro.FhavroToNormalizedMappings.{generateFhirIdColumValueFromIdColum, mappings}
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.internal.SQLConf.LegacyBehaviorPolicy.CORRECTED
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 class FhavroToNormalizedMappingsSpec
-  extends FlatSpec
+  extends AnyFlatSpec
     with Matchers
     with WithSparkSession {
 
@@ -70,11 +72,12 @@ class FhavroToNormalizedMappingsSpec
       "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN,",
       "data.mappings.specimen.excludeCollection" -> "true"
     )
-    val c1 = Configuration(
+    val c1 = ETLConfiguration(datalake = DatalakeConf(
       storages,
       sources,
       List.empty,
-      sparkConfWithExcludeCollectionEntry
+      sparkConfWithExcludeCollectionEntry),
+      excludespecimencollection = true
     )
     noException should be thrownBy mappings("re")(c1)
 
@@ -88,11 +91,12 @@ class FhavroToNormalizedMappingsSpec
       "spark.sql.legacy.timeParserPolicy" -> CORRECTED.toString,
       "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN,"
     )
-    val c2 = Configuration(
+    val c2 = ETLConfiguration(datalake = DatalakeConf(
       storages,
       sources,
       List.empty,
-      sparkConfWithoutExcludeCollectionEntry
+      sparkConfWithoutExcludeCollectionEntry),
+      excludespecimencollection = false
     )
     noException should be thrownBy mappings("re")(c2)
   }

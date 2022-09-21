@@ -1,6 +1,7 @@
 package bio.ferlab.fhir.etl.centricTypes
 
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
+import bio.ferlab.datalake.spark3.etl.ETLSingleDestination
 import bio.ferlab.datalake.spark3.etl.v2.ETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
 import bio.ferlab.datalake.spark3.loader.GenericLoader.read
@@ -9,7 +10,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
 
-class StudyCentric(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETL {
+class StudyCentric(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETLSingleDestination {
 
   override val mainDestination: DatasetConf = conf.getDataset("es_index_study_centric")
   val normalized_researchstudy: DatasetConf = conf.getDataset("normalized_research_study")
@@ -27,9 +28,9 @@ class StudyCentric(releaseId: String, studyIds: List[String])(implicit configura
 
   }
 
-  override def transform(data: Map[String, DataFrame],
+  override def transformSingle(data: Map[String, DataFrame],
                          lastRunDateTime: LocalDateTime = minDateTime,
-                         currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
+                         currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): DataFrame = {
     val studyDF = data(normalized_researchstudy.id)
 
     val countPatientDf = data(normalized_patient.id).groupBy("study_id").count().withColumnRenamed("count", "participant_count")
@@ -60,12 +61,7 @@ class StudyCentric(releaseId: String, studyIds: List[String])(implicit configura
       .withColumn("family_count", coalesce(col("family_count"), lit(0)))
       .withColumn("family_data", col("family_count").gt(0))
 
-    Map(mainDestination.id -> transformedStudyDf)
+    transformedStudyDf
   }
 
-  override def load(data: Map[String, DataFrame],
-                    lastRunDateTime: LocalDateTime = minDateTime,
-                    currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    super.load(data)
-  }
 }

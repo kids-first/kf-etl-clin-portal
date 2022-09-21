@@ -1,12 +1,14 @@
 package bio.ferlab.fhir.etl
 
-import bio.ferlab.datalake.commons.config.{Configuration, ConfigurationLoader, DatasetConf}
+import bio.ferlab.datalake.commons.config.{Configuration, ConfigurationLoader, DatasetConf, SimpleConfiguration}
 import bio.ferlab.datalake.spark3.elasticsearch.{ElasticSearchClient, Indexer}
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{DataFrame, SparkSession}
-
+import pureconfig.generic.auto._
+// This import is used to deserialize enum in configuration
+import pureconfig.module.enum._
 
 object IndexTask extends App {
 
@@ -21,7 +23,7 @@ object IndexTask extends App {
   configFile        // config/qa-[project].conf or config/prod.conf or config/dev-[project].conf
   ) = args
 
-  implicit val conf: Configuration = ConfigurationLoader.loadFromResources(configFile)
+  implicit val conf: Configuration = ConfigurationLoader.loadFromResources[SimpleConfiguration](configFile)
 
   val esConfigs = Map(
     "es.index.auto.create" -> "true",

@@ -5,9 +5,10 @@ import bio.ferlab.fhir.etl.config.FhirRequest
 import bio.ferlab.fhir.etl.fhir.FhirServerSuite
 import bio.ferlab.fhir.etl.minio.MinioServerSuite
 import bio.ferlab.fhir.etl.task.FhavroExporter
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class FhavroExporterTest extends FlatSpec with FhirServerSuite with MinioServerSuite with Matchers {
+class FhavroExporterTest extends AnyFlatSpec with FhirServerSuite with MinioServerSuite with Matchers {
 
   "requestExportFor" should "return a List of Fhir Resource by tag" in {
     val fhirRequest = FhirRequest("Patient", "kfdrc-patient", None, None, None, None, None)

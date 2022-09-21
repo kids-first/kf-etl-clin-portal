@@ -4,9 +4,10 @@ import model._
 import org.apache.spark.sql.{DataFrame, functions}
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions.{assert_true, col, collect_list, count, countDistinct, dense_rank, explode_outer, first, max, struct, when}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
+class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
 
   import spark.implicits._
 

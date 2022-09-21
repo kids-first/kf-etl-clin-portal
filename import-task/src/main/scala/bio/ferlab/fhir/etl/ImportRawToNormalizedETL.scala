@@ -5,6 +5,7 @@ import bio.ferlab.datalake.spark3.etl.v2.RawToNormalizedETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
 import bio.ferlab.datalake.spark3.loader.LoadResolver
 import bio.ferlab.datalake.spark3.transformation.Transformation
+import bio.ferlab.datalake.spark3.utils.Coalesce
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -28,18 +29,6 @@ class ImportRawToNormalizedETL(override val source: DatasetConf,
     )
   }
 
-  override def load(data: Map[String, DataFrame],
-                    lastRunDateTime: LocalDateTime = minDateTime,
-                    currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    data.map { case (dsid, df) =>
-      val ds = conf.getDataset(dsid)
-      val nbPartitions = 10
-      LoadResolver
-        .write(spark, conf)(ds.format -> ds.loadtype)
-        .apply(ds, df.coalesce(nbPartitions))
-      dsid -> ds.read
-    }
-
-  }
+  override def defaultRepartition: DataFrame => DataFrame = Coalesce(10)
 
 }
