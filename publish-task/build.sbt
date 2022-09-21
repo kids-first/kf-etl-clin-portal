@@ -3,7 +3,7 @@ val organization = "bio.ferlab"
 val version = "1.0"
 
 libraryDependencies ++= Seq(
-  "bio.ferlab" %% "datalake-spark3" % "3.1.0",
+  "bio.ferlab" %% "datalake-spark3" % "3.1.1",
   "org.json4s" %% "json4s-jackson" % "3.7.0-M5",
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.2",
   "org.apache.httpcomponents" % "httpclient" % "4.5.13",

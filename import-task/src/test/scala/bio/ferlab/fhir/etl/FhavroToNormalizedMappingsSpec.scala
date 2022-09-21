@@ -77,7 +77,7 @@ class FhavroToNormalizedMappingsSpec
       sources,
       List.empty,
       sparkConfWithExcludeCollectionEntry),
-      excludespecimencollection = true
+      excludeSpecimenCollection = true
     )
     noException should be thrownBy mappings("re")(c1)
 
@@ -96,7 +96,7 @@ class FhavroToNormalizedMappingsSpec
       sources,
       List.empty,
       sparkConfWithoutExcludeCollectionEntry),
-      excludespecimencollection = false
+      excludeSpecimenCollection = false
     )
     noException should be thrownBy mappings("re")(c2)
   }

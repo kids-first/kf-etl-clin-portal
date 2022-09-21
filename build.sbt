@@ -5,7 +5,7 @@ lazy val config = project in file("config")
 lazy val fhavro_export = project in file("fhavro-export")
 
 val sparkDepsSetting = Seq(
-  libraryDependencies ++= Seq("bio.ferlab" %% "datalake-spark3" % "3.1.0",
+  libraryDependencies ++= Seq("bio.ferlab" %% "datalake-spark3" % "3.1.1",
     "org.apache.spark" %% "spark-sql" % "3.1.2" % Provided,
     "org.apache.spark" %% "spark-hive" % "3.1.2" % Provided,
     "org.apache.hadoop" % "hadoop-client" % "3.2.0" % Provided,
@@ -40,6 +40,9 @@ val commonSettings = Seq(
 
 
 )
+
+resolvers ++= Seq("Sonatype OSS Releases" at "https://s01.oss.sonatype.org/content/repositories/snapshots/")
+
 lazy val import_task = (project in file("import-task")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
 
 lazy val prepare_index = (project in file("prepare-index")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)

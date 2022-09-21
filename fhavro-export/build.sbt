@@ -33,8 +33,6 @@ libraryDependencies ++= Seq(
 
 Test / fork := true
 
-resolvers ++= Seq("Sonatype OSS Releases" at "https://s01.oss.sonatype.org/content/repositories/snapshots/")
-
 assembly / assemblyMergeStrategy:= {
   case PathList("META-INF", _*) => MergeStrategy.discard
   case _ => MergeStrategy.first

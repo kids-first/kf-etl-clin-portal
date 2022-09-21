@@ -137,7 +137,7 @@ object ConfigurationGenerator extends App {
             "data.mappings.specimen.excludeCollection" -> excludeSpecimenCollection(project).toString
           )
         ),
-        excludespecimencollection = excludeSpecimenCollection(project)
+        excludeSpecimenCollection = excludeSpecimenCollection(project)
       )
     )
 
@@ -164,7 +164,7 @@ object ConfigurationGenerator extends App {
           sparkconf = spark_conf.++(Map("spark.fhir.server.url" -> conf(project)("fhirQa"))
           )
         ),
-        excludespecimencollection = excludeSpecimenCollection(project)
+        excludeSpecimenCollection = excludeSpecimenCollection(project)
       )
     )
 
@@ -178,7 +178,7 @@ object ConfigurationGenerator extends App {
           args = args.toList,
           sparkconf = spark_conf.++(Map("spark.fhir.server.url" -> conf(project)("fhirPrd")))
         ),
-        excludespecimencollection = excludeSpecimenCollection(project)
+        excludeSpecimenCollection = excludeSpecimenCollection(project)
       )
     )
   }
