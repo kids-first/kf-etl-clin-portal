@@ -33,9 +33,7 @@ class StudyCentric(releaseId: String, studyIds: List[String])(implicit configura
     val studyDF = data(normalized_researchstudy.id)
 
     val countPatientDf = data(normalized_patient.id).groupBy("study_id").count().withColumnRenamed("count", "participant_count")
-    val countFamilyDf = data(normalized_group.id).groupBy("study_id").count()
-      .withColumn("family_count", when(col("count").leq(1), lit(0)).otherwise(col("count")))
-      .drop(col("count"))
+    val countFamilyDf = data(normalized_group.id).filter(col("quantity").gt(1)).groupBy("study_id").count().withColumnRenamed("count", "family_count")
 
     val countFileDf = data(normalized_drs_document_reference.id).groupBy("study_id")
       .agg( count(lit(1)) as "file_count",
