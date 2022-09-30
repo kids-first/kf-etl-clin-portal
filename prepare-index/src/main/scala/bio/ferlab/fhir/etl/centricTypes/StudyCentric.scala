@@ -4,7 +4,7 @@ import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.v2.ETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
 import bio.ferlab.datalake.spark3.loader.GenericLoader.read
-import org.apache.spark.sql.functions.{array, coalesce, col, collect_set, count, lit, when}
+import org.apache.spark.sql.functions.{array, coalesce, col, collect_set, count, lit, size, when}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
@@ -33,7 +33,7 @@ class StudyCentric(releaseId: String, studyIds: List[String])(implicit configura
     val studyDF = data(normalized_researchstudy.id)
 
     val countPatientDf = data(normalized_patient.id).groupBy("study_id").count().withColumnRenamed("count", "participant_count")
-    val countFamilyDf = data(normalized_group.id).filter(col("quantity").gt(1)).groupBy("study_id").count().withColumnRenamed("count", "family_count")
+    val countFamilyDf = data(normalized_group.id).filter(size(col("family_members")).gt(1)).groupBy("study_id").count().withColumnRenamed("count", "family_count")
 
     val countFileDf = data(normalized_drs_document_reference.id).groupBy("study_id")
       .agg( count(lit(1)) as "file_count",

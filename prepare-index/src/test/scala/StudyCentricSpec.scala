@@ -15,7 +15,7 @@ class StudyCentricSpec extends FlatSpec with Matchers with WithSparkSession {
       "normalized_research_study" -> Seq(RESEARCHSTUDY()).toDF(),
       "normalized_patient" -> Seq(PATIENT(), PATIENT()).toDF(),
       "normalized_document_reference" -> Seq(DOCUMENTREFERENCE(), DOCUMENTREFERENCE(), DOCUMENTREFERENCE()).toDF(),
-      "normalized_group" -> Seq(GROUP(), GROUP(quantity = "1")).toDF(),
+      "normalized_group" -> Seq(GROUP(), GROUP()).toDF(),
       "normalized_specimen" -> Seq(
         BIOSPECIMEN(fhir_id = "1", `specimen_id` = "id1"),
         BIOSPECIMEN(fhir_id = "2", `specimen_id` = "id2")
@@ -28,7 +28,7 @@ class StudyCentricSpec extends FlatSpec with Matchers with WithSparkSession {
 
     val study_centric = output("es_index_study_centric")
     study_centric.as[STUDY_CENTRIC].collect() should contain theSameElementsAs
-      Seq(STUDY_CENTRIC(`participant_count` = 2, `file_count` = 3, `family_count` = 1, `family_data` = true, `biospecimen_count` = 2))
+      Seq(STUDY_CENTRIC(`participant_count` = 2, `file_count` = 3, `family_count` = 0, `family_data` = false, `biospecimen_count` = 2))
   }
 
   "transform" should "prepare inde study_centric with family_data false if no group" in {
