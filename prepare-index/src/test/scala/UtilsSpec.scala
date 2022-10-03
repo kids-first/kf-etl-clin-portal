@@ -14,7 +14,11 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
 
   val SCHEMA_CONDITION_CODING = "array<struct<category:string,code:string>>"
   val allHpoTerms: DataFrame = read(getClass.getResource("/hpo_terms.json").toString, "Json", Map(), None, None)
-  val allMondoTerms: DataFrame = read(getClass.getResource("/mondo_terms.json").toString, "Json", Map(), None, None)
+  val allMondoTerms: DataFrame = read(getClass.getResource("/mondo_terms.json.gz").toString, "Json", Map(), None, None)
+
+  "addStudy" should "add studies to participantaaaa" in {
+    val allMondoTerms: DataFrame = read(getClass.getResource("/mondo_terms.json.gz").toString, "Json", Map(), None, None)
+  }
 
   "addStudy" should "add studies to participant" in {
     val inputStudies = Seq(RESEARCHSTUDY()).toDF()
