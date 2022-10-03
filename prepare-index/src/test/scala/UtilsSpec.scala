@@ -16,8 +16,17 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
   val allHpoTerms: DataFrame = read(getClass.getResource("/hpo_terms.json").toString, "Json", Map(), None, None)
   val allMondoTerms: DataFrame = read(getClass.getResource("/mondo_terms.json.gz").toString, "Json", Map(), None, None)
 
+  case class TestTerm (id: String, name: String)
+  case class TestMondo (
+                      id:String,
+                      name: String,
+                      ancestors: Seq[TestTerm] = Nil
+                      )
+
   "addStudy" should "add studies to participantaaaa" in {
     val allMondoTerms: DataFrame = read(getClass.getResource("/mondo_terms.json.gz").toString, "Json", Map(), None, None)
+    allMondoTerms.printSchema()
+    allMondoTerms.show(false)
   }
 
   "addStudy" should "add studies to participant" in {
@@ -60,10 +69,11 @@ class UtilsSpec extends FlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val mondoTerms = Seq(
-      ("MONDO:0000000", "Another Term", Nil),
-      ("MONDO:0008608", "Down Syndrome", Nil),
-      ("MONDO:0008609", "Down Syndrome level 2", Seq("Down Syndrome (MONDO:0008608)"))
-    ).toDF("id", "name", "parents")
+      TestMondo("MONDO:0000000", "Another Term", Nil),
+      TestMondo("MONDO:0008608", "Down Syndrome", Nil),
+//      ("MONDO:0008609", "Down Syndrome level 2", Seq("Down Syndrome (MONDO:0008608)"))
+      TestMondo("MONDO:0008609", "Down Syndrome level 2", Seq(TestTerm(id = "MONDO:0008608", name = "Down Syndrome")))
+    ).toDF   //.toDF("id", "name", "ancestors")
     val inputDiseases = Seq(
       CONDITION_DISEASE(`fhir_id` = "O1", `participant_fhir_id` = "P1", `mondo_id` = Some("MONDO:0008608")),
       CONDITION_DISEASE(`fhir_id` = "O2", `participant_fhir_id` = "P1", `mondo_id` = Some("MONDO:0008609")),
