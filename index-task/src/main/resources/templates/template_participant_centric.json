@@ -381,6 +381,7 @@
           }
         },
         "outcomes": {
+          "type": "nested",
           "properties": {
             "age_at_event_days": {
               "properties": {
