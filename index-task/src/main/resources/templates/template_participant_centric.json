@@ -407,6 +407,12 @@
             },
             "vital_status": {
               "type": "keyword"
+            },
+            "release_id": {
+              "type": "keyword"
+            },
+            "study_id": {
+              "type": "keyword"
             }
           }
         },
