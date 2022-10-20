@@ -107,7 +107,7 @@ object ConfigurationGenerator extends App {
     )
   })).toList
 
-  val includeConf = Map("fhirDev" -> "https://include-api-fhir-service-dev.includedcc.org", "fhirQa" -> "https://include-api-fhir-service-dev.includedcc.org", "fhirPrd" -> "https://include-api-fhir-service-dev.includedcc.org", "qaDbName" -> "include_portal_qa", "prdDbName" -> "include_portal_prd", "localDbName" -> "normalized", "bucketNamePrefix" -> "include-373997854230-datalake")
+  val includeConf = Map("fhirDev" -> "https://include-api-fhir-service-dev.includedcc.org", "fhirQa" -> "https://include-api-fhir-service-dev.includedcc.org", "fhirPrd" -> "https://include-api-fhir-service.includedcc.org", "qaDbName" -> "include_portal_qa", "prdDbName" -> "include_portal_prd", "localDbName" -> "normalized", "bucketNamePrefix" -> "include-373997854230-datalake")
   val kfConf = Map("fhirDev" -> "https://kf-api-fhir-service-qa.kidsfirstdrc.org", "fhirQa" -> "https://kf-api-fhir-service-qa.kidsfirstdrc.org", "fhirPrd" -> "https://kf-api-fhir-service.kidsfirstdrc.org", "qaDbName" -> "kf_portal_qa", "prdDbName" -> "kf_portal_prd", "localDbName" -> "normalized", "bucketNamePrefix" -> "kf-strides-232196027141-datalake")
   val conf = Map(pInclude -> includeConf, pKfStrides -> kfConf)
 
