@@ -1,6 +1,6 @@
 @Library(value="kids-first/aws-infra-jenkins-shared-libraries", changelog=false) _
 simple_pipeline {
    stage_name_1 = "run_etl.sh"
-   script_1 = "cd bin && ./run_etl.sh -p kf-strides -r re_test_022 -s SD_DYPMEHHF,SD_PREASA7S,SD_8Y99QZJJ,SD_46SK55A3,SD_YGVA0E1C,SD_JWS3V24D,SD_7NQ9151J,SD_YNSSAPHE,SD_46RR9ZR6,SD_6FPYJQBR,SD_1P41Z782,SD_ME0WME0W -e qa --instance-type m5.8xlarge --instance-count 1 -b kf-strides-232196027141-datalake-qa --instance-profile kf-variant-emr-ec2-qa-profile --service-role kf-variant-emr-qa-role"
+   script_1 = "cd bin && ./run_etl.sh -p kf-strides -r re_test_023 -s SD_DYPMEHHF,SD_PREASA7S,SD_8Y99QZJJ,SD_46SK55A3,SD_YGVA0E1C,SD_JWS3V24D,SD_7NQ9151J,SD_YNSSAPHE,SD_46RR9ZR6,SD_6FPYJQBR,SD_1P41Z782,SD_ME0WME0W -e qa --instance-type m5.8xlarge --instance-count 1 -b kf-strides-232196027141-datalake-qa --instance-profile kf-variant-emr-ec2-qa-profile --service-role kf-variant-emr-qa-role"
    projectName = "kf-etl-clin-portal"
 }
