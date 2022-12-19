@@ -3,8 +3,7 @@ package bio.ferlab.fhir.etl.centricTypes
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.v2.ETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
-import bio.ferlab.datalake.spark3.loader.GenericLoader.read
-import org.apache.spark.sql.functions.{array, coalesce, col, collect_set, count, lit, size, when}
+import org.apache.spark.sql.functions.{array, coalesce, col, filter, collect_set, count, lit, size}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
@@ -58,7 +57,11 @@ class StudyCentric(releaseId: String, studyIds: List[String])(implicit configura
       .join(countFamilyDf, Seq("study_id"), "left_outer")
       .withColumn("family_count", coalesce(col("family_count"), lit(0)))
       .withColumn("family_data", col("family_count").gt(0))
+      .withColumn("search_text", array(
+        col("study_name"), col("study_code"), col("external_id")
+      ))
 
+    transformedStudyDf.select(filter(col("search_text"), x => x.isNotNull && x =!= "")).toDF()
     Map(mainDestination.id -> transformedStudyDf)
   }
 

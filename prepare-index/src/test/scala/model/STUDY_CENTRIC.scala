@@ -40,5 +40,6 @@ case class STUDY_CENTRIC (
                            `family_count`: Long = 0,
                            `family_data`: Boolean = false,
                            `biospecimen_count`: Long = 0,
-                           `release_id`: String = "re_000001"
+                           `release_id`: String = "re_000001",
+                           `search_text`: Seq[String] = Seq("Kids First: Genomic Analysis of Congenital Heart Defects and Acute Lymphoblastic Leukemia in Children with Down Syndrome", "KF-CHDALL", "phs002330")
                                )
