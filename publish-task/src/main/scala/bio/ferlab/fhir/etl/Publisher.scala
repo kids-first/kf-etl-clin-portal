@@ -1,9 +1,8 @@
 package bio.ferlab.fhir.etl
 
 import bio.ferlab.datalake.spark3.elasticsearch.ElasticSearchClient
-import org.apache.http.HttpResponse
-import org.apache.http.client.methods.HttpGet
-import org.apache.http.util.EntityUtils
+import org.apache.hadoop.shaded.org.apache.http.client.methods.HttpGet
+import org.apache.hadoop.shaded.org.apache.http.util.EntityUtils
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
@@ -13,7 +12,7 @@ object Publisher {
     val aliasUrl: String => String = aliasName => s"$url/_alias/$aliasName"
 
     val urlToCall = aliasUrl(alias)
-    val response: HttpResponse = esClient.http.execute(new HttpGet(urlToCall))
+    val response = esClient.http.execute(new HttpGet(urlToCall))
     esClient.http.close()
     if (response.getStatusLine.getStatusCode == 200) {
       val responseBody = EntityUtils.toString(response.getEntity, "UTF-8")

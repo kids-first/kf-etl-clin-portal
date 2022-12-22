@@ -1,15 +1,17 @@
 package bio.ferlab.fhir.etl.centricTypes
 
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
+import bio.ferlab.datalake.spark3.etl.ETLSingleDestination
 import bio.ferlab.datalake.spark3.etl.v2.ETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
+import bio.ferlab.datalake.spark3.utils.Coalesce
 import bio.ferlab.fhir.etl.common.Utils._
 import org.apache.spark.sql.functions.{col, struct}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
 
-class BiospecimenCentric(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETL {
+class BiospecimenCentric(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETLSingleDestination {
 
   override val mainDestination: DatasetConf = conf.getDataset("es_index_biospecimen_centric")
   val normalized_specimen: DatasetConf = conf.getDataset("normalized_specimen")
@@ -26,9 +28,9 @@ class BiospecimenCentric(releaseId: String, studyIds: List[String])(implicit con
       ).toMap
   }
 
-  override def transform(data: Map[String, DataFrame],
-                         lastRunDateTime: LocalDateTime = minDateTime,
-                         currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
+  override def transformSingle(data: Map[String, DataFrame],
+                               lastRunDateTime: LocalDateTime = minDateTime,
+                               currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): DataFrame = {
     val specimenDF = data(normalized_specimen.id)
     val transformedBiospecimen =
       specimenDF
@@ -37,14 +39,8 @@ class BiospecimenCentric(releaseId: String, studyIds: List[String])(implicit con
         .addBiospecimenFiles(data(normalized_drs_document_reference.id))
         .withColumn("biospecimen_facet_ids", struct(col("fhir_id") as "biospecimen_fhir_id_1", col("fhir_id") as "biospecimen_fhir_id_2"))
 
-    Map(mainDestination.id -> transformedBiospecimen)
+    transformedBiospecimen
   }
 
-  override def load(data: Map[String, DataFrame],
-                    lastRunDateTime: LocalDateTime = minDateTime,
-                    currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    val dataToLoad = Map(mainDestination.id -> data(mainDestination.id)
-      .coalesce(20).toDF())
-    super.load(dataToLoad)
-  }
+  override def defaultRepartition: DataFrame => DataFrame = Coalesce(20)
 }
