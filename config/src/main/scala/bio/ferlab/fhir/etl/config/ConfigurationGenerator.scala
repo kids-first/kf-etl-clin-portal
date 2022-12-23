@@ -63,7 +63,21 @@ object ConfigurationGenerator extends App {
     )
   })
 
-  val sources = (rawsAndNormalized ++ Seq(
+  val dataserviceDatasets = Seq("sequencing_experiment", "sequencing_experiment_genomic_file", "sequencing_center").map { entity =>
+    DatasetConf(
+      id = s"normalized_$entity",
+      storageid = storage,
+      path = s"/normalized/$entity",
+      format = DELTA,
+      loadtype = OverWritePartition,
+      table = Some(TableConf("database", entity)),
+      partitionby = partitionByStudyIdAndReleaseId,
+      writeoptions = WriteOptions.DEFAULT_OPTIONS ++ Map("overwriteSchema" -> "true")
+    )
+
+  }
+
+  val sources = (rawsAndNormalized ++ dataserviceDatasets ++ Seq(
     DatasetConf(
       id = "hpo_terms",
       storageid = storage,
@@ -134,7 +148,10 @@ object ConfigurationGenerator extends App {
         "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN",
         "spark.fhir.server.url" -> conf(project)("fhirDev")
       )
-    )))
+    ),
+      dataservice_url = "https://kf-api-dataservice-qa.kidsfirstdrc.org"
+
+    ))
 
     val spark_conf = Map(
       "spark.databricks.delta.retentionDurationCheck.enabled" -> "false",
@@ -154,7 +171,9 @@ object ConfigurationGenerator extends App {
       sources = populateTable(sources, conf(project)("qaDbName")),
       args = args.toList,
       sparkconf = spark_conf.++(Map("spark.fhir.server.url" -> conf(project)("fhirQa")))
-    )))
+    ),
+      dataservice_url = "https://kf-api-dataservice-qa.kidsfirstdrc.org"
+    ))
 
     ConfigurationWriter.writeTo(s"config/output/config/prd-${project}.conf", ETLConfiguration(excludeSpecimenCollection(project), DatalakeConf(
       storages = List(
@@ -163,6 +182,8 @@ object ConfigurationGenerator extends App {
       sources = populateTable(sources, conf(project)("prdDbName")),
       args = args.toList,
       sparkconf = spark_conf.++(Map("spark.fhir.server.url" -> conf(project)("fhirPrd")))
-    )))
+    ),
+      dataservice_url = "https://kf-api-dataservice.kidsfirstdrc.org"
+    ))
   }
 }
