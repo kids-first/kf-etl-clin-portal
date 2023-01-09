@@ -2,9 +2,10 @@ import bio.ferlab.fhir.etl.common.OntologyUtils.{addDiseases, firstCategory}
 import model.AGE_AT_EVENT
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions.col
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class OntologyUtilsSpec extends FlatSpec with Matchers with WithSparkSession {
+class OntologyUtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
 
   case class ConditionCoding(code: String, category: String)
   import spark.implicits._

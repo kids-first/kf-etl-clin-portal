@@ -1,14 +1,16 @@
 package bio.ferlab.fhir.etl.centricTypes
 
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
+import bio.ferlab.datalake.spark3.etl.ETLSingleDestination
 import bio.ferlab.datalake.spark3.etl.v2.ETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
-import org.apache.spark.sql.functions.{array, coalesce, col, filter, collect_set, count, lit, size}
+import bio.ferlab.datalake.spark3.utils.Coalesce
+import org.apache.spark.sql.functions.{array, coalesce, col, collect_set, count, filter, lit, size}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
 
-class StudyCentric(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETL {
+class StudyCentric(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETLSingleDestination {
 
   override val mainDestination: DatasetConf = conf.getDataset("es_index_study_centric")
   val normalized_researchstudy: DatasetConf = conf.getDataset("normalized_research_study")
@@ -26,20 +28,20 @@ class StudyCentric(releaseId: String, studyIds: List[String])(implicit configura
 
   }
 
-  override def transform(data: Map[String, DataFrame],
-                         lastRunDateTime: LocalDateTime = minDateTime,
-                         currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
+  override def transformSingle(data: Map[String, DataFrame],
+                               lastRunDateTime: LocalDateTime = minDateTime,
+                               currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): DataFrame = {
     val studyDF = data(normalized_researchstudy.id)
 
     val countPatientDf = data(normalized_patient.id).groupBy("study_id").count().withColumnRenamed("count", "participant_count")
     val countFamilyDf = data(normalized_group.id).filter(size(col("family_members")).gt(1)).groupBy("study_id").count().withColumnRenamed("count", "family_count")
 
     val countFileDf = data(normalized_drs_document_reference.id).groupBy("study_id")
-      .agg( count(lit(1)) as "file_count",
+      .agg(count(lit(1)) as "file_count",
         collect_set(col("experiment_strategy")) as "experimental_strategy",
         collect_set(col("data_category")) as "data_category",
         collect_set(col("controlled_access")) as "controlled_access"
-    )
+      )
 
     val countBiospecimenDf = data(normalized_specimen.id)
       .groupBy("study_id")
@@ -62,12 +64,9 @@ class StudyCentric(releaseId: String, studyIds: List[String])(implicit configura
       ))
 
     transformedStudyDf.select(filter(col("search_text"), x => x.isNotNull && x =!= "")).toDF()
-    Map(mainDestination.id -> transformedStudyDf)
+    transformedStudyDf
   }
 
-  override def load(data: Map[String, DataFrame],
-                    lastRunDateTime: LocalDateTime = minDateTime,
-                    currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    super.load(data)
-  }
+  override def defaultRepartition: DataFrame => DataFrame = Coalesce(20)
+
 }

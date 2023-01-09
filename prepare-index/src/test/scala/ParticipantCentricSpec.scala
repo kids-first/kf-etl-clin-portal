@@ -1,14 +1,12 @@
-import bio.ferlab.datalake.commons.config.{Configuration, ConfigurationLoader}
 import bio.ferlab.fhir.etl.centricTypes.ParticipantCentric
 import model._
 import org.apache.spark.sql.DataFrame
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class ParticipantCentricSpec extends FlatSpec with Matchers with WithSparkSession {
+class ParticipantCentricSpec extends AnyFlatSpec with Matchers with WithSparkSession  with WithTestConfig {
 
   import spark.implicits._
-
-  implicit val conf: Configuration = ConfigurationLoader.loadFromResources("config/dev-include.conf")
 
   "transform" should "prepare index participant_centric" in {
     val data: Map[String, DataFrame] = Map(

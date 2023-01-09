@@ -2,6 +2,7 @@ package bio.ferlab.fhir.etl.fhavro
 
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf, Format}
 import bio.ferlab.datalake.spark3.transformation.{Custom, Transformation}
+import bio.ferlab.fhir.etl.config.ETLConfiguration
 import bio.ferlab.fhir.etl.transformations.Transformations.extractionMappingsFor
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.{col, lit, regexp_extract}
@@ -21,11 +22,10 @@ object FhavroToNormalizedMappings {
     ))
   }
 
-  def mappings(releaseId: String)(implicit c: Configuration): List[(DatasetConf, DatasetConf, List[Transformation])] = {
+  def mappings(releaseId: String)(implicit c: ETLConfiguration): List[(DatasetConf, DatasetConf, List[Transformation])] = {
     c.sources.filter(s => s.format == Format.AVRO).map(s => {
       val pattern(table) = s.id
-      val excludeSpecimenCollection = c.sparkconf.getOrElse("data.mappings.specimen.excludeCollection", "false") == "true"
-      val mappings = extractionMappingsFor(excludeSpecimenCollection)
+      val mappings = extractionMappingsFor(c.excludeSpecimenCollection)
       (s, c.getDataset(s"normalized_$table"), defaultTransformations(releaseId) ++ mappings(table))
     }
     )

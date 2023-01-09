@@ -3,12 +3,13 @@ package bio.ferlab.fhir.etl
 import bio.ferlab.fhir.etl.config.FhirRequest
 import bio.ferlab.fhir.etl.minio.MinioServerSuite
 import bio.ferlab.fhir.etl.s3.S3Utils
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 import software.amazon.awssdk.services.s3.model.GetObjectRequest
 
 import java.io.File
 
-class S3UtilsTest extends FlatSpec with MinioServerSuite with Matchers {
+class S3UtilsTest extends AnyFlatSpec with MinioServerSuite with Matchers {
 
   "writeContent" should "write file content in s3" in {
     withS3Objects { bucket =>

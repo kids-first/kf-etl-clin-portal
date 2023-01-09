@@ -2,13 +2,12 @@ import bio.ferlab.datalake.commons.config.{Configuration, ConfigurationLoader}
 import bio.ferlab.fhir.etl.centricTypes.FileCentric
 import model._
 import org.apache.spark.sql.DataFrame
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class FileCentricSpec extends FlatSpec with Matchers with WithSparkSession {
+class FileCentricSpec extends AnyFlatSpec with Matchers with WithSparkSession  with WithTestConfig {
 
   import spark.implicits._
-
-  implicit val conf: Configuration = ConfigurationLoader.loadFromResources("config/dev-include.conf")
 
   "transform" should "prepare index file_centric" in {
     val data: Map[String, DataFrame] = Map(

@@ -26,7 +26,7 @@ libraryDependencies ++= Seq(
   "bio.ferlab" % "fhavro" % fhavroVersion,
 
   // TEST
-  "org.scalatest" %% "scalatest" % "3.0.8" % Test,
+  "org.scalatest" %% "scalatest" % "3.2.9" % Test,
   "com.dimafeng" %% "testcontainers-scala-scalatest" % "0.40.5" % "test",
   "org.testcontainers" % "localstack" % "1.17.1" % "test"
 )

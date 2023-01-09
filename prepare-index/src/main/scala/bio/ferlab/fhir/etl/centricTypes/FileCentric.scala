@@ -1,15 +1,17 @@
 package bio.ferlab.fhir.etl.centricTypes
 
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
+import bio.ferlab.datalake.spark3.etl.ETLSingleDestination
 import bio.ferlab.datalake.spark3.etl.v2.ETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
+import bio.ferlab.datalake.spark3.utils.Coalesce
 import bio.ferlab.fhir.etl.common.Utils._
 import org.apache.spark.sql.functions.{col, concat, lit, struct}
 import org.apache.spark.sql.{DataFrame, SparkSession, functions}
 
 import java.time.LocalDateTime
 
-class FileCentric(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETL {
+class FileCentric(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETLSingleDestination {
 
   override val mainDestination: DatasetConf = conf.getDataset("es_index_file_centric")
   val normalized_drs_document_reference: DatasetConf = conf.getDataset("normalized_document_reference")
@@ -25,9 +27,9 @@ class FileCentric(releaseId: String, studyIds: List[String])(implicit configurat
     ).toMap
   }
 
-  override def transform(data: Map[String, DataFrame],
+  override def transformSingle(data: Map[String, DataFrame],
                          lastRunDateTime: LocalDateTime = minDateTime,
-                         currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
+                         currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): DataFrame = {
     val fileDF = data(normalized_drs_document_reference.id)
     val fhirUrl = spark.conf.get("spark.fhir.server.url")
     val transformedFile =
@@ -37,14 +39,8 @@ class FileCentric(releaseId: String, studyIds: List[String])(implicit configurat
         .withColumn("fhir_document_reference", concat(lit(fhirUrl), lit("/DocumentReference?identifier="), col("file_id")))
         .withColumn("file_facet_ids", struct(col("fhir_id") as "file_fhir_id_1", col("fhir_id") as "file_fhir_id_2"))
 
-    Map(mainDestination.id -> transformedFile)
+    transformedFile
   }
 
-  override def load(data: Map[String, DataFrame],
-                    lastRunDateTime: LocalDateTime = minDateTime,
-                    currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    val dataToLoad = Map(mainDestination.id -> data(mainDestination.id)
-      .coalesce(20).toDF())
-    super.load(dataToLoad)
-  }
+  override def defaultRepartition: DataFrame => DataFrame = Coalesce(20)
 }

@@ -1,9 +1,10 @@
 package bio.ferlab.fhir.etl
 
 import bio.ferlab.fhir.etl.model.Environment
-import org.scalatest.FunSuite
 
-class EnvironmentTest extends FunSuite {
+import org.scalatest.funsuite.AnyFunSuite
+
+class EnvironmentTest extends AnyFunSuite {
 
   test("fromString to Environment enum.") {
     assert(Environment.fromString("INCLUDE-DEV") === Environment.INCLUDEDEV)
