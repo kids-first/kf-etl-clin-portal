@@ -24,7 +24,7 @@ docker run --net host --rm -v $(pwd):/app/project \
     -v ~/.sbt_cache:/app/.cache \
     -w /app/project \
     hseeberger/scala-sbt:11.0.14.1_1.6.2_2.12.15 \
-    sbt -Duser.home=/app fhavro_export/assembly import_task/assembly prepare_index/assembly index_task/assembly publish_task/assembly
+    sbt -Duser.home=/app fhavro_export/assembly import_task/assembly prepare_index/assembly index_task/assembly publish_task/assembly dataservice_export/assembly
 
 echo "Build docker image fhavro-export:$git_commit"
 docker build -t $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/etl-fhavro-export:latest -t $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/etl-fhavro-export:$GIT_COMMIT  fhavro-export

@@ -127,7 +127,25 @@ STEPS=$(
       "aws s3 cp s3://${BUCKET}/jobs/fhavro-export.jar /home/hadoop; cd /home/hadoop; /usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar fhavro-export.jar ${RELEASE_ID} ${STUDIES} $(build_fhavro_file_arg_suffix "${PROJECT}"-"${ENV}")"
     ]
   },
-
+ {
+    "Args": [
+      "spark-submit",
+      "--deploy-mode",
+      "client",
+      "--class",
+      "bio.ferlab.dataservice.etl.DataserviceExportApp",
+      "s3a://${BUCKET}/jobs/dataservice-export.jar",
+      "config/${ENV}-${PROJECT}.conf",
+      "default",
+      "${RELEASE_ID}",
+      "${STUDIES}"
+    ],
+    "Type": "CUSTOM_JAR",
+    "ActionOnFailure": "TERMINATE_CLUSTER",
+    "Jar": "command-runner.jar",
+    "Properties": "",
+    "Name": "Export Dataservice"
+  },
   {
     "Args": [
       "spark-submit",
