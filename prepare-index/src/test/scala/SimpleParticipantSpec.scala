@@ -106,7 +106,7 @@ class SimpleParticipantSpec extends AnyFlatSpec with Matchers with WithSparkSess
         mondo = null,
         diagnosis = null,
         outcomes = Nil,
-        family = FAMILY(fhir_id = "G1", father_id = Some("PT_48DYT4PP"), mother_id = Some("PT_48DYT4PP"), family_relations = Seq(FAMILY_RELATIONS(related_participant_fhir_id = "P2", relation = "father"), FAMILY_RELATIONS(related_participant_fhir_id = "P1", relation = "mother"))),
+        family = FAMILY(fhir_id = "G1", father_id = Some("PT_48DYT4PP"), mother_id = Some("PT_48DYT4PP"), family_relations = Seq(FAMILY_RELATIONS(related_participant_fhir_id = "P1", relation = "mother"), FAMILY_RELATIONS(related_participant_fhir_id = "P2", relation = "father"))),
         family_type = "trio"
       )
 
