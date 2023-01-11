@@ -72,12 +72,14 @@ class FhavroToNormalizedMappingsSpec
       "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN,",
       "data.mappings.specimen.excludeCollection" -> "true"
     )
-    val c1 = ETLConfiguration(excludeSpecimenCollection = false, DatalakeConf(
-      storages,
-      sources,
-      List.empty,
-      sparkConfWithExcludeCollectionEntry
-    )
+    val c1 = ETLConfiguration(excludeSpecimenCollection = false,
+      dataservice_url = "",
+      datalake = DatalakeConf(
+        storages,
+        sources,
+        List.empty,
+        sparkConfWithExcludeCollectionEntry
+      )
     )
     noException should be thrownBy mappings("re")(c1)
 
@@ -91,7 +93,9 @@ class FhavroToNormalizedMappingsSpec
       "spark.sql.legacy.timeParserPolicy" -> CORRECTED.toString,
       "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN,"
     )
-    val c2 = ETLConfiguration(excludeSpecimenCollection = false, DatalakeConf(
+    val c2 = ETLConfiguration(excludeSpecimenCollection = false,
+      dataservice_url = "",
+      datalake = DatalakeConf(
       storages,
       sources,
       List.empty,
