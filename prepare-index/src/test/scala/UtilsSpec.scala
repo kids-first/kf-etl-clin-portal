@@ -298,7 +298,7 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
     participantB_Ph shouldBe Some(("B", null))
   }
 
-  "addDiagnosisPhenotypes" should "take official HPO title, not source text for term" in {
+  "addDiagnosisPhenotypes" should "take HPO title from hpo file" in {
 
     val inputParticipants = Seq(
       PATIENT(participant_id = "A", fhir_id = "A")
