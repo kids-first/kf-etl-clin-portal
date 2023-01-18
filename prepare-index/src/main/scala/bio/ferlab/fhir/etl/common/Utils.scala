@@ -73,7 +73,8 @@ object Utils {
     }
 
     def addDiagnosisPhenotypes(phenotypeDF: DataFrame, diagnosesDF: DataFrame)(hpoTerms: DataFrame, mondoTerms: DataFrame): DataFrame = {
-      val phenotypes = addPhenotypes(phenotypeDF)
+      val phenotypes = addPhenotypes(phenotypeDF, hpoTerms)
+
       val phenotypesWithHPOTerms =
         mapObservableTerms(phenotypes, "observable_term")(hpoTerms)
           .groupBy("participant_fhir_id")

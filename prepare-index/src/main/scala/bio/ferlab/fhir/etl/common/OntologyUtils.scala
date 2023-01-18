@@ -43,15 +43,19 @@ object OntologyUtils {
       .drop("mondo_term_id","mondo_name")
   }
 
-  def addPhenotypes(df: DataFrame): DataFrame = {
+  def addPhenotypes(df: DataFrame, hpoTerms: DataFrame): DataFrame = {
+    val hpoIdName =  hpoTerms.select("id", "name")
+      .withColumnRenamed("id", "observable_term")
+
     df.where(size(col("condition_coding")) > 0)
       .withColumn("is_observed", col("observed").isNotNull && col("observed") === "confirmed")
       .withColumn("observable_term", observableTitleStandard(firstCategory("HPO", col("condition_coding"))))
+      .join(hpoIdName, Seq("observable_term"), "left_outer")
       .withColumn("age_at_event_days", col("age_at_event.value"))
-      .withColumn("formatted_hpo", concat(col("source_text"), lit(" ("), col("observable_term"), lit(")")))
+      .withColumn("formatted_hpo", concat(col("name"), lit(" ("), col("observable_term"), lit(")")))
       .withColumn("hpo_phenotype_observed", when(col("is_observed"), col("formatted_hpo")).otherwise(null))
       .withColumn("hpo_phenotype_not_observed", when(not(col("is_observed")), col("formatted_hpo")).otherwise(null))
-      .drop("formatted_hpo")
+      .drop("name", "formatted_hpo")
   }
 
   def mapObservableTerms(df: DataFrame, pivotColumn: String)(observableTerms: DataFrame): DataFrame = {

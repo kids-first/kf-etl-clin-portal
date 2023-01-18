@@ -298,6 +298,25 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
     participantB_Ph shouldBe Some(("B", null))
   }
 
+  "addDiagnosisPhenotypes" should "take official HPO title, not source text for term" in {
+
+    val inputParticipants = Seq(
+      PATIENT(participant_id = "A", fhir_id = "A")
+    ).toDF()
+
+    val inputPhenotypes = Seq(
+      CONDITION_PHENOTYPE(fhir_id = "1p", participant_fhir_id = "A", `source_text` = "source_text", condition_coding = Seq(CONDITION_CODING(`category` = "HPO", `code` = "HP_0001631")), observed = "confirmed"),
+    ).toDF()
+
+    val inputDiseases = Seq.empty[CONDITION_DISEASE].toDF()
+
+    val output = inputParticipants.addDiagnosisPhenotypes(inputPhenotypes, inputDiseases)(allHpoTerms, allMondoTerms)
+
+    val result = output.select("participant_id", "phenotype").as[(String, Seq[PHENOTYPE])].collect()
+
+    result.head._2.head.`hpo_phenotype_observed` shouldBe "Atrial septal defect (HP:0001631)"
+  }
+
   it should "map diseases to participants" in {
     val inputParticipants = Seq(
       PATIENT(participant_id = "A", fhir_id = "A"),
