@@ -14,8 +14,8 @@ object ConfigurationGenerator extends App {
   val pInclude = "include"
   val pKfStrides = "kf-strides"
 
-  def populateTable(sources: List[DatasetConf], tableName: String): List[DatasetConf] = {
-    sources.map(ds => ds.copy(table = ds.table.map(t => TableConf(tableName, t.name))))
+  def populateTable(sources: List[DatasetConf], database: String): List[DatasetConf] = {
+    sources.map(ds => ds.copy(table = ds.table.map(t => TableConf(database, t.name))))
   }
 
   def excludeSpecimenCollection(project: String): Boolean = project == pKfStrides
