@@ -28,15 +28,46 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
 
   "addSequencingExperiment" should "add sequencing experiment to DF" in {
     val inputDocumentReference = Seq(
-      DOCUMENTREFERENCE_WITH_SEQ_EXP(),
+      DOCUMENTREFERENCE(file_id = "file1"),
+      DOCUMENTREFERENCE(file_id = "file2"),
+      DOCUMENTREFERENCE(file_id = "file3"),
     ).toDF()
-    val inputSeqExp = Seq(SEQUENCING_EXPERIMENT_INPUT(kf_id = "1")).toDF()
-    val inputSeqExpGenFile =Seq(SEQUENCING_EXPERIMENT_GENOMIC_FILE_INPUT(sequencing_experiment = "1")).toDF()
+    val inputSeqExp = Seq(
+      SEQUENCING_EXPERIMENT_INPUT(kf_id = "seq_exp1"),
+      SEQUENCING_EXPERIMENT_INPUT(kf_id = "seq_exp2", experiment_strategy = "WES"),
+      SEQUENCING_EXPERIMENT_INPUT(kf_id = "seq_exp3"),
+    ).toDF()
+    val inputSeqExpGenFile = Seq(
+      SEQUENCING_EXPERIMENT_GENOMIC_FILE_INPUT(sequencing_experiment = "seq_exp1", genomic_file = "file1"),
+      SEQUENCING_EXPERIMENT_GENOMIC_FILE_INPUT(sequencing_experiment = "seq_exp2", genomic_file = "file1"),
+      SEQUENCING_EXPERIMENT_GENOMIC_FILE_INPUT(sequencing_experiment = "seq_exp3", genomic_file = "file2")
+    ).toDF()
 
     val output = inputDocumentReference.addSequencingExperiment(inputSeqExp, inputSeqExpGenFile)
+      .select("file_id", "sequencing_experiment")
+      .as[FileWithSeqExp]
+      .collect()
+      .toSeq
 
-    //FIXME not a good test; just a placeholder for now
-    output.collect() should not be empty
+    output.length shouldBe 3
+
+    output.find(_.file_id === "file1") should not be empty
+    val seqExpResultFile1 = output.find(_.file_id === "file1").get.sequencing_experiment
+    seqExpResultFile1.length shouldBe 2
+    seqExpResultFile1 should contain theSameElementsAs Seq(
+      SEQUENCING_EXPERIMENT(sequencing_experiment_id = "seq_exp1"),
+      SEQUENCING_EXPERIMENT(sequencing_experiment_id = "seq_exp2", experiment_strategy = "WES")
+    )
+
+    output.find(_.file_id === "file2") should not be empty
+    val seqExpResultFile2 = output.find(_.file_id === "file2").get.sequencing_experiment
+    seqExpResultFile2.length shouldBe 1
+    seqExpResultFile2 should contain theSameElementsAs Seq(
+      SEQUENCING_EXPERIMENT(sequencing_experiment_id = "seq_exp3")
+    )
+
+    output.find(_.file_id === "file3") should not be empty
+    output.find(_.file_id === "file3").get.sequencing_experiment shouldBe null
   }
 
   "addOutcomes" should "add outcomes to participant" in {
@@ -72,7 +103,7 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
     val mondoTerms = Seq(
       ONTOLOGY_TERM("MONDO:0000000", "Another Term"),
       ONTOLOGY_TERM("MONDO:0008608", "Down Syndrome"),
-      ONTOLOGY_TERM("MONDO:0008609", "Down Syndrome level 2", `ancestors` = Seq( TERM("MONDO:0008608", "Down Syndrome")))
+      ONTOLOGY_TERM("MONDO:0008609", "Down Syndrome level 2", `ancestors` = Seq(TERM("MONDO:0008608", "Down Syndrome")))
     ).toDF()
 
     val inputDiseases = Seq(
@@ -163,7 +194,7 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val output = inputPatients.addFamily(inputFamilies, inputFamilyRelationship)
-    output.select("participant_id","family_type").as[ (String,String)].collect() should contain theSameElementsAs Seq(
+    output.select("participant_id", "family_type").as[(String, String)].collect() should contain theSameElementsAs Seq(
       ("P1", "duo"),
       ("P2", "duo")
     )
@@ -189,7 +220,7 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val output = inputPatients.addFamily(inputFamilies, inputFamilyRelationship)
-    output.select("participant_id","family_type").as[ (String,String)].collect() should contain theSameElementsAs Seq(
+    output.select("participant_id", "family_type").as[(String, String)].collect() should contain theSameElementsAs Seq(
       ("P1", "duo+"),
       ("P2", "duo+"),
       ("P3", "duo+")
@@ -217,7 +248,7 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val output = inputPatients.addFamily(inputFamilies, inputFamilyRelationship)
-    output.select("participant_id","family_type").as[ (String,String)].collect() should contain theSameElementsAs Seq(
+    output.select("participant_id", "family_type").as[(String, String)].collect() should contain theSameElementsAs Seq(
       ("P1", "duo+"),
       ("P2", "duo+"),
       ("P3", "duo+")
@@ -244,7 +275,7 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val output = inputPatients.addFamily(inputFamilies, inputFamilyRelationship)
-    output.select("participant_id","family_type").as[ (String,String)].collect() should contain theSameElementsAs Seq(
+    output.select("participant_id", "family_type").as[(String, String)].collect() should contain theSameElementsAs Seq(
       ("P1", "trio"),
       ("P2", "trio"),
       ("P3", "trio")
@@ -276,7 +307,7 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val output = inputPatients.addFamily(inputFamilies, inputFamilyRelationship)
-    output.select("participant_id","family_type").as[ (String,String)].collect() should contain theSameElementsAs Seq(
+    output.select("participant_id", "family_type").as[(String, String)].collect() should contain theSameElementsAs Seq(
       ("P1", "trio+"),
       ("P2", "trio+"),
       ("P3", "trio+"),
@@ -452,7 +483,7 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
 
     val inputParticipant = Seq(
       SIMPLE_PARTICIPANT(`fhir_id` = "A", participant_facet_ids = PARTICIPANT_FACET_IDS(participant_fhir_id_1 = "A", participant_fhir_id_2 = "A"), `participant_id` = "P_A"),
-      SIMPLE_PARTICIPANT(`fhir_id` = "B", participant_facet_ids = PARTICIPANT_FACET_IDS(participant_fhir_id_1 = "B", participant_fhir_id_2 = "B"),`participant_id` = "P_B")
+      SIMPLE_PARTICIPANT(`fhir_id` = "B", participant_facet_ids = PARTICIPANT_FACET_IDS(participant_fhir_id_1 = "B", participant_fhir_id_2 = "B"), `participant_id` = "P_B")
     ).toDF()
 
     val output = inputBiospecimen.addBiospecimenParticipant(inputParticipant)
@@ -598,3 +629,5 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
 
 
 }
+
+case class FileWithSeqExp(file_id: String, sequencing_experiment: Seq[SEQUENCING_EXPERIMENT]) //TODO move
