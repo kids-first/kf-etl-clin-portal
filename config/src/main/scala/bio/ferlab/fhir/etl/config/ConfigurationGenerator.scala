@@ -18,7 +18,7 @@ object ConfigurationGenerator extends App {
     sources.map(ds => ds.copy(table = ds.table.map(t => TableConf(database, t.name))))
   }
 
-  def excludeSpecimenCollection(project: String): Boolean = project == pKfStrides
+  def excludeSpecimenCollection(project: String): Boolean = project == pInclude
 
   private val partitionByStudyIdAndReleaseId = List("study_id", "release_id")
   val sourceNames: Seq[SourceConfig] = Seq(

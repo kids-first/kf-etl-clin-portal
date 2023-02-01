@@ -22,7 +22,7 @@ case class FILE_CENTRIC(
                          study: LIGHT_STUDY_CENTRIC = LIGHT_STUDY_CENTRIC(),
                          release_id: String = "re_000001",
                          participants: Seq[PARTICIPANT_WITH_BIOSPECIMEN] = Seq.empty,
-                         sequencing_experiment: SEQUENCING_EXPERIMENT = SEQUENCING_EXPERIMENT(),
+                         sequencing_experiment: Seq[SEQUENCING_EXPERIMENT] = Seq(SEQUENCING_EXPERIMENT()),
                          nb_participants: Long,
                          nb_biospecimens: Long,
                          fhir_document_reference: String = "http://localhost:8080/DocumentReference?identifier=GF_067MR115"

@@ -26,6 +26,19 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
     output.collect().sameElements(Seq(PARTICIPANT_CENTRIC()))
   }
 
+  "addSequencingExperiment" should "add sequencing experiment to DF" in {
+    val inputDocumentReference = Seq(
+      DOCUMENTREFERENCE_WITH_SEQ_EXP(),
+    ).toDF()
+    val inputSeqExp = Seq(SEQUENCING_EXPERIMENT_INPUT(kf_id = "1")).toDF()
+    val inputSeqExpGenFile =Seq(SEQUENCING_EXPERIMENT_GENOMIC_FILE_INPUT(sequencing_experiment = "1")).toDF()
+
+    val output = inputDocumentReference.addSequencingExperiment(inputSeqExp, inputSeqExpGenFile)
+
+    //FIXME not a good test; just a placeholder for now
+    output.collect() should not be empty
+  }
+
   "addOutcomes" should "add outcomes to participant" in {
     val inputPatients = Seq(
       PATIENT(`fhir_id` = "P1"),
