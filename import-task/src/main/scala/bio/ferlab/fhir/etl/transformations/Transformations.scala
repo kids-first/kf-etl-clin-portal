@@ -36,7 +36,7 @@ object Transformations {
     Drop("identifier")
   )
 
-  val age_at_bio_collection_on_set_intervals = Seq((0, 5), (5, 10), (10, 20), (20, 30), (30, 40), (40, 50), (50, 60), (60, 70), (70, 80))
+  val age_at_bio_collection_on_set_intervals: Seq[(Int, Int)] = Seq((0, 5), (5, 10), (10, 20), (20, 30), (30, 40), (40, 50), (50, 60), (60, 70), (70, 80))
 
   val observationVitalStatusMappings: List[Transformation] = List(
     Custom(_
@@ -161,6 +161,7 @@ object Transformations {
         .withColumn("repository", retrieveRepository(col("content")("attachment")("url")(0)))
         .withColumn("size", retrieveSize(col("content")(0)("attachment")("fileSize")))
         .withColumn("urls", col("content")(0)("attachment")("url"))
+        .withColumn("s3_url", col("content")(1)("attachment")("url"))
         .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
         .withColumn("specimen_fhir_ids", extractReferencesId(col("context")("related")("reference")))
         .withColumnRenamed("docStatus", "status")
