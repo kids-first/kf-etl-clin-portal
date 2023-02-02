@@ -28,8 +28,8 @@
           "type": "keyword"
         },
         "sample_id": {
-          "type" : "keyword",
-          "normalizer" : "custom_normalizer"
+          "type": "keyword",
+          "normalizer": "custom_normalizer"
         },
         "sample_type": {
           "type": "keyword"
@@ -41,8 +41,8 @@
           "type": "keyword"
         },
         "collection_sample_id": {
-          "type" : "keyword",
-          "normalizer" : "custom_normalizer"
+          "type": "keyword",
+          "normalizer": "custom_normalizer"
         },
         "collection_sample_type": {
           "type": "keyword"
@@ -153,26 +153,44 @@
               "type": "keyword"
             },
             "sequencing_experiment": {
+              "type": "nested",
               "properties": {
-                "fhir_id": {
-                  "type": "keyword"
-                },
                 "sequencing_experiment_id": {
                   "type": "keyword"
                 },
                 "experiment_strategy": {
                   "type": "keyword"
                 },
-                "instrument_model": {
+                "experiment_date": {
+                  "type": "keyword",
+                  "index": false
+                },
+                "center": {
                   "type": "keyword"
                 },
                 "library_name": {
+                  "type": "keyword"
+                },
+                "library_prep": {
+                  "type": "keyword"
+                },
+                "library_selection": {
                   "type": "keyword"
                 },
                 "library_strand": {
                   "type": "keyword"
                 },
                 "platform": {
+                  "type": "keyword"
+                },
+                "instrument_model": {
+                  "type": "keyword"
+                },
+                "external_id": {
+                  "type": "keyword",
+                  "index": false
+                },
+                "sequencing_center_id": {
                   "type": "keyword"
                 }
               }

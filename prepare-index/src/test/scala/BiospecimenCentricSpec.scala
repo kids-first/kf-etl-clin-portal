@@ -29,6 +29,9 @@ class BiospecimenCentricSpec extends AnyFlatSpec with Matchers with WithSparkSes
       ).toDF(),
       "es_index_study_centric" -> Seq(STUDY_CENTRIC()).toDF(),
       "normalized_task" -> Seq(TASK(`fhir_id` = "1", `document_reference_fhir_ids` = Seq("11", "21"))).toDF(),
+      "normalized_sequencing_experiment" -> Seq(SEQUENCING_EXPERIMENT_INPUT()).toDF(),
+      "normalized_sequencing_experiment_genomic_file" -> Seq(SEQUENCING_EXPERIMENT_GENOMIC_FILE_INPUT()).toDF()
+
     )
 
     val output = new BiospecimenCentric("re_000001", List("SD_Z6MWD3H0"))(conf).transform(data)
@@ -45,20 +48,17 @@ class BiospecimenCentricSpec extends AnyFlatSpec with Matchers with WithSparkSes
           `participant` = SIMPLE_PARTICIPANT(`fhir_id` = "1", participant_facet_ids = PARTICIPANT_FACET_IDS(participant_fhir_id_1 = "1", participant_fhir_id_2 = "1")),
           `nb_files` = 3,
           `files` = Seq(
-            DOCUMENTREFERENCE_WITH_SEQ_EXP(
+            BIOSPECIMEN_FILES(
               `fhir_id` = "11",
-              file_facet_ids = FILE_FACET_IDS(file_fhir_id_1 = "11", file_fhir_id_2 = "11"),
-              `sequencing_experiment` = SEQUENCING_EXPERIMENT()
+              file_facet_ids = FILE_FACET_IDS(file_fhir_id_1 = "11", file_fhir_id_2 = "11")
             ),
-            DOCUMENTREFERENCE_WITH_SEQ_EXP(
+            BIOSPECIMEN_FILES(
               `fhir_id` = "33",
-              file_facet_ids = FILE_FACET_IDS(file_fhir_id_1 = "33", file_fhir_id_2 = "33"),
-              `sequencing_experiment` = SEQUENCING_EXPERIMENT()
+              file_facet_ids = FILE_FACET_IDS(file_fhir_id_1 = "33", file_fhir_id_2 = "33")
             ),
-            DOCUMENTREFERENCE_WITH_SEQ_EXP(
+            BIOSPECIMEN_FILES(
               `fhir_id` = "44",
-              file_facet_ids = FILE_FACET_IDS(file_fhir_id_1 = "44", file_fhir_id_2 = "44"),
-              `sequencing_experiment` = SEQUENCING_EXPERIMENT()
+              file_facet_ids = FILE_FACET_IDS(file_fhir_id_1 = "44", file_fhir_id_2 = "44")
             )
           )
         ),
@@ -69,20 +69,17 @@ class BiospecimenCentricSpec extends AnyFlatSpec with Matchers with WithSparkSes
           `participant` = SIMPLE_PARTICIPANT(`fhir_id` = "2", participant_facet_ids = PARTICIPANT_FACET_IDS(participant_fhir_id_1 = "2", participant_fhir_id_2 = "2")),
           `nb_files` = 3,
           `files` = Seq(
-            DOCUMENTREFERENCE_WITH_SEQ_EXP(
+            BIOSPECIMEN_FILES(
               `fhir_id` = "21",
-              file_facet_ids = FILE_FACET_IDS(file_fhir_id_1 = "21", file_fhir_id_2 = "21"),
-              `sequencing_experiment` = SEQUENCING_EXPERIMENT()
+              file_facet_ids = FILE_FACET_IDS(file_fhir_id_1 = "21", file_fhir_id_2 = "21")
             ),
-            DOCUMENTREFERENCE_WITH_SEQ_EXP(
+            BIOSPECIMEN_FILES(
               `fhir_id` = "33",
-              file_facet_ids = FILE_FACET_IDS(file_fhir_id_1 = "33", file_fhir_id_2 = "33"),
-              `sequencing_experiment` = SEQUENCING_EXPERIMENT()
+              file_facet_ids = FILE_FACET_IDS(file_fhir_id_1 = "33", file_fhir_id_2 = "33")
             ),
-            DOCUMENTREFERENCE_WITH_SEQ_EXP(
+            BIOSPECIMEN_FILES(
               `fhir_id` = "44",
-              file_facet_ids = FILE_FACET_IDS(file_fhir_id_1 = "44", file_fhir_id_2 = "44"),
-              `sequencing_experiment` = SEQUENCING_EXPERIMENT()
+              file_facet_ids = FILE_FACET_IDS(file_fhir_id_1 = "44", file_fhir_id_2 = "44")
             )
           )
         ))

@@ -10,14 +10,9 @@ object Utils {
 
   val observableTitleStandard: Column => Column = term => trim(regexp_replace(term, "_", ":"))
 
-  val sequencingExperimentCols = Seq("fhir_id", "sequencing_experiment_id", "experiment_strategy",
-    "instrument_model", "library_name", "library_strand", "platform")
-
-  private def reformatSequencingExperiment(documentDF: DataFrame) = {
+  private def reformatFileFacetIds(documentDF: DataFrame) = {
     documentDF
-      .withColumn("sequencing_experiment", struct(col("experiment_strategy")))
       .withColumn("file_facet_ids", struct(col("fhir_id") as "file_fhir_id_1", col("fhir_id") as "file_fhir_id_2"))
-      .drop("experiment_strategy")
   }
 
   private def reformatBiospecimen(biospecimensDf: DataFrame) = {
@@ -158,10 +153,10 @@ object Utils {
     def addParticipantFilesWithBiospecimen(filesDf: DataFrame, biospecimensDf: DataFrame): DataFrame = {
       val biospecimenDfReformat = reformatBiospecimen(biospecimensDf)
 
-      val filesWithSeqExpDF = reformatSequencingExperiment(filesDf)
+      val filesWithFacetIds = reformatFileFacetIds(filesDf)
 
       val filesWithBiospecimenDf =
-        filesWithSeqExpDF
+        filesWithFacetIds
           .withColumn("specimen_fhir_id_file", explode_outer(col("specimen_fhir_ids")))
           .join(biospecimenDfReformat,
             col("specimen_fhir_id_file") === biospecimenDfReformat("specimen_fhir_id"),
@@ -175,7 +170,7 @@ object Utils {
           .drop("participant_fhir_id_file")
           .groupBy("fhir_id", "participant_fhir_id")
           .agg(collect_list(col("biospecimen")) as "biospecimens",
-            filesWithSeqExpDF.columns.filter(c => !c.equals("fhir_id") && !c.equals("participant_fhir_id")).map(c => first(c).as(c)): _*)
+            filesWithFacetIds.columns.filter(c => !c.equals("fhir_id") && !c.equals("participant_fhir_id")).map(c => first(c).as(c)): _*)
           .withColumn("file_facet_ids", struct(col("fhir_id") as "file_fhir_id_1", col("fhir_id") as "file_fhir_id_2"))
           .drop("specimen_fhir_ids")
 
@@ -199,7 +194,7 @@ object Utils {
 
     def addFileParticipantsWithBiospecimen(participantDf: DataFrame, biospecimensDf: DataFrame): DataFrame = {
 
-      val fileWithSeqExp = reformatSequencingExperiment(df)
+      val fileWithSeqExp = reformatFileFacetIds(df)
         .withColumn("specimen_fhir_id", explode_outer(col("specimen_fhir_ids")))
 
       val biospecimensDfReformat = reformatBiospecimen(biospecimensDf)
@@ -224,11 +219,72 @@ object Utils {
 
     }
 
-    def addBiospecimenFiles(filesDf: DataFrame): DataFrame = {
-      val filesWithSeqExperiments = reformatSequencingExperiment(filesDf)
+    def addSequencingExperiment(sequencingExperiment:DataFrame, sequencingExperimentGenomicFile:DataFrame): DataFrame = {
+      val seqExpGenomicFileDF = sequencingExperimentGenomicFile
+        .select(col("genomic_file") as "file_id", col("sequencing_experiment") as "sequencing_experiment_id")
 
-      val fileColumns = filesWithSeqExperiments.columns.collect { case c if c != "specimen_fhir_ids" => col(c) }
-      val reformatFile = filesWithSeqExperiments
+      val seqExpDF = sequencingExperiment.select(
+        col("kf_id") as "sequencing_experiment_id",
+        struct(
+          col("kf_id") as "sequencing_experiment_id",
+          col("experiment_date"),
+          col("experiment_strategy"),
+          col("center"),
+          col("library_name"),
+          col("library_prep"),
+          col("library_selection"),
+          col("library_strand"),
+          col("is_paired_end"),
+          col("platform"),
+          col("instrument_model"),
+          col("max_insert_size"),
+          col("mean_insert_size"),
+          col("mean_depth"),
+          col("total_reads"),
+          col("mean_read_length"),
+          col("external_id"),
+          col("sequencing_center_id")
+        ) as "sequencing_experiment"
+      )
+
+      val joinedSeqExp = seqExpDF.join(seqExpGenomicFileDF, Seq("sequencing_experiment_id"))
+        .drop("sequencing_experiment_id")
+        .groupBy("file_id").agg(collect_list("sequencing_experiment") as "sequencing_experiment")
+
+      val fileWithSeqExp = df.join(joinedSeqExp, Seq("file_id"), "left")
+      val sequencingExperimentFallback = array(
+        struct(
+          lit(null).cast("string") as "sequencing_experiment_id",
+          lit(null).cast("string") as "experiment_date",
+          col("experiment_strategy"),
+          lit(null).cast("string") as "center",
+          lit(null).cast("string") as "library_name",
+          lit(null).cast("string") as "library_prep",
+          lit(null).cast("string") as "library_selection",
+          lit(null).cast("string") as "library_strand",
+          lit(null).cast("boolean") as "is_paired_end",
+          lit(null).cast("string") as "platform",
+          lit(null).cast("string") as "instrument_model",
+          lit(null).cast("long") as "max_insert_size",
+          lit(null).cast("double") as "mean_insert_size",
+          lit(null).cast("double") as "mean_depth",
+          lit(null).cast("long") as "total_reads",
+          lit(null).cast("double") as "mean_read_length",
+          lit(null).cast("string") as "external_id",
+          lit(null).cast("string") as "sequencing_center_id"
+
+      ))
+      fileWithSeqExp
+        .withColumn("sequencing_experiment_fallback", when(col("experiment_strategy").isNotNull, sequencingExperimentFallback).otherwise(null))
+        .withColumn("sequencing_experiment", coalesce(col("sequencing_experiment"), col("sequencing_experiment_fallback")))
+        .drop("sequencing_experiment_fallback", "experiment_strategy")
+
+    }
+    def addBiospecimenFiles(filesDf: DataFrame): DataFrame = {
+      val filesWithFacetIds = reformatFileFacetIds(filesDf)
+
+      val fileColumns = filesWithFacetIds.columns.collect { case c if c != "specimen_fhir_ids" => col(c) }
+      val reformatFile = filesWithFacetIds
         .withColumn("biospecimen_fhir_id", explode(col("specimen_fhir_ids")))
         .drop("document_reference_fhir_id")
         .withColumn("file", struct(fileColumns: _*))

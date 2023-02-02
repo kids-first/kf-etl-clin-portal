@@ -17,10 +17,11 @@ class ParticipantCentric(releaseId: String, studyIds: List[String])(implicit con
   val simple_participant: DatasetConf = conf.getDataset("simple_participant")
   val normalized_drs_document_reference: DatasetConf = conf.getDataset("normalized_document_reference")
   val normalized_specimen: DatasetConf = conf.getDataset("normalized_specimen")
-
+  val normalized_sequencing_experiment: DatasetConf = conf.getDataset("normalized_sequencing_experiment")
+  val normalized_sequencing_experiment_genomic_file: DatasetConf = conf.getDataset("normalized_sequencing_experiment_genomic_file")
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    Seq(simple_participant, normalized_drs_document_reference, normalized_specimen)
+    Seq(simple_participant, normalized_drs_document_reference, normalized_specimen, normalized_sequencing_experiment, normalized_sequencing_experiment_genomic_file)
       .map(ds => ds.id -> ds.read.where(col("release_id") === releaseId)
                             .where(col("study_id").isin(studyIds: _*))
       ).toMap
@@ -30,12 +31,13 @@ class ParticipantCentric(releaseId: String, studyIds: List[String])(implicit con
                          lastRunDateTime: LocalDateTime = minDateTime,
                          currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): DataFrame = {
     val patientDF = data(simple_participant.id)
+    val filesWithSeqExp = data(normalized_drs_document_reference.id).addSequencingExperiment(data(normalized_sequencing_experiment.id), data(normalized_sequencing_experiment_genomic_file.id))
 
     val transformedParticipant =
       patientDF
         .withColumn("study_external_id", col("study")("external_id"))
         .addParticipantFilesWithBiospecimen(
-          data(normalized_drs_document_reference.id),
+          filesWithSeqExp,
           data(normalized_specimen.id)
         )
 

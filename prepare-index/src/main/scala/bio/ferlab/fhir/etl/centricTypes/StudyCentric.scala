@@ -2,7 +2,6 @@ package bio.ferlab.fhir.etl.centricTypes
 
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.ETLSingleDestination
-import bio.ferlab.datalake.spark3.etl.v2.ETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
 import bio.ferlab.datalake.spark3.utils.Coalesce
 import org.apache.spark.sql.functions.{array, coalesce, col, collect_set, count, filter, lit, size}
@@ -62,8 +61,8 @@ class StudyCentric(releaseId: String, studyIds: List[String])(implicit configura
       .withColumn("search_text", array(
         col("study_name"), col("study_code"), col("external_id")
       ))
+      .withColumn("search_text", filter(col("search_text"), x => x.isNotNull && x =!= ""))
 
-    transformedStudyDf.select(filter(col("search_text"), x => x.isNotNull && x =!= "")).toDF()
     transformedStudyDf
   }
 
