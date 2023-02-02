@@ -153,10 +153,10 @@ object Utils {
     def addParticipantFilesWithBiospecimen(filesDf: DataFrame, biospecimensDf: DataFrame): DataFrame = {
       val biospecimenDfReformat = reformatBiospecimen(biospecimensDf)
 
-      val filesWithSeqExpDF = reformatFileFacetIds(filesDf)
+      val filesWithFacetIds = reformatFileFacetIds(filesDf)
 
       val filesWithBiospecimenDf =
-        filesWithSeqExpDF
+        filesWithFacetIds
           .withColumn("specimen_fhir_id_file", explode_outer(col("specimen_fhir_ids")))
           .join(biospecimenDfReformat,
             col("specimen_fhir_id_file") === biospecimenDfReformat("specimen_fhir_id"),
@@ -170,7 +170,7 @@ object Utils {
           .drop("participant_fhir_id_file")
           .groupBy("fhir_id", "participant_fhir_id")
           .agg(collect_list(col("biospecimen")) as "biospecimens",
-            filesWithSeqExpDF.columns.filter(c => !c.equals("fhir_id") && !c.equals("participant_fhir_id")).map(c => first(c).as(c)): _*)
+            filesWithFacetIds.columns.filter(c => !c.equals("fhir_id") && !c.equals("participant_fhir_id")).map(c => first(c).as(c)): _*)
           .withColumn("file_facet_ids", struct(col("fhir_id") as "file_fhir_id_1", col("fhir_id") as "file_fhir_id_2"))
           .drop("specimen_fhir_ids")
 
@@ -252,14 +252,39 @@ object Utils {
         .groupBy("file_id").agg(collect_list("sequencing_experiment") as "sequencing_experiment")
 
       val fileWithSeqExp = df.join(joinedSeqExp, Seq("file_id"), "left")
+      val sequencingExperimentFallback = array(
+        struct(
+          lit(null).cast("string") as "sequencing_experiment_id",
+          lit(null).cast("string") as "experiment_date",
+          col("experiment_strategy"),
+          lit(null).cast("string") as "center",
+          lit(null).cast("string") as "library_name",
+          lit(null).cast("string") as "library_prep",
+          lit(null).cast("string") as "library_selection",
+          lit(null).cast("string") as "library_strand",
+          lit(null).cast("boolean") as "is_paired_end",
+          lit(null).cast("string") as "platform",
+          lit(null).cast("string") as "instrument_model",
+          lit(null).cast("long") as "max_insert_size",
+          lit(null).cast("double") as "mean_insert_size",
+          lit(null).cast("double") as "mean_depth",
+          lit(null).cast("long") as "total_reads",
+          lit(null).cast("double") as "mean_read_length",
+          lit(null).cast("string") as "external_id",
+          lit(null).cast("string") as "sequencing_center_id"
 
+      ))
       fileWithSeqExp
+        .withColumn("sequencing_experiment_fallback", when(col("experiment_strategy").isNotNull, sequencingExperimentFallback).otherwise(null))
+        .withColumn("sequencing_experiment", coalesce(col("sequencing_experiment"), col("sequencing_experiment_fallback")))
+        .drop("sequencing_experiment_fallback", "experiment_strategy")
+
     }
     def addBiospecimenFiles(filesDf: DataFrame): DataFrame = {
-      val filesWithSeqExperiments = reformatFileFacetIds(filesDf)
+      val filesWithFacetIds = reformatFileFacetIds(filesDf)
 
-      val fileColumns = filesWithSeqExperiments.columns.collect { case c if c != "specimen_fhir_ids" => col(c) }
-      val reformatFile = filesWithSeqExperiments
+      val fileColumns = filesWithFacetIds.columns.collect { case c if c != "specimen_fhir_ids" => col(c) }
+      val reformatFile = filesWithFacetIds
         .withColumn("biospecimen_fhir_id", explode(col("specimen_fhir_ids")))
         .drop("document_reference_fhir_id")
         .withColumn("file", struct(fileColumns: _*))

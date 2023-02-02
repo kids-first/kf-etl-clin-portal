@@ -30,7 +30,7 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
     val inputDocumentReference = Seq(
       DOCUMENTREFERENCE(file_id = "file1"),
       DOCUMENTREFERENCE(file_id = "file2"),
-      DOCUMENTREFERENCE(file_id = "file3"),
+      DOCUMENTREFERENCE(file_id = "file3", `experiment_strategy` = null),
     ).toDF()
     val inputSeqExp = Seq(
       SEQUENCING_EXPERIMENT_INPUT(kf_id = "seq_exp1"),
@@ -44,8 +44,7 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val output = inputDocumentReference.addSequencingExperiment(inputSeqExp, inputSeqExpGenFile)
-      .select("file_id", "sequencing_experiment")
-      .as[FileWithSeqExp]
+      .as[DOCUMENTREFERENCE_WITH_SEQEXP]
       .collect()
       .toSeq
 
@@ -68,6 +67,31 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
 
     output.find(_.file_id === "file3") should not be empty
     output.find(_.file_id === "file3").get.sequencing_experiment shouldBe null
+  }
+
+  it should "fallback to sequencing experiment defined in document reference fhir resource" in {
+    val inputDocumentReference = Seq(
+      DOCUMENTREFERENCE(file_id = "file1", `experiment_strategy` = "WXS")
+    ).toDF()
+    val inputSeqExp = spark.emptyDataset[SEQUENCING_EXPERIMENT_INPUT].toDF()
+    val inputSeqExpGenomicFile = spark.emptyDataset[SEQUENCING_EXPERIMENT_GENOMIC_FILE_INPUT].toDF()
+
+    val output = inputDocumentReference.addSequencingExperiment(inputSeqExp, inputSeqExpGenomicFile)
+      .as[DOCUMENTREFERENCE_WITH_SEQEXP]
+      .collect()
+      .toSeq
+
+    output.length shouldBe 1
+
+    output.find(_.file_id === "file1") should not be empty
+    val seqExpResultFile1 = output.find(_.file_id === "file1").get.sequencing_experiment
+    assert(seqExpResultFile1 != null, "Sequencing experiment should not be null")
+    seqExpResultFile1.length shouldBe 1
+    seqExpResultFile1 should contain theSameElementsAs Seq(
+      SEQUENCING_EXPERIMENT(sequencing_experiment_id = null, experiment_strategy = "WXS")
+    )
+
+
   }
 
   "addOutcomes" should "add outcomes to participant" in {
@@ -538,14 +562,14 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val inputDocumentReference = Seq(
-      DOCUMENTREFERENCE(`participant_fhir_id` = null, `fhir_id` = "F1", `specimen_fhir_ids` = Seq("B11", "B12", "B21")),
-      DOCUMENTREFERENCE(`participant_fhir_id` = "P1", `fhir_id` = "F2", `specimen_fhir_ids` = Seq("B11", "B13", "B31", "B32")),
-      DOCUMENTREFERENCE(`participant_fhir_id` = "P2", `fhir_id` = "F3", `specimen_fhir_ids` = Seq("B22")),
-      DOCUMENTREFERENCE(`participant_fhir_id` = "P3", `fhir_id` = "F4", `specimen_fhir_ids` = Seq("B33")),
-      DOCUMENTREFERENCE(`participant_fhir_id` = "P2", `fhir_id` = "F5", `specimen_fhir_ids` = Seq.empty),
+      DOCUMENTREFERENCE_WITH_SEQEXP(`participant_fhir_id` = null, `fhir_id` = "F1", `specimen_fhir_ids` = Seq("B11", "B12", "B21")),
+      DOCUMENTREFERENCE_WITH_SEQEXP(`participant_fhir_id` = "P1", `fhir_id` = "F2", `specimen_fhir_ids` = Seq("B11", "B13", "B31", "B32")),
+      DOCUMENTREFERENCE_WITH_SEQEXP(`participant_fhir_id` = "P2", `fhir_id` = "F3", `specimen_fhir_ids` = Seq("B22")),
+      DOCUMENTREFERENCE_WITH_SEQEXP(`participant_fhir_id` = "P3", `fhir_id` = "F4", `specimen_fhir_ids` = Seq("B33")),
+      DOCUMENTREFERENCE_WITH_SEQEXP(`participant_fhir_id` = "P2", `fhir_id` = "F5", `specimen_fhir_ids` = Seq.empty),
 
-      DOCUMENTREFERENCE(`participant_fhir_id` = "P_NOT_THERE", `fhir_id` = "F6", `specimen_fhir_ids` = Seq("B_NOT_THERE1")),
-      DOCUMENTREFERENCE(`participant_fhir_id` = "P_NOT_THERE", `fhir_id` = "F7", `specimen_fhir_ids` = Seq.empty),
+      DOCUMENTREFERENCE_WITH_SEQEXP(`participant_fhir_id` = "P_NOT_THERE", `fhir_id` = "F6", `specimen_fhir_ids` = Seq("B_NOT_THERE1")),
+      DOCUMENTREFERENCE_WITH_SEQEXP(`participant_fhir_id` = "P_NOT_THERE", `fhir_id` = "F7", `specimen_fhir_ids` = Seq.empty),
     ).toDF()
 
     val output = inputParticipant.addParticipantFilesWithBiospecimen(inputDocumentReference, inputBiospecimen)
@@ -613,7 +637,7 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val inputDocumentReference = Seq(
-      DOCUMENTREFERENCE(`participant_fhir_id` = "P1", `fhir_id` = "F1", `specimen_fhir_ids` = Seq("B11")),
+      DOCUMENTREFERENCE_WITH_SEQEXP(`participant_fhir_id` = "P1", `fhir_id` = "F1", `specimen_fhir_ids` = Seq("B11")),
     ).toDF()
 
     val output = inputParticipant.addParticipantFilesWithBiospecimen(inputDocumentReference, inputBiospecimen)
@@ -626,8 +650,5 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
     val participantWithFile = output.select("fhir_id", "files.file_name").filter(col("fhir_id") === "P1").as[(String, Seq[String])].collect()
     participantWithFile.head._2 should contain theSameElementsAs Seq("4db9adf4-94f7-4800-a360-49eda89dfb62.g.vcf.gz", "dummy_file")
   }
-
-
 }
 
-case class FileWithSeqExp(file_id: String, sequencing_experiment: Seq[SEQUENCING_EXPERIMENT]) //TODO move
