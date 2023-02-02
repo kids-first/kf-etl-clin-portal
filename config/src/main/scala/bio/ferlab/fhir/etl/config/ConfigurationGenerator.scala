@@ -146,7 +146,9 @@ object ConfigurationGenerator extends App {
         "spark.sql.extensions" -> "io.delta.sql.DeltaSparkSessionExtension",
         "spark.sql.legacy.timeParserPolicy" -> "CORRECTED",
         "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN",
-        "spark.fhir.server.url" -> conf(project)("fhirDev")
+        "spark.fhir.server.url" -> conf(project)("fhirDev"),
+        "spark.databricks.delta.merge.repartitionBeforeWrite.enabled" -> "true",
+        "spark.databricks.delta.schema.autoMerge.enabled" -> "true"
       )
     ),
       dataservice_url = "https://kf-api-dataservice-qa.kidsfirstdrc.org"
@@ -154,6 +156,8 @@ object ConfigurationGenerator extends App {
     ))
 
     val spark_conf = Map(
+      "spark.databricks.delta.merge.repartitionBeforeWrite.enabled" -> "true",
+      "spark.databricks.delta.schema.autoMerge.enabled" -> "true",
       "spark.databricks.delta.retentionDurationCheck.enabled" -> "false",
       "spark.delta.merge.repartitionBeforeWrite" -> "true",
       "spark.sql.catalog.spark_catalog" -> "org.apache.spark.sql.delta.catalog.DeltaCatalog",
