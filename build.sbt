@@ -45,6 +45,8 @@ lazy val import_task = (project in file("import-task")).dependsOn(config).settin
 
 lazy val prepare_index = (project in file("prepare-index")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
 
+lazy val variant_task = (project in file("variant-task")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
+
 lazy val index_task = (project in file("index-task")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
 
 lazy val publish_task = (project in file("publish-task")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
