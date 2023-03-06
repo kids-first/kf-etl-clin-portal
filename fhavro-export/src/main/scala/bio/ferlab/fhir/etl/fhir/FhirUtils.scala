@@ -20,6 +20,7 @@ object FhirUtils {
   }
 
   def replaceBaseUrl(url: String, replaceHost: String) = {
-    URIUtils.rewriteURI(URI.create(url), HttpHost.create(replaceHost)).toString
+    val replaceHostUri = new URI(replaceHost)
+    URIUtils.rewriteURI(URI.create(url), new HttpHost(replaceHostUri.getHost, replaceHostUri.getPort, replaceHostUri.getScheme)).toString
   }
 }
