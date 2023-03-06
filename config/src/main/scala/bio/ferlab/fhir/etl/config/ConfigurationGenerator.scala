@@ -24,7 +24,9 @@ object ConfigurationGenerator extends App {
   val sourceNames: Seq[SourceConfig] = Seq(
     SourceConfig("observation", Some("family_relationship"), partitionByStudyIdAndReleaseId),
     SourceConfig("observation", Some("vital_status"), partitionByStudyIdAndReleaseId),
-    SourceConfig("condition", Some("disease"), partitionByStudyIdAndReleaseId),
+    SourceConfig("observation", Some("histology_observation"), partitionByStudyIdAndReleaseId),
+    SourceConfig("condition", Some("disease_mondo"), partitionByStudyIdAndReleaseId),
+    SourceConfig("condition", Some("disease_ncit"), partitionByStudyIdAndReleaseId),
     SourceConfig("condition", Some("phenotype"), partitionByStudyIdAndReleaseId),
     SourceConfig("patient", None, partitionByStudyIdAndReleaseId),
     SourceConfig("group", None, partitionByStudyIdAndReleaseId),

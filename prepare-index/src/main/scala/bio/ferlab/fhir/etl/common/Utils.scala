@@ -49,11 +49,11 @@ object Utils {
         .drop("participant_fhir_id")
     }
 
-    def addDownSyndromeDiagnosis(diseases: DataFrame, mondoTerms: DataFrame): DataFrame = {
+    def addDownSyndromeDiagnosis(diseasesMondo: DataFrame, mondoTerms: DataFrame): DataFrame = {
       val mondoDownSyndrome = mondoTerms.where(
         exists(col("ancestors"), p => p("id") like s"%$DOWN_SYNDROM_MONDO_TERM%") || col("id") === DOWN_SYNDROM_MONDO_TERM).select(col("id") as "mondo_down_syndrome_id", col("name") as "mondo_down_syndrome_name")
 
-      val downSyndromeDiagnosis = diseases.join(mondoDownSyndrome, col("mondo_id") === col("mondo_down_syndrome_id"))
+      val downSyndromeDiagnosis = diseasesMondo.join(mondoDownSyndrome, col("mondo_id") === col("mondo_down_syndrome_id"))
         .select(
           col("participant_fhir_id"),
           when(col("mondo_down_syndrome_id").isNotNull, displayTerm(col("mondo_down_syndrome_id"), col("mondo_down_syndrome_name")))
@@ -67,7 +67,7 @@ object Utils {
 
     }
 
-    def addDiagnosisPhenotypes(phenotypeDF: DataFrame, diagnosesDF: DataFrame)(hpoTerms: DataFrame, mondoTerms: DataFrame): DataFrame = {
+    def addDiagnosisPhenotypes(phenotypeDF: DataFrame, diseasesMondoDF: DataFrame)(hpoTerms: DataFrame, mondoTerms: DataFrame): DataFrame = {
       val phenotypes = addPhenotypes(phenotypeDF, hpoTerms)
 
       val phenotypesWithHPOTerms =
@@ -109,7 +109,7 @@ object Utils {
           .join(observedPhenotypes, Seq("participant_fhir_id"), "left_outer")
           .join(nonObservedPhenotypes, Seq("participant_fhir_id"), "left_outer")
 
-      val diseases = addDiseases(diagnosesDF, mondoTerms)
+      val diseases = addDiseases(diseasesMondoDF, mondoTerms)
       val commonColumns = Seq("participant_fhir_id", "study_id")
 
       val diseaseColumns = diseases.columns.filter(col => !commonColumns.contains(col))

@@ -70,7 +70,7 @@ object Transformations {
     Drop("subject", "identifier", "focus", "valueCodeableConcept", "meta")
   )
 
-  val conditionDiseaseMappings: List[Transformation] = List(
+  val diseaseMondoMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id", "study_id", "release_id", "identifier", "code", "bodySite", "subject", "verificationStatus", "_recordedDate")
       .withColumn("diagnosis_id", officialIdentifier)
@@ -263,7 +263,7 @@ object Transformations {
     "vital_status" -> observationVitalStatusMappings,
     "family_relationship" -> observationFamilyRelationshipMappings,
     "phenotype" -> conditionPhenotypeMappings,
-    "disease" -> conditionDiseaseMappings,
+    "diseaseMondo" -> diseaseMondoMappings,
     "research_subject" -> researchSubjectMappings,
     "research_study" -> researchstudyMappings,
     "group" -> groupMappings,
