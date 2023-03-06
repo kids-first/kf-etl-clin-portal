@@ -1,8 +1,8 @@
 # Config
 RELEASE_ID=${1}
-STUDY_ID="???" #FIXME
+STUDY_ID="GIMS" #FIXME
 KF_BUCKET="s3://kf-strides-232196027141-datalake-qa/jobs"
-ES_ENDPOINT="???" #FIXME
+ES_ENDPOINT="https://vpc-genetics-info-commons-es-xz26u5sd5zjg2umnzyis6na5gq.us-west-2.es.amazonaws.com" #FIXME
 
 # Copy jars from KF S3 bucket to here
 aws s3 cp ${KF_BUCKET}/fhavro-export.jar fhavro-export.jar
