@@ -18,6 +18,7 @@ object ConfigurationGenerator extends App {
     sources.map(ds => ds.copy(table = ds.table.map(t => TableConf(database, t.name))))
   }
 
+
   def excludeSpecimenCollection(project: String): Boolean = project == pInclude
 
   private val partitionByStudyIdAndReleaseId = List("study_id", "release_id")
@@ -127,7 +128,18 @@ object ConfigurationGenerator extends App {
   val includeConf = Map("fhirDev" -> "https://include-api-fhir-service-dev.includedcc.org", "fhirQa" -> "https://include-api-fhir-service-dev.includedcc.org", "fhirPrd" -> "https://include-api-fhir-service.includedcc.org", "qaDbName" -> "include_portal_qa", "prdDbName" -> "include_portal_prd", "localDbName" -> "normalized", "bucketNamePrefix" -> "include-373997854230-datalake")
   val kfConf = Map("fhirDev" -> "https://kf-api-fhir-service-qa.kidsfirstdrc.org", "fhirQa" -> "https://kf-api-fhir-service-qa.kidsfirstdrc.org", "fhirPrd" -> "https://kf-api-fhir-service.kidsfirstdrc.org", "qaDbName" -> "kf_portal_qa", "prdDbName" -> "kf_portal_prd", "localDbName" -> "normalized", "bucketNamePrefix" -> "kf-strides-232196027141-datalake")
   val conf = Map(pInclude -> includeConf, pKfStrides -> kfConf)
-
+  val spark_conf = Map(
+    "spark.databricks.delta.merge.repartitionBeforeWrite.enabled" -> "true",
+    "spark.databricks.delta.schema.autoMerge.enabled" -> "true",
+    "spark.databricks.delta.retentionDurationCheck.enabled" -> "false",
+    "spark.delta.merge.repartitionBeforeWrite" -> "true",
+    "spark.sql.catalog.spark_catalog" -> "org.apache.spark.sql.delta.catalog.DeltaCatalog",
+    "spark.sql.extensions" -> "io.delta.sql.DeltaSparkSessionExtension",
+    "spark.sql.legacy.parquet.datetimeRebaseModeInWrite" -> "CORRECTED",
+    "spark.sql.legacy.timeParserPolicy" -> "CORRECTED",
+    "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN",
+    "spark.hadoop.fs.s3a.multiobjectdelete.enable" -> "false", //https://hadoop.apache.org/docs/stable/hadoop-aws/tools/hadoop-aws/troubleshooting_s3a.html#MultiObjectDeleteException_during_delete_or_rename_of_files
+  )
   conf.foreach { case (project, _) =>
     ConfigurationWriter.writeTo(s"config/output/config/dev-${project}.conf", ETLConfiguration(excludeSpecimenCollection(project), DatalakeConf(
       storages = List(
@@ -157,18 +169,6 @@ object ConfigurationGenerator extends App {
 
     ))
 
-    val spark_conf = Map(
-      "spark.databricks.delta.merge.repartitionBeforeWrite.enabled" -> "true",
-      "spark.databricks.delta.schema.autoMerge.enabled" -> "true",
-      "spark.databricks.delta.retentionDurationCheck.enabled" -> "false",
-      "spark.delta.merge.repartitionBeforeWrite" -> "true",
-      "spark.sql.catalog.spark_catalog" -> "org.apache.spark.sql.delta.catalog.DeltaCatalog",
-      "spark.sql.extensions" -> "io.delta.sql.DeltaSparkSessionExtension",
-      "spark.sql.legacy.parquet.datetimeRebaseModeInWrite" -> "CORRECTED",
-      "spark.sql.legacy.timeParserPolicy" -> "CORRECTED",
-      "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN",
-      "spark.hadoop.fs.s3a.multiobjectdelete.enable" -> "false", //https://hadoop.apache.org/docs/stable/hadoop-aws/tools/hadoop-aws/troubleshooting_s3a.html#MultiObjectDeleteException_during_delete_or_rename_of_files
-    )
 
     ConfigurationWriter.writeTo(s"config/output/config/qa-${project}.conf", ETLConfiguration(excludeSpecimenCollection(project), DatalakeConf(
       storages = List(
@@ -192,4 +192,15 @@ object ConfigurationGenerator extends App {
       dataservice_url = "https://kf-api-dataservice.kidsfirstdrc.org"
     ))
   }
+
+  ConfigurationWriter.writeTo(s"config/output/config/ucsf.conf", ETLConfiguration(excludeSpecimenCollection = true, DatalakeConf(
+    storages = List(
+      StorageConf(storage, s"s3a://d3b-portal-65-4-r-us-west-2.sec.ucsf.edu", S3)
+    ),
+    sources = sources.map(ds => ds.copy(table = None)),
+    args = args.toList,
+    sparkconf = spark_conf.++(Map("spark.fhir.server.url" -> "http://10.90.172.42:443"))
+  ),
+    dataservice_url = ""
+  ))
 }

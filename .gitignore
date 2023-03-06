@@ -109,3 +109,5 @@ metastore_db/*
 
 /tmp
 .DS_store
+
+bin/spark_ivy
