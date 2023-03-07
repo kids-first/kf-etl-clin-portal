@@ -128,6 +128,26 @@ STEPS=$(
     ]
   },
  {
+     "Args": [
+       "spark-submit",
+       "--deploy-mode",
+       "client",
+       "--class",
+       "bio.ferlab.enrich.etl.Enrich",
+       "s3a://${BUCKET}/jobs/enrich.jar",
+        "config/${ENV}-${PROJECT}.conf",
+       "default",
+       "${RELEASE_ID}",
+       "${STUDIES}",
+       "config/${ENV}-${PROJECT}.conf"
+     ],
+     "Type": "CUSTOM_JAR",
+     "ActionOnFailure": "TERMINATE_CLUSTER",
+     "Jar": "command-runner.jar",
+     "Properties": "",
+     "Name": "Enrich"
+   }
+ {
     "Args": [
       "spark-submit",
       "--deploy-mode",
