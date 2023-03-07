@@ -26,7 +26,7 @@ object FhavroToNormalizedMappings {
     c.sources.filter(s => s.format == Format.AVRO).map(s => {
       val pattern(table) = s.id
       val mappings = extractionMappingsFor(c.excludeSpecimenCollection)
-      (s, c.getDataset(s"normalized_$table"), defaultTransformations(releaseId) ++ mappings(table))
+      (s, c.getDataset(s"normalized_$table"), defaultTransformations(releaseId) ++ mappings.getOrElse(table, Nil))
     }
     )
   }
