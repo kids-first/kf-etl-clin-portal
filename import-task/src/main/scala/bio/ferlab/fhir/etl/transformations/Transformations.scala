@@ -268,6 +268,9 @@ object Transformations {
     "research_study" -> researchstudyMappings,
     "group" -> groupMappings,
     "document_reference" -> documentreferenceMappings,
-    "organization" -> organizationMappings
+    "organization" -> organizationMappings,
+    "histology_observation" -> Nil,
+    "diseaseNcit" -> Nil
+
   )
 }
