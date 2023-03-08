@@ -26,6 +26,7 @@ object ConfigurationGenerator extends App {
     SourceConfig("observation", Some("family_relationship"), partitionByStudyIdAndReleaseId),
     SourceConfig("observation", Some("vital_status"), partitionByStudyIdAndReleaseId),
     SourceConfig("observation", Some("histology_observation"), partitionByStudyIdAndReleaseId),
+    SourceConfig("observation", Some("proband_observation"), partitionByStudyIdAndReleaseId),
     SourceConfig("condition", Some("disease_mondo"), partitionByStudyIdAndReleaseId),
     SourceConfig("condition", Some("disease_ncit"), partitionByStudyIdAndReleaseId),
     SourceConfig("condition", Some("phenotype"), partitionByStudyIdAndReleaseId),

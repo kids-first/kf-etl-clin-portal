@@ -258,6 +258,15 @@ object Transformations {
       "container", "collection_sample", "meta")
   )
 
+  def probandObservationMappings(excludeCollection: Boolean): List[Transformation] = List(
+    Custom(input =>
+      input.select("subject", "valueCodeableConcept")
+        .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
+        .withColumn("is_proband", extractFirstForSystem(col("valueCodeableConcept")("coding"), Seq(SYS_YES_NO))("code") === "Y")
+    ),
+    Drop("subject", "valueCodeableConcept")
+  )
+
   def extractionMappingsFor(excludeSpecimenCollection: Boolean): Map[String, List[Transformation]] = Map(
     "patient" -> patientMappings,
     "specimen" -> specimenMappings(excludeSpecimenCollection),
@@ -271,7 +280,8 @@ object Transformations {
     "document_reference" -> documentreferenceMappings,
     "organization" -> organizationMappings,
     "histology_observation" -> Nil,
-    "diseaseNcit" -> Nil
+    "diseaseNcit" -> Nil,
+    "proband_observation" -> probandObservationMappings
 
   )
 }

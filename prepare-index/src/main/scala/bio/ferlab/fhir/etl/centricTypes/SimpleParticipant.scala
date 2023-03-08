@@ -17,6 +17,7 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
   override val mainDestination: DatasetConf = conf.getDataset("simple_participant")
   val es_index_study_centric: DatasetConf = conf.getDataset("es_index_study_centric")
   val normalized_patient: DatasetConf = conf.getDataset("normalized_patient")
+  val normalized_proband_observation: DatasetConf = conf.getDataset("normalized_proband_observation")
   val normalized_vital_status: DatasetConf = conf.getDataset("normalized_vital_status")
   val normalized_family_relationship: DatasetConf = conf.getDataset("normalized_family_relationship")
   val normalized_phenotype: DatasetConf = conf.getDataset("normalized_phenotype")
@@ -28,7 +29,7 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     (Seq(
-      es_index_study_centric, normalized_patient, normalized_family_relationship, normalized_phenotype, normalized_disease_mondo, normalized_group, normalized_vital_status)
+      es_index_study_centric, normalized_patient, normalized_family_relationship, normalized_phenotype, normalized_disease_mondo, normalized_group, normalized_vital_status, normalized_proband_observation)
       .map(ds => ds.id -> ds.read.where(col("release_id") === releaseId)
         .where(col("study_id").isin(studyIds: _*))
       ) ++ Seq(
@@ -39,8 +40,8 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
   }
 
   override def transformSingle(data: Map[String, DataFrame],
-                         lastRunDateTime: LocalDateTime = minDateTime,
-                         currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): DataFrame = {
+                               lastRunDateTime: LocalDateTime = minDateTime,
+                               currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): DataFrame = {
     val patientDF = data(normalized_patient.id)
     val diseaseMondoDF = data(normalized_disease_mondo.id).withColumn("mondo_id", observableTitleStandard(firstCategory("MONDO", col("condition_coding"))))
     val transformedParticipant =
@@ -50,11 +51,11 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
           data(normalized_phenotype.id),
           diseaseMondoDF
         )(data(hpo_terms.id), data(mondo_terms.id))
-        .addDownSyndromeDiagnosis(diseaseMondoDF,data(mondo_terms.id))
+        .addDownSyndromeDiagnosis(diseaseMondoDF, data(mondo_terms.id))
         .addOutcomes(data(normalized_vital_status.id))
+        .addProband(data(normalized_proband_observation.id))
         .addFamily(data(normalized_group.id), data(normalized_family_relationship.id))
         .withColumnRenamed("gender", "sex")
-        .withColumn("is_proband", lit(false)) // TODO
         .withColumn("age_at_data_collection", lit(111)) // TODO
         .withColumn("study_external_id", col("study")("external_id"))
         .withColumn("participant_facet_ids", struct(col("fhir_id") as "participant_fhir_id_1", col("fhir_id") as "participant_fhir_id_2"))

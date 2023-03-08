@@ -49,6 +49,13 @@ object Utils {
         .drop("participant_fhir_id")
     }
 
+    def addProband(probandDF: DataFrame): DataFrame = {
+      df
+        .join(probandDF.select("participant_fhir_id", "is_proband"), col("fhir_id") === col("participant_fhir_id"), "left_outer")
+        .withColumn("is_proband", coalesce(col("is_proband"), lit(false)))
+        .drop("participant_fhir_id")
+    }
+
     def addDownSyndromeDiagnosis(diseasesMondo: DataFrame, mondoTerms: DataFrame): DataFrame = {
       val mondoDownSyndrome = mondoTerms.where(
         exists(col("ancestors"), p => p("id") like s"%$DOWN_SYNDROM_MONDO_TERM%") || col("id") === DOWN_SYNDROM_MONDO_TERM).select(col("id") as "mondo_down_syndrome_id", col("name") as "mondo_down_syndrome_name")
