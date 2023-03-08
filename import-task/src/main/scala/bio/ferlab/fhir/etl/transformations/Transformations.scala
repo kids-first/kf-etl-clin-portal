@@ -70,9 +70,9 @@ object Transformations {
     Drop("subject", "identifier", "focus", "valueCodeableConcept", "meta")
   )
 
-  val diseaseMondoMappings: List[Transformation] = List(
+  val diseaseMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "study_id", "release_id", "identifier", "code", "bodySite", "subject", "verificationStatus", "_recordedDate")
+      .select("fhir_id", "study_id", "release_id", "identifier", "code", "bodySite", "subject", "verificationStatus", "_recordedDate", "category")
       .withColumn("diagnosis_id", officialIdentifier)
       .withColumn("condition_coding", codingClassify(col("code")("coding")).cast("array<struct<category:string,code:string>>"))
       .withColumn("source_text", col("code")("text"))
@@ -87,10 +87,27 @@ object Transformations {
         col("_recordedDate")("recordedDate")("offset")("unit") as "units",
         extractFirstForSystem(col("_recordedDate")("recordedDate")("event")("coding"), Seq("http://snomed.info/sct"))("display") as "from"
       ))
+      .withColumn("diagnosis_mondo", filter(col("condition_coding"), x => x("category") === "MONDO"))
+      .withColumn("diagnosis_mondo", col("diagnosis_mondo.code")(0))
+      .withColumn("diagnosis_ncit", filter(col("condition_coding"), x => x("category") === "NCIT"))
+      .withColumn("diagnosis_ncit", col("diagnosis_ncit.code")(0))
+      .withColumn("diagnosis_icd", filter(col("condition_coding"), x => x("category") === "ICD"))
+      .withColumn("diagnosis_ncit", col("diagnosis_icd.code")(0))
+
       // TODO external_id
       // TODO diagnosis_category
     ),
-    Drop("identifier", "code", "subject", "verificationStatus", "_recordedDate", "bodySite")
+    Drop("identifier", "code", "subject", "verificationStatus", "_recordedDate", "bodySite", "category")
+  )
+
+  val histologyObservationMappings: List[Transformation] = List(
+    Custom(_
+      .select("specimen", "subject", "focus")
+      .withColumn("condition_id", explode(col("focus.reference")))
+      .withColumn("condition_id", extractReferenceId(col("condition_id")))
+      .withColumn("specimen_id", extractReferenceId(col("specimen.reference")))
+      .withColumn("patient_id", extractReferenceId(col("subject.reference")))),
+    Drop("specimen", "subject", "focus")
   )
 
   val conditionPhenotypeMappings: List[Transformation] = List(
@@ -121,7 +138,6 @@ object Transformations {
     ),
     Drop("identifier", "name")
   )
-
 
   val researchstudyMappings: List[Transformation] = List(
     Custom(_
@@ -273,7 +289,7 @@ object Transformations {
     "vital_status" -> observationVitalStatusMappings,
     "family_relationship" -> observationFamilyRelationshipMappings,
     "phenotype" -> conditionPhenotypeMappings,
-    "diseaseMondo" -> diseaseMondoMappings,
+    "disease" -> diseaseMappings,
     "research_subject" -> researchSubjectMappings,
     "research_study" -> researchstudyMappings,
     "group" -> groupMappings,
@@ -282,6 +298,6 @@ object Transformations {
     "histology_observation" -> Nil,
     "diseaseNcit" -> Nil,
     "proband_observation" -> probandObservationMappings
-
+    "histology_observation" -> histologyObservationMappings
   )
 }

@@ -21,7 +21,7 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
   val normalized_vital_status: DatasetConf = conf.getDataset("normalized_vital_status")
   val normalized_family_relationship: DatasetConf = conf.getDataset("normalized_family_relationship")
   val normalized_phenotype: DatasetConf = conf.getDataset("normalized_phenotype")
-  val normalized_disease_mondo: DatasetConf = conf.getDataset("normalized_disease_mondo")
+  val normalized_disease: DatasetConf = conf.getDataset("normalized_disease")
   val normalized_group: DatasetConf = conf.getDataset("normalized_group")
   val hpo_terms: DatasetConf = conf.getDataset("hpo_terms")
   val mondo_terms: DatasetConf = conf.getDataset("mondo_terms")
@@ -29,7 +29,7 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     (Seq(
-      es_index_study_centric, normalized_patient, normalized_family_relationship, normalized_phenotype, normalized_disease_mondo, normalized_group, normalized_vital_status, normalized_proband_observation)
+      es_index_study_centric, normalized_patient, normalized_family_relationship, normalized_phenotype, normalized_disease, normalized_group, normalized_vital_status, normalized_proband_observation)
       .map(ds => ds.id -> ds.read.where(col("release_id") === releaseId)
         .where(col("study_id").isin(studyIds: _*))
       ) ++ Seq(
@@ -43,15 +43,15 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
                                lastRunDateTime: LocalDateTime = minDateTime,
                                currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): DataFrame = {
     val patientDF = data(normalized_patient.id)
-    val diseaseMondoDF = data(normalized_disease_mondo.id).withColumn("mondo_id", observableTitleStandard(firstCategory("MONDO", col("condition_coding"))))
+    val disease = data(normalized_disease.id).withColumn("mondo_id", observableTitleStandard(firstCategory("MONDO", col("condition_coding"))))
     val transformedParticipant =
       patientDF
         .addStudy(data(es_index_study_centric.id))
         .addDiagnosisPhenotypes(
           data(normalized_phenotype.id),
-          diseaseMondoDF
+          disease
         )(data(hpo_terms.id), data(mondo_terms.id))
-        .addDownSyndromeDiagnosis(diseaseMondoDF, data(mondo_terms.id))
+        .addDownSyndromeDiagnosis(disease,data(mondo_terms.id))
         .addOutcomes(data(normalized_vital_status.id))
         .addProband(data(normalized_proband_observation.id))
         .addFamily(data(normalized_group.id), data(normalized_family_relationship.id))
