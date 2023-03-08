@@ -213,7 +213,8 @@ object Transformations {
   def specimenMappings(excludeCollection: Boolean): List[Transformation] = List(
     Custom { input =>
       val specimen = input
-        .select("fhir_id", "release_id", "study_id", "type", "identifier", "collection", "subject", "status", "container", "parent", "processing")
+        .select("fhir_id", "release_id", "study_id", "type", "identifier", "collection", "subject", "status", "container", "parent", "processing", "meta")
+        .withColumn("consent_code", filter(col("meta.security"), x => x("system") === SYS_CONSENT_CODE)(0)("code"))
         .withColumn("sample_type", col("type")("text"))
         .withColumn("sample_id", officialIdentifier)
         .withColumn("laboratory_procedure", col("processing")(0)("description"))
@@ -254,7 +255,7 @@ object Transformations {
     },
     Drop("type", "identifier", "collection", "subject",
       "parent",
-      "container", "collection_sample")
+      "container", "collection_sample", "meta")
   )
 
   def extractionMappingsFor(excludeSpecimenCollection: Boolean): Map[String, List[Transformation]] = Map(
