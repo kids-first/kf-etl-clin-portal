@@ -297,7 +297,7 @@ object Transformations {
     "organization" -> organizationMappings,
     "histology_observation" -> Nil,
     "diseaseNcit" -> Nil,
-    "proband_observation" -> probandObservationMappings
+    "proband_observation" -> probandObservationMappings(excludeSpecimenCollection),
     "histology_observation" -> histologyObservationMappings
   )
 }
