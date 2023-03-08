@@ -27,5 +27,6 @@ package object etl {
   val SYS_PROGRAMS = "https://includedcc.org/fhir/code-systems/programs"
   val SYS_DATA_ACCESS_TYPES = "https://includedcc.org/fhir/code-systems/data_access_types"
   val SYS_CONSENT_CODE = "https://kf-api-dataservice.kidsfirstdrc.org/biospecimens?dbgap_consent_code="
+  val SYS_YES_NO = "http://terminology.hl7.org/CodeSystem/v2-0136"
 
 }

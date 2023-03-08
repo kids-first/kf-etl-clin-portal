@@ -40,7 +40,11 @@ class SimpleParticipantSpec extends AnyFlatSpec with Matchers with WithSparkSess
       ).toDF(),
       "es_index_study_centric" -> Seq(STUDY_CENTRIC()).toDF(),
       "hpo_terms" -> read(getClass.getResource("/hpo_terms.json").toString, "Json", Map(), None, None),
-      "mondo_terms" -> read(getClass.getResource("/mondo_terms.json.gz").toString, "Json", Map(), None, None)
+      "mondo_terms" -> read(getClass.getResource("/mondo_terms.json.gz").toString, "Json", Map(), None, None),
+      "normalized_proband_observation" -> Seq(
+        OBSERVATION_PROBAND(participant_fhir_id = "P1", is_proband = true),
+        OBSERVATION_PROBAND(participant_fhir_id = "P2")
+      ).toDF()
     )
     val expectedMondoTree = List(
       PHENOTYPE_ENRICHED("psychiatric disorder (MONDO:0002025)", List("disease or disorder (MONDO:0000001)"), false, false, List(0)),
@@ -79,6 +83,7 @@ class SimpleParticipantSpec extends AnyFlatSpec with Matchers with WithSparkSess
       family = FAMILY(fhir_id = "G1", family_relations = Seq(FAMILY_RELATIONS(related_participant_fhir_id = "P3", relation = "son"))),
       family_type = "trio",
       down_syndrome_status = "D21",
+      is_proband = true
     ))
 
     simple_participant.find(_.fhir_id === "P2") shouldBe Some(
