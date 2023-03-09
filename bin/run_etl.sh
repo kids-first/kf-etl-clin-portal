@@ -137,7 +137,7 @@ STEPS=$(
        "s3a://${BUCKET}/jobs/enrich.jar",
         "config/${ENV}-${PROJECT}.conf",
        "default",
-       "histology"
+       "histology",
        "${RELEASE_ID}",
        "${STUDIES}"
      ],
