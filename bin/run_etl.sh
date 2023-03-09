@@ -146,7 +146,7 @@ STEPS=$(
      "Jar": "command-runner.jar",
      "Properties": "",
      "Name": "Enrich"
-   }
+ },
  {
     "Args": [
       "spark-submit",
