@@ -137,9 +137,9 @@ STEPS=$(
        "s3a://${BUCKET}/jobs/enrich.jar",
         "config/${ENV}-${PROJECT}.conf",
        "default",
+       "histology"
        "${RELEASE_ID}",
-       "${STUDIES}",
-       "config/${ENV}-${PROJECT}.conf"
+       "${STUDIES}"
      ],
      "Type": "CUSTOM_JAR",
      "ActionOnFailure": "TERMINATE_CLUSTER",
