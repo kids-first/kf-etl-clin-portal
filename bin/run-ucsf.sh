@@ -13,6 +13,7 @@ aws s3 cp ${KF_BUCKET}/import-task.jar import-task.jar
 aws s3 cp ${KF_BUCKET}/prepare-index.jar prepare-index.jar
 aws s3 cp ${KF_BUCKET}/index-task.jar index-task.jar
 aws s3 cp ${KF_BUCKET}/publish-task.jar publish-task.jar
+aws s3 cp ${KF_BUCKET}/enrich.jar enrich.jar
 
 # Check spark conf are here
 if [[ ! -f $(pwd)/conf/spark-defaults.conf ]]; then
