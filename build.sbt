@@ -48,3 +48,5 @@ lazy val prepare_index = (project in file("prepare-index")).dependsOn(config).se
 lazy val index_task = (project in file("index-task")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
 
 lazy val publish_task = (project in file("publish-task")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
+
+lazy val enrich_task = (project in file("enrich")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)

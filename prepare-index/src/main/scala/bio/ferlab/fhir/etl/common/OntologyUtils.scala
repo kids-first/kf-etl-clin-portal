@@ -28,9 +28,9 @@ object OntologyUtils {
 
   val firstCategory: (String, Column) => Column = (category, codes) => filter(codes, code => code("category") === lit(category))(0)("code")
 
-  def addDiseases(diseasesMondoDF: DataFrame, mondoTerms: DataFrame): DataFrame = {
+  def addDiseases(diseases: DataFrame, mondoTerms: DataFrame): DataFrame = {
     val mondoTermsIdName = mondoTerms.select(col("id") as "mondo_term_id", col("name") as "mondo_name")
-    diseasesMondoDF
+    diseases
       //filter out disease with empty code
       .where(size(col("condition_coding")) > 0)
       .withColumn("icd_id_diagnosis", firstCategory("ICD", col("condition_coding")))

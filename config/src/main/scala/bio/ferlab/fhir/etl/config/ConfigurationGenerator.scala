@@ -26,9 +26,8 @@ object ConfigurationGenerator extends App {
     SourceConfig("observation", Some("family_relationship"), partitionByStudyIdAndReleaseId),
     SourceConfig("observation", Some("vital_status"), partitionByStudyIdAndReleaseId),
     SourceConfig("observation", Some("histology_observation"), partitionByStudyIdAndReleaseId),
+    SourceConfig("condition", Some("disease"), partitionByStudyIdAndReleaseId),
     SourceConfig("observation", Some("proband_observation"), partitionByStudyIdAndReleaseId),
-    SourceConfig("condition", Some("disease_mondo"), partitionByStudyIdAndReleaseId),
-    SourceConfig("condition", Some("disease_ncit"), partitionByStudyIdAndReleaseId),
     SourceConfig("condition", Some("phenotype"), partitionByStudyIdAndReleaseId),
     SourceConfig("patient", None, partitionByStudyIdAndReleaseId),
     SourceConfig("group", None, partitionByStudyIdAndReleaseId),
@@ -107,7 +106,18 @@ object ConfigurationGenerator extends App {
       loadtype = OverWrite,
       partitionby = partitionByStudyIdAndReleaseId
     )
-  ) ++ Seq(
+  )++ Seq(
+    DatasetConf(
+      id = "enriched_histology_disease",
+      storageid = storage,
+      path = s"/enriched/histology_disease",
+      format = DELTA,
+      loadtype = OverWritePartition,
+      table = Some(TableConf("database", "histology_disease")),
+      partitionby = partitionByStudyIdAndReleaseId,
+      writeoptions = WriteOptions.DEFAULT_OPTIONS ++ Map("overwriteSchema" -> "true")
+    )
+  )++ Seq(
     Index("study_centric", partitionByStudyIdAndReleaseId),
     Index("participant_centric", partitionByStudyIdAndReleaseId),
     Index("file_centric", partitionByStudyIdAndReleaseId),
