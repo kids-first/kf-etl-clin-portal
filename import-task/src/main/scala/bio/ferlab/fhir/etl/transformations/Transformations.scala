@@ -102,7 +102,7 @@ object Transformations {
 
   val histologyObservationMappings: List[Transformation] = List(
     Custom(_
-      .select("specimen", "subject", "focus")
+      .select("study_id", "specimen", "subject", "focus")
       .withColumn("condition_id", explode(col("focus.reference")))
       .withColumn("condition_id", extractReferenceId(col("condition_id")))
       .withColumn("specimen_id", extractReferenceId(col("specimen.reference")))
