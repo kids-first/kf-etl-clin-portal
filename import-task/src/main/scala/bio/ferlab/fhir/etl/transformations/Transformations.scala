@@ -102,7 +102,7 @@ object Transformations {
 
   val histologyObservationMappings: List[Transformation] = List(
     Custom(_
-      .select("study_id", "specimen", "subject", "focus")
+      .select("study_id", "release_id", "specimen", "subject", "focus")
       .withColumn("condition_id", explode(col("focus.reference")))
       .withColumn("condition_id", extractReferenceId(col("condition_id")))
       .withColumn("specimen_id", extractReferenceId(col("specimen.reference")))
@@ -276,7 +276,7 @@ object Transformations {
 
   def probandObservationMappings(excludeCollection: Boolean): List[Transformation] = List(
     Custom(input =>
-      input.select("subject", "valueCodeableConcept")
+      input.select("subject", "valueCodeableConcept", "release_id", "study_id")
         .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
         .withColumn("is_proband", extractFirstForSystem(col("valueCodeableConcept")("coding"), Seq(SYS_YES_NO))("code") === "Y")
     ),
