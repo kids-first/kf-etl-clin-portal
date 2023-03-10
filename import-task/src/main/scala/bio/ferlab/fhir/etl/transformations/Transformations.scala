@@ -276,7 +276,7 @@ object Transformations {
 
   def probandObservationMappings(excludeCollection: Boolean): List[Transformation] = List(
     Custom(input =>
-      input.select("subject", "valueCodeableConcept")
+      input.select("subject", "valueCodeableConcept", "release_id", "study_id")
         .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
         .withColumn("is_proband", extractFirstForSystem(col("valueCodeableConcept")("coding"), Seq(SYS_YES_NO))("code") === "Y")
     ),
