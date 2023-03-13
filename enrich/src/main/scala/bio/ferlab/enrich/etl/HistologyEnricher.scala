@@ -25,7 +25,14 @@ class HistologyEnricher(releaseId: String, studyIds: List[String])(implicit conf
     val diseases = data(normalized_disease.id)
     val histologyObservation = data(normalized_histology_observation.id)
     histologyObservation
-      .join(diseases, histologyObservation("condition_id") === diseases("fhir_id"))
+      .join(
+        diseases,
+        histologyObservation("condition_id") === diseases("fhir_id")
+          and histologyObservation("study_id") === diseases("study_id")
+      )
       .drop(diseases("fhir_id"))
+      .drop(diseases("study_id"))
+      .drop(diseases("release_id"))
+      .drop(diseases("participant_fhir_id"))
   }
 }
