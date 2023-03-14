@@ -79,7 +79,8 @@ object Utils {
               col("hpo_phenotype_observed"),
               col("hpo_phenotype_not_observed"),
               col("age_at_event_days"),
-              col("is_observed")
+              col("is_observed"),
+              col("source_text"),
             )) as "phenotype",
             collect_list(
               when(col("is_observed"), col("observable_with_ancestors"))

@@ -461,6 +461,9 @@
             },
             "observed": {
               "type": "boolean"
+            },
+            "source_text": {
+              "type": "keyword"
             }
           }
         },

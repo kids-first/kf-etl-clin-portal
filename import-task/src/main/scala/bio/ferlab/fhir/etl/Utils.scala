@@ -44,6 +44,12 @@ object Utils {
 
   val extractOfficial: Column => Column = (identifiers: Column) => coalesce(filter(identifiers, identifier => identifier("use") === "official")(0)("value"), identifiers(0)("value"))
 
+  def extractSpecimenSecondaryIdentifier(xs: Column, systemParam: String): Column =
+    filter(xs, x => x("use") === "secondary" &&  x("system").contains(systemParam))(0)("value")
+
+  def extractSpecimenNcitAnatomySiteId(xs: Column): Column = filter(xs, x => x("code").startsWith("NCIT:"))(0)("code")
+
+  def extractKfSpecimenConsentType(xs: Column): Column = filter(xs, x => x("system").contains("consent_type"))(0)("code")
 
   val codingClassify: UserDefinedFunction =
     udf((arr: Seq[(String, String, String, String, String, String)]) =>

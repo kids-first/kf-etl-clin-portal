@@ -125,7 +125,7 @@ object Transformations {
 
   val researchstudyMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "keyword", "release_id", "study_id", "title", "identifier", "principalInvestigator", "status", "relatedArtifact")
+      .select("fhir_id", "keyword", "release_id", "study_id", "title", "identifier", "principalInvestigator", "status", "relatedArtifact", "category")
       .withColumn("attribution", extractFirstForSystem(col("identifier"), Seq(SYS_NCBI_URL))("value"))
       .withColumn("external_id", extractStudyExternalId(extractFirstForSystem(col("identifier"), Seq(SYS_NCBI_URL))("value")))
       .withColumnRenamed("title", "name")
@@ -137,8 +137,9 @@ object Transformations {
       .withColumn("study_code", col("keyword")(1)("coding")(0)("code"))
       .withColumn("program", firstSystemEquals(flatten(col("keyword.coding")), SYS_PROGRAMS)("display"))
       .withColumn("website", extractDocUrl(col("relatedArtifact"))("url"))
+      .withColumn("domain", col("category").getItem(0)("text"))
     ),
-    Drop("title", "identifier", "principalInvestigator", "keyword", "relatedArtifact")
+    Drop("title", "identifier", "principalInvestigator", "keyword", "relatedArtifact", "category")
   )
 
   val documentreferenceMappings: List[Transformation] = List(
@@ -210,11 +211,13 @@ object Transformations {
     Drop()
   )
 
-  def specimenMappings(excludeCollection: Boolean): List[Transformation] = List(
+  val nullLitStr = () => lit(null).cast("string")
+  //noinspection ScalaStyle TODO=========================REMOVE THIS WARNING
+  def specimenMappings(isFlatSpecimenModel: Boolean): List[Transformation] = List(
     Custom { input =>
       val specimen = input
         .select("fhir_id", "release_id", "study_id", "type", "identifier", "collection", "subject", "status", "container", "parent", "processing")
-        .withColumn("sample_type", col("type")("text"))
+        .withColumn("sample_type", if (isFlatSpecimenModel) col("type")("coding")(1)("display") else col("type")("text"))
         .withColumn("sample_id", officialIdentifier)
         .withColumn("laboratory_procedure", col("processing")(0)("description"))
         .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
@@ -223,34 +226,43 @@ object Transformations {
         .withColumn("age_at_biospecimen_collection_onset", age_on_set(col("age_at_biospecimen_collection_years"), age_at_bio_collection_on_set_intervals))
         .withColumn("container", explode_outer(col("container")))
         .withColumn("container_id", col("container")("identifier")(0)("value"))
-        .withColumn("volume", col("container")("specimenQuantity")("value"))
-        .withColumn("volume_unit", col("container")("specimenQuantity")("unit"))
+        .withColumn("volume", if (isFlatSpecimenModel) col("collection")("quantity")("value") else col("container")("specimenQuantity")("value"))
+        .withColumn("volume_unit", if (isFlatSpecimenModel) col("collection")("quantity")("unit") else col("container")("specimenQuantity")("unit"))
         .withColumn("biospecimen_storage", col("container")("description"))
         .withColumn("parent", col("parent")(0))
         .withColumn("parent_id", extractReferenceId(col("parent.reference")))
         .withColumn("parent_0", struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(0) as "level"))
+        .withColumn("external_collection_sample_id", if (isFlatSpecimenModel) extractSpecimenSecondaryIdentifier(col("identifier"), "external_sample_id") else nullLitStr())
+        .withColumn("external_sample_id", if (isFlatSpecimenModel) extractSpecimenSecondaryIdentifier(col("identifier"), "external_aliquot_id") else nullLitStr())
+        .withColumn("method_of_sample_procurement", col("collection.method.text"))
+        .withColumn("ncit_anatomy_site_id", extractSpecimenNcitAnatomySiteId(col("collection.bodySite.coding")))
+        .withColumn("anatomy_site", col("collection.bodySite.text"))
+        .withColumn("tissue_type_source_text", col("type")("text"))
+        .withColumn("ncit_id_tissue_type", extractSpecimenNcitAnatomySiteId(col("type")("coding")))
+        .withColumn("consent_type",  if (isFlatSpecimenModel) extractKfSpecimenConsentType(col("meta")("security")) else nullLitStr())
+
+      def noopWhenFlatModel(c: Column) = if (isFlatSpecimenModel) nullLitStr() else c
 
       val parentRange = 1 to 10
       val samplesWithParent = parentRange.foldLeft(specimen) { case (s, i) =>
         val joined = specimen.select(struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(i) as "level") as s"parent_$i")
         s.join(joined, s(s"parent_${i - 1}.parent_id") === joined(s"parent_$i.fhir_id"), "left")
       }
-        .withColumn("parent_sample_type", col("parent_1.sample_type"))
-        .withColumn("parent_sample_id", col("parent_1.sample_id"))
-        .withColumn("parent_fhir_id", col("parent_1.fhir_id"))
+        .withColumn("parent_sample_type", if (isFlatSpecimenModel) col("type")("coding")(0)("display") else col("parent_1.sample_type"))
+        .withColumn("parent_sample_id", noopWhenFlatModel(col("parent_1.sample_id")))
+        .withColumn("parent_fhir_id", noopWhenFlatModel(col("parent_1.fhir_id")))
         .withColumn("collection_sample", coalesce(parentRange.reverse.map(p => col(s"parent_$p")): _*))
-        .withColumn("collection_sample_id", col("collection_sample.sample_id"))
-        .withColumn("collection_sample_type", col("collection_sample.sample_type"))
-        .withColumn("collection_fhir_id", col("collection_sample.fhir_id"))
-
+        .withColumn("collection_sample_id", noopWhenFlatModel(col("collection_sample.sample_id")))
+        .withColumn("collection_sample_type", noopWhenFlatModel(col("collection_sample.sample_type")))
+        .withColumn("collection_fhir_id", noopWhenFlatModel(col("collection_sample.fhir_id")))
       val sampleWithParentFiltered =
-        if (excludeCollection) samplesWithParent.where(col("collection_fhir_id") =!= col("fhir_id")) else samplesWithParent
-
+        if (isFlatSpecimenModel) samplesWithParent.where(col("collection_fhir_id") =!= col("fhir_id")) else samplesWithParent
       val grouped = sampleWithParentFiltered.drop(parentRange.map(p => s"parent_$p"): _*).select(struct(col("*")) as "specimen")
         .groupBy("specimen.fhir_id", "specimen.container_id")
         .agg(first("specimen") as "specimen")
         .select("specimen.*")
       grouped
+
     },
     Drop("type", "identifier", "collection", "subject",
       "parent",

@@ -61,7 +61,7 @@ class FhavroToNormalizedMappingsSpec
         table = Some(TableConf(database = "kf_portal_qa", name = "specimen"))
       )
     )
-    val sparkConfWithExcludeCollectionEntry = Map(
+    val sparkConfWithFlatSpecimentModelEntry = Map(
       "spark.databricks.delta.retentionDurationCheck.enabled" -> "false",
       "spark.delta.merge.repartitionBeforeWrite" -> "true",
       "spark.fhir.server.url" -> "https://kf-api-fhir-service-qa.kidsfirstdrc.org",
@@ -70,7 +70,7 @@ class FhavroToNormalizedMappingsSpec
       "spark.sql.legacy.parquet.datetimeRebaseModeInWrite" -> CORRECTED.toString,
       "spark.sql.legacy.timeParserPolicy" -> CORRECTED.toString,
       "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN,",
-      "data.mappings.specimen.excludeCollection" -> "true"
+      "data.mappings.specimen.isFlatSpecimenModel" -> "true"
     )
     val c1 = ETLConfiguration(excludeSpecimenCollection = false,
       dataservice_url = "",
@@ -78,12 +78,12 @@ class FhavroToNormalizedMappingsSpec
         storages,
         sources,
         List.empty,
-        sparkConfWithExcludeCollectionEntry
+        sparkConfWithFlatSpecimentModelEntry
       )
     )
     noException should be thrownBy mappings("re")(c1)
 
-    val sparkConfWithoutExcludeCollectionEntry = Map(
+    val sparkConfWithoutFlatSpecimenModelEntry = Map(
       "spark.databricks.delta.retentionDurationCheck.enabled" -> "false",
       "spark.delta.merge.repartitionBeforeWrite" -> "true",
       "spark.fhir.server.url" -> "https://kf-api-fhir-service-qa.kidsfirstdrc.org",
@@ -99,7 +99,7 @@ class FhavroToNormalizedMappingsSpec
       storages,
       sources,
       List.empty,
-      sparkConfWithoutExcludeCollectionEntry
+      sparkConfWithoutFlatSpecimenModelEntry
     ))
     noException should be thrownBy mappings("re")(c2)
   }
