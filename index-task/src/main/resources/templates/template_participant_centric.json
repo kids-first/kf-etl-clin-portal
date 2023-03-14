@@ -138,9 +138,6 @@
             "acl": {
               "type": "keyword"
             },
-            "latest_did": {
-              "type": "keyword"
-            },
             "biospecimens": {
               "type": "nested",
               "properties": {
