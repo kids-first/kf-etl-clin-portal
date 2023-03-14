@@ -249,7 +249,7 @@ object Transformations {
     sampleWithParentFiltered.drop(parentRange.map(p => s"parent_$p"): _*).select(struct(col("*")) as "specimen")
   }
 
-  private def nullLitStr() = lit(null).cast("string")
+  val nullLitStr = () => lit(null).cast("string")
 
   def specimenMappings(isFlatSpecimenModel: Boolean): List[Transformation] = List(
     Custom { input =>
