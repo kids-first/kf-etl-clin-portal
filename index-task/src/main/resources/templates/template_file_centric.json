@@ -65,6 +65,9 @@
         "file_name": {
           "type": "keyword"
         },
+        "latest_did": {
+          "type": "keyword"
+        },
         "hashes": {
           "properties": {
             "etag": {
@@ -356,6 +359,9 @@
                 },
                 "observed": {
                   "type": "boolean"
+                },
+                "source_text": {
+                  "type": "keyword"
                 }
               }
             },
@@ -419,6 +425,9 @@
                   "type": "keyword"
                 },
                 "website": {
+                  "type": "keyword"
+                },
+                "domain": {
                   "type": "keyword"
                 }
               }
@@ -540,6 +549,9 @@
               "type": "keyword"
             },
             "version": {
+              "type": "keyword"
+            },
+            "domain": {
               "type": "keyword"
             }
           }

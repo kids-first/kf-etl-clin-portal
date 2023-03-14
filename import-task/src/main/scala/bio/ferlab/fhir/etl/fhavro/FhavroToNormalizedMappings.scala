@@ -25,7 +25,7 @@ object FhavroToNormalizedMappings {
   def mappings(releaseId: String)(implicit c: ETLConfiguration): List[(DatasetConf, DatasetConf, List[Transformation])] = {
     c.sources.filter(s => s.format == Format.AVRO).map(s => {
       val pattern(table) = s.id
-      val mappings = extractionMappingsFor(c.excludeSpecimenCollection)
+      val mappings = extractionMappingsFor(c.isFlatSpecimenModel)
       (s, c.getDataset(s"normalized_$table"), defaultTransformations(releaseId) ++ mappings.getOrElse(table, Nil))
     }
     )

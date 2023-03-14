@@ -76,6 +76,9 @@
         "search_text": {
           "type": "keyword",
           "normalizer" : "custom_normalizer"
+        },
+        "domain": {
+          "type": "keyword"
         }
       }
     }

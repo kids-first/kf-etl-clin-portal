@@ -12,10 +12,8 @@ object Utils {
   val gen3Host = "data.kidsfirstdrc.org"
   val dcfHost = "api.gdc.cancer.gov"
   val patternUrnUniqueIdStudy = "[A-Z][a-z]+-(SD_[0-9A-Za-z]+)-([A-Z]{2}_[0-9A-Za-z]+)"
-  val documentReferenceExtract = "^DocumentReference\\/([0-9]+)$"
-  val specimenExtract = "^Specimen\\/([0-9]+)$"
   val phenotypeExtract = "^[A-Z]{2,}.[0-9]+$"
-
+  val DRS_HOSTNAME = "drs://data.kidsfirstdrc.org/"
 
   private def codingSystemClassify(url: String) = {
     url match {
@@ -27,14 +25,18 @@ object Utils {
     }
   }
 
+  def extractSpecimenSecondaryIdentifier(xs: Column, systemParam: String): Column =
+    filter(xs, x => x("use") === "secondary" && x("system").contains(systemParam))(0)("value")
+  def extractSpecimenNcitAnatomySiteId(xs: Column): Column = filter(xs, x => x("code").startsWith("NCIT:"))(0)("code")
+  def extractKfSpecimenConsentType(xs: Column): Column = filter(xs, x => x("system").contains("consent_type"))(0)("code")
+  def extractLatestDid(urlCol: Column): Column = when(urlCol.startsWith(DRS_HOSTNAME), DRS_HOSTNAME).otherwise("")
+
   val extractAclFromList: UserDefinedFunction =
     udf((arr: Seq[String], studyId: String) => arr.filter(e => e != null && ((e matches actCodeR) || (e == studyId))))
 
   val extractReferencesId: Column => Column = (column: Column) => functions.transform(column, extractReferenceId)
 
   val extractReferenceId: Column => Column = (column: Column) => functions.split(column, "/")(1)
-
-  val extractStudyId: () => Column = () => regexp_extract(extractFirstForSystem(col("identifier"), Seq(URN_UNIQUE_ID))("value"), patternUrnUniqueIdStudy, 1)
 
   val extractFirstForSystem: (Column, Seq[String]) => Column = (column: Column, system: Seq[String]) => filter(column, c => regexp_extract(c("system"), extractSystemUrl, 1).isin(system: _*))(0)
 
