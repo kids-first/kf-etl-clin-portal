@@ -19,7 +19,7 @@ object ConfigurationGenerator extends App {
   }
 
 
-  def excludeSpecimenCollection(project: String): Boolean = project == pInclude
+  def isFlatSpecimenModel(project: String): Boolean = project == pInclude
 
   private val partitionByStudyIdAndReleaseId = List("study_id", "release_id")
   val sourceNames: Seq[SourceConfig] = Seq(
@@ -152,7 +152,7 @@ object ConfigurationGenerator extends App {
     "spark.hadoop.fs.s3a.multiobjectdelete.enable" -> "false", //https://hadoop.apache.org/docs/stable/hadoop-aws/tools/hadoop-aws/troubleshooting_s3a.html#MultiObjectDeleteException_during_delete_or_rename_of_files
   )
   conf.foreach { case (project, _) =>
-    ConfigurationWriter.writeTo(s"config/output/config/dev-${project}.conf", ETLConfiguration(excludeSpecimenCollection(project), DatalakeConf(
+    ConfigurationWriter.writeTo(s"config/output/config/dev-${project}.conf", ETLConfiguration(isFlatSpecimenModel(project), DatalakeConf(
       storages = List(
         StorageConf(storage, "s3a://storage", S3)
       ),
@@ -181,7 +181,7 @@ object ConfigurationGenerator extends App {
     ))
 
 
-    ConfigurationWriter.writeTo(s"config/output/config/qa-${project}.conf", ETLConfiguration(excludeSpecimenCollection(project), DatalakeConf(
+    ConfigurationWriter.writeTo(s"config/output/config/qa-${project}.conf", ETLConfiguration(isFlatSpecimenModel(project), DatalakeConf(
       storages = List(
         StorageConf(storage, s"s3a://${conf(project)("bucketNamePrefix")}-qa", S3)
       ),
@@ -192,7 +192,7 @@ object ConfigurationGenerator extends App {
       dataservice_url = "https://kf-api-dataservice-qa.kidsfirstdrc.org"
     ))
 
-    ConfigurationWriter.writeTo(s"config/output/config/prd-${project}.conf", ETLConfiguration(excludeSpecimenCollection(project), DatalakeConf(
+    ConfigurationWriter.writeTo(s"config/output/config/prd-${project}.conf", ETLConfiguration(isFlatSpecimenModel(project), DatalakeConf(
       storages = List(
         StorageConf(storage, s"s3a://${conf(project)("bucketNamePrefix")}-prd", S3)
       ),
@@ -204,7 +204,7 @@ object ConfigurationGenerator extends App {
     ))
   }
 
-  ConfigurationWriter.writeTo(s"config/output/config/ucsf.conf", ETLConfiguration(excludeSpecimenCollection = true, DatalakeConf(
+  ConfigurationWriter.writeTo(s"config/output/config/ucsf.conf", ETLConfiguration(isFlatSpecimenModel = true, DatalakeConf(
     storages = List(
       StorageConf(storage, s"s3a://d3b-portal-65-4-r-us-west-2.sec.ucsf.edu", S3)
     ),

@@ -138,6 +138,9 @@
             "acl": {
               "type": "keyword"
             },
+            "latest_did": {
+              "type": "keyword"
+            },
             "biospecimens": {
               "type": "nested",
               "properties": {
@@ -195,6 +198,30 @@
                       "type": "keyword"
                     }
                   }
+                },
+                "external_collection_sample_id": {
+                  "type": "keyword"
+                },
+                "external_sample_id": {
+                  "type": "keyword"
+                },
+                "method_of_sample_procurement": {
+                  "type": "keyword"
+                },
+                "ncit_anatomy_site_id": {
+                  "type": "keyword"
+                },
+                "anatomy_site": {
+                  "type": "keyword"
+                },
+                "tissue_type_source_text": {
+                  "type": "keyword"
+                },
+                "ncit_id_tissue_type": {
+                  "type": "keyword"
+                },
+                "consent_type": {
+                  "type": "keyword"
                 },
                 "status": {
                   "type": "keyword"
@@ -461,6 +488,9 @@
             },
             "observed": {
               "type": "boolean"
+            },
+            "source_text": {
+              "type": "keyword"
             }
           }
         },
@@ -527,6 +557,9 @@
               "type": "keyword"
             },
             "website": {
+              "type": "keyword"
+            },
+            "domain": {
               "type": "keyword"
             }
           }
