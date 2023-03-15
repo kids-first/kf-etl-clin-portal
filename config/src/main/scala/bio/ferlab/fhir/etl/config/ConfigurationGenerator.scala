@@ -18,8 +18,7 @@ object ConfigurationGenerator extends App {
     sources.map(ds => ds.copy(table = ds.table.map(t => TableConf(database, t.name))))
   }
 
-
-  def isFlatSpecimenModel(project: String): Boolean = project == pInclude
+  def isFlatSpecimenModel(project: String): Boolean = project == pKfStrides
 
   private val partitionByStudyIdAndReleaseId = List("study_id", "release_id")
   val sourceNames: Seq[SourceConfig] = Seq(
