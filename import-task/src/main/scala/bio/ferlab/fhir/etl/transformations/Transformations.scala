@@ -254,7 +254,7 @@ object Transformations {
   def specimenMappings(isFlatSpecimenModel: Boolean): List[Transformation] = List(
     Custom { input =>
       val specimen = input
-        .select("fhir_id", "release_id", "study_id", "type", "identifier", "collection", "subject", "status", "container", "parent", "processing")
+        .select("fhir_id", "release_id", "study_id", "type", "identifier", "collection", "subject", "status", "container", "parent", "processing", "meta")
         .withColumn("sample_type", if (isFlatSpecimenModel) col("type")("coding")(1)("display") else col("type")("text"))
         .withColumn("sample_id", officialIdentifier)
         .withColumn("laboratory_procedure", col("processing")(0)("description"))
@@ -286,9 +286,13 @@ object Transformations {
       grouped
 
     },
-    Drop("type", "identifier", "collection", "subject",
+    Drop(
+      "type",
+      "identifier",
+      "collection",
+      "subject",
       "parent",
-      "container", "collection_sample")
+      "container", "collection_sample", "meta")
   )
 
   val probandObservationMappings: List[Transformation] = List(
