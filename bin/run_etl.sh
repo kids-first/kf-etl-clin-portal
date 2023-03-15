@@ -22,6 +22,7 @@ usage() {
   echo "--instance-count    instance count"
   echo "--instance-profile    instance profile"
   echo "--service-role    aws service role"
+  echo "--until-step    Enrich"
   echo "-h, --help    display usage"
   echo
   echo "Example(s):"
@@ -29,7 +30,7 @@ usage() {
   exit 1
 }
 
-PARSED_ARGUMENTS=$(getopt -a -n run_etl -o p:r:s:b:e:h --long project:,release:,studies:,bucket:,environment:,instance-type:,instance-count:,instance-profile:,service-role:,help -- "$@")
+PARSED_ARGUMENTS=$(getopt -a -n run_etl -o p:r:s:b:e:h --long project:,release:,studies:,bucket:,environment:,instance-type:,instance-count:,instance-profile:,service-role:,help,until-step: -- "$@")
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then
   usage
@@ -45,6 +46,7 @@ PROJECT=$(unset)
 STUDIES=$(unset)
 INSTANCE_PROFILE=$(unset)
 SERVICE_ROLE=$(unset)
+UNTIL_STEP_NAME=$(unset)
 
 while :; do
   case "$1" in
@@ -84,6 +86,10 @@ while :; do
     SERVICE_ROLE="$2"
     shift 2
     ;;
+  --until-step)
+    UNTIL_STEP_NAME="$2"
+    shift 2
+    ;;
   --)
     shift
     break
@@ -107,6 +113,125 @@ ES_ENDPOINT=$(net_conf_extractor "es" "${PROJECT}" "${ENV}")
 STEPS=$(
   cat <<EOF
 [
+  {
+    "Type":"CUSTOM_JAR",
+    "Name":"Cleanup jars",
+    "ActionOnFailure":"TERMINATE_CLUSTER",
+    "Jar":"command-runner.jar",
+    "Args":[
+      "bash","-c",
+      "sudo rm -f /usr/lib/spark/jars/spark-avro.jar"
+    ]
+  },
+  {
+    "Type":"CUSTOM_JAR",
+    "Name":"Download and Run Fhavro-export",
+    "ActionOnFailure":"TERMINATE_CLUSTER",
+    "Jar":"command-runner.jar",
+    "Args":[
+      "bash","-c",
+      "aws s3 cp s3://${BUCKET}/jobs/fhavro-export.jar /home/hadoop; cd /home/hadoop; /usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar fhavro-export.jar ${RELEASE_ID} ${STUDIES} $(build_fhavro_file_arg_suffix "${PROJECT}"-"${ENV}")"
+    ]
+  },
+ {
+    "Args": [
+      "spark-submit",
+      "--deploy-mode",
+      "client",
+      "--class",
+      "bio.ferlab.dataservice.etl.DataserviceExportApp",
+      "s3a://${BUCKET}/jobs/dataservice-export.jar",
+      "config/${ENV}-${PROJECT}.conf",
+      "default",
+      "${RELEASE_ID}",
+      "${STUDIES}"
+    ],
+    "Type": "CUSTOM_JAR",
+    "ActionOnFailure": "TERMINATE_CLUSTER",
+    "Jar": "command-runner.jar",
+    "Properties": "",
+    "Name": "Export Dataservice"
+  },
+  {
+    "Args": [
+      "spark-submit",
+      "--deploy-mode",
+      "client",
+      "--class",
+      "bio.ferlab.fhir.etl.ImportTask",
+      "s3a://${BUCKET}/jobs/import-task.jar",
+      "config/${ENV}-${PROJECT}.conf",
+      "default",
+      "${RELEASE_ID}",
+      "${STUDIES}"
+    ],
+    "Type": "CUSTOM_JAR",
+    "ActionOnFailure": "TERMINATE_CLUSTER",
+    "Jar": "command-runner.jar",
+    "Properties": "",
+    "Name": "Import Task"
+  },
+  {
+       "Args": [
+         "spark-submit",
+         "--deploy-mode",
+         "client",
+         "--class",
+         "bio.ferlab.enrich.etl.Enrich",
+         "s3a://${BUCKET}/jobs/enrich.jar",
+          "config/${ENV}-${PROJECT}.conf",
+         "default",
+         "histology",
+         "${RELEASE_ID}",
+         "${STUDIES}"
+       ],
+       "Type": "CUSTOM_JAR",
+       "ActionOnFailure": "TERMINATE_CLUSTER",
+       "Jar": "command-runner.jar",
+       "Properties": "",
+       "Name": "Enrich"
+ },
+ {
+     "Args": [
+       "spark-submit",
+       "--deploy-mode",
+       "client",
+       "--class",
+       "bio.ferlab.fhir.etl.PrepareIndex",
+       "s3a://${BUCKET}/jobs/prepare-index.jar",
+        "config/${ENV}-${PROJECT}.conf",
+       "default",
+       "all",
+       "${RELEASE_ID}",
+       "${STUDIES}"
+     ],
+     "Type": "CUSTOM_JAR",
+     "ActionOnFailure": "TERMINATE_CLUSTER",
+     "Jar": "command-runner.jar",
+     "Properties": "",
+     "Name": "Prepare Index"
+   },
+   {
+     "Args": [
+       "spark-submit",
+       "--deploy-mode",
+       "client",
+       "--class",
+       "bio.ferlab.fhir.etl.IndexTask",
+       "s3a://${BUCKET}/jobs/index-task.jar",
+       "${ES_ENDPOINT}",
+       "443",
+       "${RELEASE_ID}",
+       "${STUDIES}",
+       "study_centric",
+       "config/${ENV}-${PROJECT}.conf"
+     ],
+     "Type": "CUSTOM_JAR",
+     "ActionOnFailure": "TERMINATE_CLUSTER",
+     "Jar": "command-runner.jar",
+     "Properties": "",
+     "Name": "Index Study"
+   },
    {
      "Args": [
        "spark-submit",
@@ -197,6 +322,15 @@ STEPS=$(
 ]
 EOF
 )
+fi
+
+# Remove all steps before $UNTIL_STEP_NAME if it exists - Allows to skip tests if needed.
+if [ -n "$UNTIL_STEP_NAME" ]; then
+  STEP_FROM="$(echo "$STEPS" | jq --arg step "$UNTIL_STEP_NAME" '[.[].Name] | to_entries | .[] | select(.value == $step) | .key')"
+  if [ -z "$STEP_FROM" ]; then
+    STEP_FROM=0
+  fi
+  STEPS="$(echo "$STEPS" | jq --arg from "$STEP_FROM" '.[($from|tonumber):]')"
 fi
 
 SG_SERVICE=$(aws ec2 describe-security-groups --filters Name=group-name,Values=ElasticMapReduce-ServiceAccess-"${ENV}"-* --query "SecurityGroups[*].{Name:GroupName,ID:GroupId}" | jq -r '.[0].ID')
