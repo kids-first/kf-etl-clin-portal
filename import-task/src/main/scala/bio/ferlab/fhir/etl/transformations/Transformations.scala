@@ -206,7 +206,7 @@ object Transformations {
 
     }
     ,
-    Drop("securityLabel", "content", "type", "identifier", "subject", "context", "relates_to", "relate_to")
+    Drop("securityLabel", "content", "type", "identifier", "subject", "context", "relates_to", "relate_to", "category")
   )
 
   val groupMappings: List[Transformation] = List(
@@ -291,11 +291,11 @@ object Transformations {
       "container", "collection_sample")
   )
 
-  def probandObservationMappings(): List[Transformation] = List(
+  val probandObservationMappings: List[Transformation] = List(
     Custom(input =>
       input.select("subject", "valueCodeableConcept", "release_id", "study_id")
         .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
-        .withColumn("is_proband", extractFirstForSystem(col("valueCodeableConcept")("coding"), Seq(SYS_YES_NO))("code") === "Y")
+        .withColumn("is_proband", firstSystemEquals(col("valueCodeableConcept")("coding"), SYS_YES_NO)("code") === "Y" )
     ),
     Drop("subject", "valueCodeableConcept")
   )
@@ -312,7 +312,7 @@ object Transformations {
     "group" -> groupMappings,
     "document_reference" -> documentreferenceMappings,
     "organization" -> organizationMappings,
-    "proband_observation" -> probandObservationMappings(),
+    "proband_observation" -> probandObservationMappings,
     "histology_observation" -> histologyObservationMappings
   )
 }
