@@ -245,7 +245,7 @@ object Transformations {
       .withColumn("collection_sample_type", noopWhenFlatModel(col("collection_sample.sample_type")))
       .withColumn("collection_fhir_id", col("collection_sample.fhir_id"))
     val sampleWithParentFiltered =
-      if (isFlatSpecimenModel) samplesWithParent.where(col("collection_fhir_id") =!= col("fhir_id")) else samplesWithParent
+      if (isFlatSpecimenModel) samplesWithParent else samplesWithParent.where(col("collection_fhir_id") =!= col("fhir_id"))
     sampleWithParentFiltered.drop(parentRange.map(p => s"parent_$p"): _*).select(struct(col("*")) as "specimen")
   }
 
