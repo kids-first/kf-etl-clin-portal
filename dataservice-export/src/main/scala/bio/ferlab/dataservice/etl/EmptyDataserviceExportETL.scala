@@ -19,9 +19,9 @@ class EmptyDataserviceExportETL()(implicit override val conf: Configuration) ext
   override def extract(lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime)(implicit spark: SparkSession): Map[String, DataFrame] = {
     import spark.implicits._
     Map(
-      normalized_sequencing_experiment.id -> spark.emptyDataset[ESequencingExperiment].toDF().withColumn("study_id", lit(null).cast("string")).withColumn("release_id", lit(null)),
-      normalized_sequencing_experiment_genomic_file.id -> spark.emptyDataset[ESequencingExperimentGenomicFile].toDF().withColumn("study_id", lit(null).cast("string")).withColumn("release_id", lit(null)),
-      normalized_sequencing_center.id -> spark.emptyDataset[ESequencingCenter].toDF().withColumn("study_id", lit(null).cast("string")).withColumn("release_id", lit(null))
+      normalized_sequencing_experiment.id -> spark.emptyDataset[ESequencingExperiment].toDF().withColumn("study_id", lit(null).cast("string")).withColumn("release_id", lit(null).cast("string")),
+      normalized_sequencing_experiment_genomic_file.id -> spark.emptyDataset[ESequencingExperimentGenomicFile].toDF().withColumn("study_id", lit(null).cast("string")).withColumn("release_id", lit(null).cast("string")),
+      normalized_sequencing_center.id -> spark.emptyDataset[ESequencingCenter].toDF().withColumn("study_id", lit(null).cast("string")).withColumn("release_id", lit(null).cast("string"))
     )
   }
 
