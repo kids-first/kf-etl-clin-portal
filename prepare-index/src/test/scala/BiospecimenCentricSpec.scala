@@ -33,7 +33,7 @@ class BiospecimenCentricSpec extends AnyFlatSpec with Matchers with WithSparkSes
       "enriched_histology_disease" -> Seq(ENRICH_HISTOLOGIES_TO_DISEASES(`specimen_id` = "111")).toDF()
     )
 
-    val output = new BiospecimenCentric("re_000001", List("SD_Z6MWD3H0"))(conf).transform(data)
+    val output = new BiospecimenCentric(List("SD_Z6MWD3H0"))(conf).transform(data)
 
     output.keys should contain("es_index_biospecimen_centric")
 

@@ -1,9 +1,10 @@
 package bio.ferlab.enrich.etl
 
 import bio.ferlab.datalake.spark3.SparkApp
+
 object Enrich extends SparkApp {
   println(s"ARGS: " + args.mkString("[", ", ", "]"))
-  val Array(_, _, jobName, releaseId, studyIds) = args
+  val Array(_, _, jobName, studyIds) = args
 
   implicit val (conf, _, spark) = init()
 
@@ -12,6 +13,6 @@ object Enrich extends SparkApp {
   private val studies = studyIds.split(",").toList
 
   jobName match {
-    case "histology" => new HistologyEnricher(releaseId, studies).run()
+    case "histology" => new HistologyEnricher(studies).run()
   }
 }

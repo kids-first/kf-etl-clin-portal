@@ -11,7 +11,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
 
-class BiospecimenCentric(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETLSingleDestination {
+class BiospecimenCentric(studyIds: List[String])(implicit configuration: Configuration) extends ETLSingleDestination {
 
   override val mainDestination: DatasetConf = conf.getDataset("es_index_biospecimen_centric")
   val normalized_specimen: DatasetConf = conf.getDataset("normalized_specimen")
@@ -28,7 +28,7 @@ class BiospecimenCentric(releaseId: String, studyIds: List[String])(implicit con
 
     Seq(normalized_specimen, normalized_drs_document_reference, simple_participant, es_index_study_centric,
       normalized_sequencing_experiment, normalized_sequencing_experiment_genomic_file, enriched_histology_disease)
-      .map(ds => ds.id -> ds.read.where(col("release_id") === releaseId)
+      .map(ds => ds.id -> ds.read
         .where(col("study_id").isin(studyIds: _*))
       ).toMap
   }

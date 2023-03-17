@@ -12,7 +12,7 @@ import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits._
 import bio.ferlab.datalake.spark3.utils.Coalesce
 import bio.ferlab.fhir.etl.common.OntologyUtils.firstCategory
 
-class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETLSingleDestination {
+class SimpleParticipant(studyIds: List[String])(implicit configuration: Configuration) extends ETLSingleDestination {
 
   override val mainDestination: DatasetConf = conf.getDataset("simple_participant")
   val es_index_study_centric: DatasetConf = conf.getDataset("es_index_study_centric")
@@ -30,7 +30,7 @@ class SimpleParticipant(releaseId: String, studyIds: List[String])(implicit conf
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     (Seq(
       es_index_study_centric, normalized_patient, normalized_family_relationship, normalized_phenotype, normalized_disease, normalized_group, normalized_vital_status, normalized_proband_observation)
-      .map(ds => ds.id -> ds.read.where(col("release_id") === releaseId)
+      .map(ds => ds.id -> ds.read
         .where(col("study_id").isin(studyIds: _*))
       ) ++ Seq(
       hpo_terms.id -> hpo_terms.read,

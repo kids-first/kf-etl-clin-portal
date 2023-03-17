@@ -20,7 +20,7 @@ class StudyCentricSpec extends AnyFlatSpec with Matchers with WithSparkSession  
       ).toDF()
     )
 
-    val output = new StudyCentric("re_000001", List("SD_Z6MWD3H0"))(conf).transform(data)
+    val output = new StudyCentric(List("SD_Z6MWD3H0"))(conf).transform(data)
 
     output.keys should contain("es_index_study_centric")
 
@@ -38,7 +38,7 @@ class StudyCentricSpec extends AnyFlatSpec with Matchers with WithSparkSession  
       "normalized_specimen" -> Seq(BIOSPECIMEN()).toDF()
     )
 
-    val output = new StudyCentric("re_000001", List("SD_Z6MWD3H0"))(conf).transform(data)
+    val output = new StudyCentric(List("SD_Z6MWD3H0"))(conf).transform(data)
 
     output.keys should contain("es_index_study_centric")
 

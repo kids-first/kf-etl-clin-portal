@@ -1,11 +1,11 @@
 package bio.ferlab.fhir.etl.config
 
 import bio.ferlab.datalake.commons.config.Format.{AVRO, DELTA, JSON, PARQUET}
-import bio.ferlab.datalake.commons.config.LoadType.{OverWrite, OverWritePartition}
+import bio.ferlab.datalake.commons.config.LoadType.{OverWrite, OverWritePartition, Read}
 import bio.ferlab.datalake.commons.config._
 import bio.ferlab.datalake.commons.file.FileSystemType.S3
 
-case class SourceConfig(fhirResource: String, entityType: Option[String], partitionBy: List[String])
+case class SourceConfig(entityType: String, partitionBy: List[String])
 
 case class Index(name: String, partitionBy: List[String])
 
@@ -20,37 +20,36 @@ object ConfigurationGenerator extends App {
 
   def isFlatSpecimenModel(project: String): Boolean = project == pKfStrides
 
-  private val partitionByStudyIdAndReleaseId = List("study_id", "release_id")
+  private val partitionByStudyId = List("study_id")
   val sourceNames: Seq[SourceConfig] = Seq(
-    SourceConfig("observation", Some("family_relationship"), partitionByStudyIdAndReleaseId),
-    SourceConfig("observation", Some("vital_status"), partitionByStudyIdAndReleaseId),
-    SourceConfig("observation", Some("histology_observation"), partitionByStudyIdAndReleaseId),
-    SourceConfig("condition", Some("disease"), partitionByStudyIdAndReleaseId),
-    SourceConfig("observation", Some("proband_observation"), partitionByStudyIdAndReleaseId),
-    SourceConfig("condition", Some("phenotype"), partitionByStudyIdAndReleaseId),
-    SourceConfig("patient", None, partitionByStudyIdAndReleaseId),
-    SourceConfig("group", None, partitionByStudyIdAndReleaseId),
-    SourceConfig("documentreference", Some("document_reference"), partitionByStudyIdAndReleaseId),
-    SourceConfig("researchstudy", Some("research_study"), partitionByStudyIdAndReleaseId),
-    SourceConfig("researchsubject", Some("research_subject"), partitionByStudyIdAndReleaseId),
-    SourceConfig("specimen", None, partitionByStudyIdAndReleaseId),
-    SourceConfig("organization", None, List("release_id"))
+    SourceConfig("family_relationship", partitionByStudyId),
+    SourceConfig("vital_status", partitionByStudyId),
+    SourceConfig("histology_observation", partitionByStudyId),
+    SourceConfig("disease", partitionByStudyId),
+    SourceConfig("proband_observation", partitionByStudyId),
+    SourceConfig("phenotype", partitionByStudyId),
+    SourceConfig("patient", partitionByStudyId),
+    SourceConfig("group", partitionByStudyId),
+    SourceConfig("document_reference", partitionByStudyId),
+    SourceConfig("research_study", partitionByStudyId),
+    SourceConfig("research_subject", partitionByStudyId),
+    SourceConfig("specimen", partitionByStudyId),
+    SourceConfig("organization", Nil)
   )
 
   val storage = "storage"
 
   val rawsAndNormalized = sourceNames.flatMap(source => {
-    val rawPath = source.entityType.getOrElse(source.fhirResource)
-    val tableName = source.entityType.map(_.replace("-", "_")).getOrElse(source.fhirResource.replace("-", "_"))
+    val rawPath = source.entityType
+    val tableName = source.entityType.replace("-", "_")
     Seq(
       DatasetConf(
         id = s"raw_$tableName",
         storageid = storage,
         path = s"/fhir/$rawPath",
         format = AVRO,
-        loadtype = OverWrite,
-        table = Some(TableConf("database", s"raw_$tableName")),
-        partitionby = source.partitionBy
+        loadtype = Read,
+        partitionby = source.partitionBy :+ "release_id"
       ),
       DatasetConf(
         id = s"normalized_$tableName",
@@ -73,7 +72,7 @@ object ConfigurationGenerator extends App {
       format = DELTA,
       loadtype = OverWritePartition,
       table = Some(TableConf("database", entity)),
-      partitionby = partitionByStudyIdAndReleaseId,
+      partitionby = partitionByStudyId,
       writeoptions = WriteOptions.DEFAULT_OPTIONS ++ Map("overwriteSchema" -> "true")
     )
 
@@ -103,9 +102,9 @@ object ConfigurationGenerator extends App {
       path = s"/es_index/fhir/simple_participant",
       format = PARQUET,
       loadtype = OverWrite,
-      partitionby = partitionByStudyIdAndReleaseId
+      partitionby = partitionByStudyId
     )
-  )++ Seq(
+  ) ++ Seq(
     DatasetConf(
       id = "enriched_histology_disease",
       storageid = storage,
@@ -113,14 +112,14 @@ object ConfigurationGenerator extends App {
       format = DELTA,
       loadtype = OverWritePartition,
       table = Some(TableConf("database", "histology_disease")),
-      partitionby = partitionByStudyIdAndReleaseId,
+      partitionby = partitionByStudyId,
       writeoptions = WriteOptions.DEFAULT_OPTIONS ++ Map("overwriteSchema" -> "true")
     )
-  )++ Seq(
-    Index("study_centric", partitionByStudyIdAndReleaseId),
-    Index("participant_centric", partitionByStudyIdAndReleaseId),
-    Index("file_centric", partitionByStudyIdAndReleaseId),
-    Index("biospecimen_centric", partitionByStudyIdAndReleaseId),
+  ) ++ Seq(
+    Index("study_centric", partitionByStudyId),
+    Index("participant_centric", partitionByStudyId),
+    Index("file_centric", partitionByStudyId),
+    Index("biospecimen_centric", partitionByStudyId),
   ).flatMap(index => {
     Seq(
       DatasetConf(

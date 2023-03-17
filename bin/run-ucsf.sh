@@ -34,7 +34,7 @@ docker run -it --rm \
 -v /root/kf-etl-clin-portal/bin/work-dir:/opt/spark/work-dir \
 -e AWS_REGION=${REGION} \
 -p 4040:4040 apache/spark:3.3.1 \
-/opt/spark/bin/spark-submit --deploy-mode client --class bio.ferlab.fhir.etl.ImportTask enrich.jar config/ucsf.conf default ${RELEASE_ID} ${STUDY_ID}
+/opt/spark/bin/spark-submit --deploy-mode client --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --class bio.ferlab.fhir.etl.ImportTask import-task.jar config/ucsf.conf default ${RELEASE_ID} ${STUDY_ID}
 
 # Execute enrich-task
 docker run -it --rm \
@@ -43,7 +43,7 @@ docker run -it --rm \
 -v /root/kf-etl-clin-portal/bin/work-dir:/opt/spark/work-dir \
 -e AWS_REGION=${REGION} \
 -p 4040:4040 apache/spark:3.3.1 \
-/opt/spark/bin/spark-submit --deploy-mode client --class bio.ferlab.enrich.etl.Enrich import-task.jar config/ucsf.conf default ${RELEASE_ID} ${STUDY_ID}
+/opt/spark/bin/spark-submit --deploy-mode client --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --class bio.ferlab.enrich.etl.Enrich enrich.jar config/ucsf.conf default ${STUDY_ID}
 
 # Execute prepare-index
 docker run -it --rm \
@@ -52,7 +52,7 @@ docker run -it --rm \
 -v /root/kf-etl-clin-portal/bin/work-dir:/opt/spark/work-dir \
 -e AWS_REGION=${REGION} \
 -p 4040:4040 apache/spark:3.3.1 \
-/opt/spark/bin/spark-submit --deploy-mode client --class bio.ferlab.fhir.etl.PrepareIndex prepare-index.jar config/ucsf.conf default all ${RELEASE_ID} ${STUDY_ID}
+/opt/spark/bin/spark-submit --deploy-mode client --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --class bio.ferlab.fhir.etl.PrepareIndex prepare-index.jar config/ucsf.conf default all ${STUDY_ID}
 
 # Execute index-task for study_centric
 docker run -it --rm \
@@ -61,7 +61,7 @@ docker run -it --rm \
 -v /root/kf-etl-clin-portal/bin/work-dir:/opt/spark/work-dir \
 -e AWS_REGION=${REGION} \
 -p 4040:4040 apache/spark:3.3.1 \
-/opt/spark/bin/spark-submit --deploy-mode client --class bio.ferlab.fhir.etl.IndexTask index-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDY_ID} study_centric config/ucsf.conf
+/opt/spark/bin/spark-submit --deploy-mode client --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --class bio.ferlab.fhir.etl.IndexTask index-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDY_ID} study_centric config/ucsf.conf
 
 # Execute index-task for participant_centric
 docker run -it --rm \
@@ -70,7 +70,7 @@ docker run -it --rm \
 -v /root/kf-etl-clin-portal/bin/work-dir:/opt/spark/work-dir \
 -e AWS_REGION=${REGION} \
 -p 4040:4040 apache/spark:3.3.1 \
-/opt/spark/bin/spark-submit --deploy-mode client --class bio.ferlab.fhir.etl.IndexTask index-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDY_ID} participant_centric config/ucsf.conf
+/opt/spark/bin/spark-submit --deploy-mode client --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --class bio.ferlab.fhir.etl.IndexTask index-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDY_ID} participant_centric config/ucsf.conf
 
 # Execute index-task for file_centric
 docker run -it --rm \
@@ -79,7 +79,7 @@ docker run -it --rm \
 -v /root/kf-etl-clin-portal/bin/work-dir:/opt/spark/work-dir \
 -e AWS_REGION=${REGION} \
 -p 4040:4040 apache/spark:3.3.1 \
-/opt/spark/bin/spark-submit --deploy-mode client --class bio.ferlab.fhir.etl.IndexTask index-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDY_ID} file_centric config/ucsf.conf
+/opt/spark/bin/spark-submit --deploy-mode client --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --class bio.ferlab.fhir.etl.IndexTask index-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDY_ID} file_centric config/ucsf.conf
 
 # Execute index-task for biospecimen_centric
 docker run -it --rm \
@@ -88,7 +88,7 @@ docker run -it --rm \
 -v /root/kf-etl-clin-portal/bin/work-dir:/opt/spark/work-dir \
 -e AWS_REGION=${REGION} \
 -p 4040:4040 apache/spark:3.3.1 \
-/opt/spark/bin/spark-submit --deploy-mode client --class bio.ferlab.fhir.etl.IndexTask index-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDY_ID} biospecimen_centric config/ucsf.conf
+/opt/spark/bin/spark-submit --deploy-mode client --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --class bio.ferlab.fhir.etl.IndexTask index-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDY_ID} biospecimen_centric config/ucsf.conf
 
 # Execute publish-task
 docker run -it --rm -v $(pwd):/app amazoncorretto:11 java -jar /app/publish-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDY_ID} all

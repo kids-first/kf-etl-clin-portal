@@ -40,7 +40,7 @@ class FileCentricSpec extends AnyFlatSpec with Matchers with WithSparkSession wi
       "normalized_sequencing_experiment_genomic_file" -> Seq(SEQUENCING_EXPERIMENT_GENOMIC_FILE_INPUT()).toDF()
     )
 
-    val output = new FileCentric("re_000001", List("SD_Z6MWD3H0"))(conf).transform(data)
+    val output = new FileCentric(List("SD_Z6MWD3H0"))(conf).transform(data)
 
     output.keys should contain("es_index_file_centric")
 
@@ -199,7 +199,7 @@ class FileCentricSpec extends AnyFlatSpec with Matchers with WithSparkSession wi
       "normalized_sequencing_experiment_genomic_file" -> Seq(SEQUENCING_EXPERIMENT_GENOMIC_FILE_INPUT()).toDF()
     )
 
-    val output = new FileCentric("re_000001", List("SD_Z6MWD3H0"))(conf).transform(data)
+    val output = new FileCentric(List("SD_Z6MWD3H0"))(conf).transform(data)
 
     output.keys should contain("es_index_file_centric")
 
