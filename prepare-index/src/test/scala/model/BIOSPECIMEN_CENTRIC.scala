@@ -13,7 +13,12 @@ case class BIOSPECIMEN_CENTRIC(
                                 `study`: LIGHT_STUDY_CENTRIC = LIGHT_STUDY_CENTRIC(),
                                 `participant`: SIMPLE_PARTICIPANT = SIMPLE_PARTICIPANT(),
                                 `files`: Seq[BIOSPECIMEN_FILES] = Seq.empty,
-                                `nb_files`: Long
+                                `nb_files`: Long,
+                                `diagnosis_mondo`: String = null,
+                                `diagnosis_ncit`: String = null,
+                                `diagnosis_icd`: Seq[String] = null,
+                                `source_text`: String = null,
+                                `source_text_tumor_location`: Seq[String] = null,
                               )
 
 case class BIOSPECIMEN_FILES(

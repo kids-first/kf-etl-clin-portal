@@ -307,6 +307,25 @@ object Utils {
         .drop("biospecimen_fhir_id")
     }
 
+    def addHistologicalInformation(histToDiseasesDf: DataFrame): DataFrame = {
+      val histToDiseases = histToDiseasesDf
+        .select(
+          "specimen_id",
+          "diagnosis_mondo",
+          "diagnosis_ncit",
+          "diagnosis_icd",
+          "source_text",
+          "source_text_tumor_location",
+          "study_id"
+        )
+      df.join(
+        histToDiseases,
+        df("fhir_id") === histToDiseases("specimen_id")
+          and df("study_id") === histToDiseases("study_id"), "left_outer")
+        .drop(histToDiseases("study_id")
+        )
+    }
+
     def addBiospecimenParticipant(participantsDf: DataFrame): DataFrame = {
       val reformatParticipant: DataFrame = participantsDf
         .withColumn("participant", struct(participantsDf.columns.map(col): _*))
