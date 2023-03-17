@@ -131,6 +131,21 @@
             "biospecimens": {
               "type": "nested",
               "properties": {
+                "diagnosis_mondo": {
+                  "type": "keyword"
+                },
+                "diagnosis_ncit": {
+                  "type": "keyword"
+                },
+                "diagnosis_icd": {
+                  "type": "keyword"
+                },
+                "source_text": {
+                  "type": "keyword"
+                },
+                "source_text_tumor_location": {
+                  "type": "keyword"
+                },
                 "age_at_biospecimen_collection": {
                   "type": "integer"
                 },

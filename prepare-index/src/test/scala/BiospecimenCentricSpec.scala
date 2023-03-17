@@ -1,4 +1,3 @@
-import bio.ferlab.datalake.commons.config.{Configuration, ConfigurationLoader, SimpleConfiguration}
 import bio.ferlab.fhir.etl.centricTypes.BiospecimenCentric
 import model._
 import org.apache.spark.sql.DataFrame
@@ -30,8 +29,8 @@ class BiospecimenCentricSpec extends AnyFlatSpec with Matchers with WithSparkSes
       "es_index_study_centric" -> Seq(STUDY_CENTRIC()).toDF(),
       "normalized_task" -> Seq(TASK(`fhir_id` = "1", `document_reference_fhir_ids` = Seq("11", "21"))).toDF(),
       "normalized_sequencing_experiment" -> Seq(SEQUENCING_EXPERIMENT_INPUT()).toDF(),
-      "normalized_sequencing_experiment_genomic_file" -> Seq(SEQUENCING_EXPERIMENT_GENOMIC_FILE_INPUT()).toDF()
-
+      "normalized_sequencing_experiment_genomic_file" -> Seq(SEQUENCING_EXPERIMENT_GENOMIC_FILE_INPUT()).toDF(),
+      "enriched_histology_disease" -> Seq(ENRICH_HISTOLOGIES_TO_DISEASES(`specimen_id` = "111")).toDF()
     )
 
     val output = new BiospecimenCentric("re_000001", List("SD_Z6MWD3H0"))(conf).transform(data)
@@ -60,7 +59,12 @@ class BiospecimenCentricSpec extends AnyFlatSpec with Matchers with WithSparkSes
               `fhir_id` = "44",
               file_facet_ids = FILE_FACET_IDS(file_fhir_id_1 = "44", file_fhir_id_2 = "44")
             )
-          )
+          ),
+          `diagnosis_mondo` = "MONDO:0005072",
+          `diagnosis_ncit` = "NCIT:0005072",
+          `diagnosis_icd` = Seq.empty,
+          `source_text` = "Neuroblastoma",
+          `source_text_tumor_location` = Seq("Reported Unknown"),
         ),
         BIOSPECIMEN_CENTRIC(
           `fhir_id` = "222",
