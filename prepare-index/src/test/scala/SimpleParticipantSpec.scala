@@ -63,7 +63,7 @@ class SimpleParticipantSpec extends AnyFlatSpec with Matchers with WithSparkSess
       PHENOTYPE_ENRICHED(name = "Abnormality of cardiovascular system morphology (HP:0030680)", parents = List("Abnormality of the cardiovascular system (HP:0001626)"), age_at_event_days = List(0)),
       PHENOTYPE_ENRICHED(name = "Atrial septal defect (HP:0001631)", parents = List("Abnormal cardiac atrium morphology (HP:0005120)", "Abnormal atrial septum morphology (HP:0011994)"), is_tagged = true, age_at_event_days = List(0)))
 
-    val output = new SimpleParticipant("re_000001", List("SD_Z6MWD3H0"))(conf).transform(data)
+    val output = new SimpleParticipant(List("SD_Z6MWD3H0"))(conf).transform(data)
 
     output.keys should contain("simple_participant")
 

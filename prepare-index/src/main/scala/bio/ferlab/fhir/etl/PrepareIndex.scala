@@ -6,7 +6,7 @@ import bio.ferlab.fhir.etl.centricTypes.{BiospecimenCentric, FileCentric, Partic
 object PrepareIndex extends SparkApp {
   println(s"ARGS: " + args.mkString("[", ", ", "]"))
 
-  val Array(_, _, jobName, releaseId, studyIds) = args
+  val Array(_, _, jobName, studyIds) = args
 
   implicit val (conf, _, spark) = init()
 
@@ -15,24 +15,24 @@ object PrepareIndex extends SparkApp {
   val studyList = studyIds.split(",").toList
 
   jobName match {
-    case "study_centric" => new StudyCentric(releaseId, studyList).run()
+    case "study_centric" => new StudyCentric(studyList).run()
     case "participant_centric" =>
-      new StudyCentric(releaseId, studyList).run()
-      new SimpleParticipant(releaseId, studyList).run()
-      new ParticipantCentric(releaseId, studyList).run()
+      new StudyCentric(studyList).run()
+      new SimpleParticipant(studyList).run()
+      new ParticipantCentric(studyList).run()
     case "file_centric" =>
-      new StudyCentric(releaseId, studyList).run()
-      new SimpleParticipant(releaseId, studyList).run()
-      new FileCentric(releaseId, studyList).run()
+      new StudyCentric(studyList).run()
+      new SimpleParticipant(studyList).run()
+      new FileCentric(studyList).run()
     case "biospecimen_centric" =>
-      new StudyCentric(releaseId, studyList).run()
-      new SimpleParticipant(releaseId, studyList).run()
-      new BiospecimenCentric(releaseId, studyList).run()
+      new StudyCentric(studyList).run()
+      new SimpleParticipant(studyList).run()
+      new BiospecimenCentric(studyList).run()
     case "all" =>
-      new StudyCentric(releaseId, studyList).run()
-      new SimpleParticipant(releaseId, studyList).run()
-      new ParticipantCentric(releaseId, studyList).run()
-      new FileCentric(releaseId, studyList).run()
-      new BiospecimenCentric(releaseId, studyList).run()
+      new StudyCentric(studyList).run()
+      new SimpleParticipant(studyList).run()
+      new ParticipantCentric(studyList).run()
+      new FileCentric(studyList).run()
+      new BiospecimenCentric(studyList).run()
   }
 }

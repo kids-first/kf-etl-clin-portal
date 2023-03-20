@@ -182,7 +182,6 @@ STEPS=$(
           "config/${ENV}-${PROJECT}.conf",
          "default",
          "histology",
-         "${RELEASE_ID}",
          "${STUDIES}"
        ],
        "Type": "CUSTOM_JAR",
@@ -202,7 +201,6 @@ STEPS=$(
         "config/${ENV}-${PROJECT}.conf",
        "default",
        "all",
-       "${RELEASE_ID}",
        "${STUDIES}"
      ],
      "Type": "CUSTOM_JAR",

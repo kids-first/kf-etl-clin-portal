@@ -8,7 +8,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
 
-class HistologyEnricher(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETLSingleDestination {
+class HistologyEnricher(studyIds: List[String])(implicit configuration: Configuration) extends ETLSingleDestination {
   override val mainDestination: DatasetConf = conf.getDataset("enriched_histology_disease")
   val normalized_disease: DatasetConf = conf.getDataset("normalized_disease")
   val normalized_histology_observation: DatasetConf = conf.getDataset("normalized_histology_observation")
@@ -16,7 +16,7 @@ class HistologyEnricher(releaseId: String, studyIds: List[String])(implicit conf
   override def extract(lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime)(implicit spark: SparkSession): Map[String, DataFrame] = {
     //FIXME duplicate accross project
     Seq(normalized_histology_observation, normalized_disease)
-      .map(ds => ds.id -> ds.read.where(col("release_id") === releaseId)
+      .map(ds => ds.id -> ds.read
         .where(col("study_id").isin(studyIds: _*))
       ).toMap
   }

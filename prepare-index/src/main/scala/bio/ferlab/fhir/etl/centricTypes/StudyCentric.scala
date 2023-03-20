@@ -9,7 +9,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
 
-class StudyCentric(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETLSingleDestination {
+class StudyCentric(studyIds: List[String])(implicit configuration: Configuration) extends ETLSingleDestination {
 
   override val mainDestination: DatasetConf = conf.getDataset("es_index_study_centric")
   val normalized_researchstudy: DatasetConf = conf.getDataset("normalized_research_study")
@@ -21,7 +21,7 @@ class StudyCentric(releaseId: String, studyIds: List[String])(implicit configura
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     Seq(normalized_researchstudy, normalized_drs_document_reference, normalized_patient, normalized_group, normalized_specimen)
-      .map(ds => ds.id -> ds.read.where(col("release_id") === releaseId)
+      .map(ds => ds.id -> ds.read
         .where(col("study_id").isin(studyIds: _*))
       ).toMap
 

@@ -11,7 +11,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
 
-class ParticipantCentric(releaseId: String, studyIds: List[String])(implicit configuration: Configuration) extends ETLSingleDestination {
+class ParticipantCentric(studyIds: List[String])(implicit configuration: Configuration) extends ETLSingleDestination {
 
   override val mainDestination: DatasetConf = conf.getDataset("es_index_participant_centric")
   val simple_participant: DatasetConf = conf.getDataset("simple_participant")
@@ -22,7 +22,7 @@ class ParticipantCentric(releaseId: String, studyIds: List[String])(implicit con
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     Seq(simple_participant, normalized_drs_document_reference, normalized_specimen, normalized_sequencing_experiment, normalized_sequencing_experiment_genomic_file)
-      .map(ds => ds.id -> ds.read.where(col("release_id") === releaseId)
+      .map(ds => ds.id -> ds.read
                             .where(col("study_id").isin(studyIds: _*))
       ).toMap
   }

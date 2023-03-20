@@ -36,7 +36,7 @@ class ParticipantCentricSpec extends AnyFlatSpec with Matchers with WithSparkSes
       "normalized_sequencing_experiment_genomic_file" -> Seq(SEQUENCING_EXPERIMENT_GENOMIC_FILE_INPUT()).toDF()
     )
 
-    val output = new ParticipantCentric("re_000001", List("SD_Z6MWD3H0"))(conf).transform(data)
+    val output = new ParticipantCentric(List("SD_Z6MWD3H0"))(conf).transform(data)
 
     output.keys should contain("es_index_participant_centric")
 
