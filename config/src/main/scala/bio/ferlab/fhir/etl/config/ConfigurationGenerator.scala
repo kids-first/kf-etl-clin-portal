@@ -56,7 +56,7 @@ object ConfigurationGenerator extends App {
         storageid = storage,
         path = s"/normalized/$rawPath",
         format = DELTA,
-        loadtype = OverWritePartition,
+        loadtype = if (source.partitionBy.nonEmpty) OverWritePartition else OverWrite,
         table = Some(TableConf("database", tableName)),
         partitionby = source.partitionBy,
         writeoptions = WriteOptions.DEFAULT_OPTIONS ++ Map("overwriteSchema" -> "true")
