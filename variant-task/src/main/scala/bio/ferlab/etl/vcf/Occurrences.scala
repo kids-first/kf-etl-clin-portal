@@ -2,43 +2,31 @@ package bio.ferlab.etl.vcf
 
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.ETLSingleDestination
-import org.apache.spark.sql.functions.{array_sort, col, explode, lit, struct}
-import org.apache.spark.sql.{DataFrame, SparkSession}
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits._
-import bio.ferlab.datalake.spark3.implicits.GenomicImplicits.columns.{annotations, firstAnn, firstCsq, hgvsg, variant_class}
-import bio.ferlab.datalake.spark3.implicits.GenomicImplicits.vcf
+import bio.ferlab.datalake.spark3.implicits.GenomicImplicits._
+import bio.ferlab.datalake.spark3.implicits.GenomicImplicits.columns._
 import bio.ferlab.datalake.spark3.implicits.SparkUtils.filename
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{DataFrame, SparkSession, functions}
 
 import java.time.LocalDateTime
-import scala.collection.Set
 
-/*
-- Affected status x
-- family id x
-- participant id (fhir id?) x
-- dbgap_consent_code (biospecimen) x
-- proband
-- gender x
-- sample id or external id? x
- */
 class Occurrences(studyId: String, releaseId: String, vcfV1Pattern: String, vcfV2pattern: String)(implicit configuration: Configuration) extends ETLSingleDestination {
-  val patient: DatasetConf = conf.getDataset("normalized_patient")
-  val family_relationship: DatasetConf = conf.getDataset("normalized_family_relationship")
-  val disease: DatasetConf = conf.getDataset("normalized_disease")
-  val specimen: DatasetConf = conf.getDataset("normalized_specimen")
-  val document_reference: DatasetConf = conf.getDataset("normalized_document_reference")
+  private val enriched_specimen: DatasetConf = conf.getDataset("enriched_specimen")
+  private val document_reference: DatasetConf = conf.getDataset("normalized_document_reference")
   override val mainDestination: DatasetConf = conf.getDataset("normalized_snv")
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
 
     Map(
-      "vcf" -> loadVCFs(document_reference.read, studyId, vcfV1Pattern, vcfV2pattern)
+      "vcf" -> loadVCFs(document_reference.read, studyId, vcfV1Pattern, vcfV2pattern),
+      enriched_specimen -> enriched_specimen.read.where(col("study_id") === studyId)
     )
 
   }
 
-  def getFilesUrl(files: DataFrame, studyId: String, endsWith: String)(implicit spark: SparkSession) = {
+  private def getFilesUrl(files: DataFrame, studyId: String, endsWith: String)(implicit spark: SparkSession) = {
     import spark.implicits._
     val filesUrl = files.select("s3_url")
       .where(col("study_id") === studyId)
@@ -63,8 +51,7 @@ class Occurrences(studyId: String, releaseId: String, vcfV1Pattern: String, vcfV
     vcfDF.withColumn("file_name", filename)
   }
 
-  private def asV1(inputDf: DataFrame)(implicit spark: SparkSession): DataFrame = {
-    import spark.implicits._
+  private def asV1(inputDf: DataFrame): DataFrame = {
     inputDf
       .withColumn("annotation", firstAnn)
       .withColumn("hgvsg", hgvsg)
@@ -72,38 +59,38 @@ class Occurrences(studyId: String, releaseId: String, vcfV1Pattern: String, vcfV
       .drop("annotation", "INFO_ANN")
       .withColumn("INFO_DS", lit(null).cast("boolean"))
       .withColumn("INFO_HaplotypeScore", lit(null).cast("double"))
-      .withColumn("genotype", explode($"genotypes"))
+      .withColumn("genotype", explode(col("genotypes")))
       .drop("genotypes")
-      .withColumn("INFO_ReadPosRankSum", $"INFO_ReadPosRankSum"(0))
-      .withColumn("INFO_ClippingRankSum", $"INFO_ClippingRankSum"(0))
-      .withColumn("INFO_RAW_MQ", $"INFO_RAW_MQ"(0))
-      .withColumn("INFO_BaseQRankSum", $"INFO_BaseQRankSum"(0))
-      .withColumn("INFO_MQRankSum", $"INFO_MQRankSum"(0))
-      .withColumn("INFO_ExcessHet", $"INFO_ExcessHet"(0))
+      .withColumn("INFO_ReadPosRankSum", col("INFO_ReadPosRankSum")(0))
+      .withColumn("INFO_ClippingRankSum", col("INFO_ClippingRankSum")(0))
+      .withColumn("INFO_RAW_MQ", col("INFO_RAW_MQ")(0))
+      .withColumn("INFO_BaseQRankSum", col("INFO_BaseQRankSum")(0))
+      .withColumn("INFO_MQRankSum", col("INFO_MQRankSum")(0))
+      .withColumn("INFO_ExcessHet", col("INFO_ExcessHet")(0))
       .withColumn(
         "genotype",
         struct(
-          $"genotype.sampleId",
-          $"genotype.conditionalQuality",
-          $"genotype.filters",
-          $"genotype.SB",
-          $"genotype.alleleDepths",
-          $"genotype.PP",
-          $"genotype.PID"(0) as "PID",
-          $"genotype.phased",
-          $"genotype.calls",
-          $"genotype.MIN_DP"(0) as "MIN_DP",
-          $"genotype.JL",
-          $"genotype.PGT"(0) as "PGT",
-          $"genotype.phredLikelihoods",
-          $"genotype.depth",
-          $"genotype.RGQ",
-          $"genotype.JP"
+          col("genotype.sampleId"),
+          col("genotype.conditionalQuality"),
+          col("genotype.filters"),
+          col("genotype.SB"),
+          col("genotype.alleleDepths"),
+          col("genotype.PP"),
+          col("genotype.PID")(0) as "PID",
+          col("genotype.phased"),
+          col("genotype.calls"),
+          col("genotype.MIN_DP")(0) as "MIN_DP",
+          col("genotype.JL"),
+          col("genotype.PGT")(0) as "PGT",
+          col("genotype.phredLikelihoods"),
+          col("genotype.depth"),
+          col("genotype.RGQ"),
+          col("genotype.JP")
         )
       )
   }
 
-  private def asV2(inputDf: DataFrame)(implicit spark: SparkSession): DataFrame = {
+  private def asV2(inputDf: DataFrame): DataFrame = {
     inputDf
       .withColumn("annotation", firstAnn)
       .withColumn("hgvsg", hgvsg)
@@ -112,5 +99,80 @@ class Occurrences(studyId: String, releaseId: String, vcfV1Pattern: String, vcfV
       .withColumn("genotype", explode(col("genotypes")))
   }
 
-  override def transformSingle(data: Map[String, DataFrame], lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime)(implicit spark: SparkSession): DataFrame = ???
+  override def transformSingle(data: Map[String, DataFrame], lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime)(implicit spark: SparkSession): DataFrame = {
+    val vcf = selectOccurrences(data("vcf"))
+    val enrichedSpecimenDF = data(enriched_specimen.id)
+    vcf.join(enrichedSpecimenDF, Seq("sample_id"))
+      .withRelativesGenotype(Seq("gq", "dp", "info_qd", "filters", "ad_ref", "ad_alt", "ad_total", "ad_ratio", "calls", "affected_status", "zygosity"))
+      .withParentalOrigin("parental_origin", col("calls"), col("father_calls"), col("mother_calls"))
+      .withGenotypeTransmission("transmission")
+      .withCompoundHeterozygous()
+  }
+
+  private def selectOccurrences(inputDF: DataFrame): DataFrame = {
+    val occurrences = inputDF
+      .select(
+        chromosome,
+        start,
+        end,
+        reference,
+        alternate,
+        name,
+        col("hgvsg"),
+        col("variant_class"),
+        col("genotype.sampleId") as "sample_id",
+        col("genotype.alleleDepths") as "ad",
+        col("genotype.depth") as "dp",
+        col("genotype.conditionalQuality") as "gq",
+        col("genotype.calls") as "calls",
+        has_alt,
+        is_multi_allelic,
+        old_multi_allelic,
+        col("qual") as "quality",
+        col("INFO_filters")(0) as "filter",
+        ac as "info_ac",
+        an as "info_an",
+        af as "info_af",
+        col("INFO_culprit") as "info_culprit",
+        col("INFO_SOR") as "info_sor",
+        col("INFO_ReadPosRankSum") as "info_read_pos_rank_sum",
+        col("INFO_InbreedingCoeff") as "info_inbreeding_coeff",
+        col("INFO_PG") as "info_pg",
+        col("INFO_FS") as "info_fs",
+        col("INFO_DP") as "info_dp",
+        optional_info(inputDF, "INFO_DS", "info_ds", "boolean"),
+        col("INFO_NEGATIVE_TRAIN_SITE") as "info_info_negative_train_site",
+        col("INFO_POSITIVE_TRAIN_SITE") as "info_positive_train_site",
+        col("INFO_VQSLOD") as "info_vqslod",
+        col("INFO_ClippingRankSum") as "info_clipping_rank_sum",
+        col("INFO_RAW_MQ") as "info_raw_mq",
+        col("INFO_BaseQRankSum") as "info_base_qrank_sum",
+        col("INFO_MLEAF")(0) as "info_mleaf",
+        col("INFO_MLEAC")(0) as "info_mleac",
+        col("INFO_MQ") as "info_mq",
+        col("INFO_QD") as "info_qd",
+        col("INFO_DB") as "info_db",
+        col("INFO_MQRankSum") as "info_m_qrank_sum",
+        optional_info(inputDF, "INFO_loConfDeNovo", "lo_conf_denovo"),
+        optional_info(inputDF, "INFO_hiConfDeNovo", "hi_conf_denovo"),
+        col("INFO_ExcessHet") as "info_excess_het",
+        optional_info(inputDF, "INFO_HaplotypeScore", "info_haplotype_score", "float"),
+        col("file_name"),
+        lit(studyId) as "study_id",
+        lit(releaseId) as "release_id",
+        is_normalized
+      )
+      .withColumn(
+        "is_lo_conf_denovo",
+        array_contains(functions.split(col("lo_conf_denovo"), ","), col("sample_d"))
+      )
+      .withColumn(
+        "is_hi_conf_denovo",
+        array_contains(functions.split(col("hi_conf_denovo"), ","), col("sample_id"))
+      )
+      .drop("annotation", "lo_conf_denovo", "hi_conf_denovo")
+      .withColumn("zygosity", zygosity(col("calls")))
+    occurrences
+  }
+
 }
