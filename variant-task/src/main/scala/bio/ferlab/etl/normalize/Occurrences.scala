@@ -22,7 +22,7 @@ class Occurrences(studyId: String, releaseId: String, vcfV1Pattern: String, vcfV
 
     Map(
       "vcf" -> loadVCFs(document_reference.read, studyId, vcfV1Pattern, vcfV2pattern, referenceGenomePath),
-      enriched_specimen -> enriched_specimen.read.where(col("study_id") === studyId)
+      enriched_specimen.id -> enriched_specimen.read.where(col("study_id") === studyId)
     )
 
   }
