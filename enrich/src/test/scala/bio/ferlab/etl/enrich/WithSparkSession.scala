@@ -1,3 +1,5 @@
+package bio.ferlab.etl.enrich
+
 import org.apache.hadoop.security.UserGroupInformation
 import org.apache.spark.sql.SparkSession
 //TODO re-use

@@ -177,7 +177,7 @@ STEPS=$(
          "--deploy-mode",
          "client",
          "--class",
-         "bio.ferlab.enrich.etl.Enrich",
+         "bio.ferlab.etl.enrich.Enrich",
          "s3a://${BUCKET}/jobs/enrich.jar",
           "config/${ENV}-${PROJECT}.conf",
          "default",

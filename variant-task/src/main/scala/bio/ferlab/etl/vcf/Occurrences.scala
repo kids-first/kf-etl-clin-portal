@@ -112,28 +112,5 @@ class Occurrences(studyId: String, releaseId: String, vcfV1Pattern: String, vcfV
       .withColumn("genotype", explode(col("genotypes")))
   }
 
-  /*
-val participants =  spark.table("patient").select($"fhir_id" as "participant_fhir_id", $"participant_id", $"gender")
-  val family = spark.table("group").select(col("family_members_id"), col("fhir_id") as "family_fhir_id", col("family_id"))
-  val affectedStatus = spark.table("disease").select("participant_fhir_id", "affected_status").where($"affected_status").groupBy("participant_fhir_id").agg(first("affected_status") as "affected_status")
-
-  val relations = spark.table("family_relationship")
-  .select($"participant2_fhir_id" as "participant_fhir_id", $"participant1_fhir_id" as "related_participant_id", $"participant1_to_participant_2_relationship" as "relation")
-  .where($"relation" isin ("father", "mother"))
-  .groupBy("participant_fhir_id")
-  .agg(collect_list(struct($"related_participant_id", $"relation")) as "relations")
-  .withColumn("family", struct(
-    filter(col("relations"), c => c("relation") === "father")(0)("related_participant_id") as "father_id",
-    filter(col("relations"), c => c("relation") === "mother")(0)("related_participant_id") as "mother_id"
-    ))
-  .drop("relations")
-
-  val sp = spark.table("specimen").select($"sample_id", $"fhir_id" as "sample_fhir_id", $"participant_fhir_id", $"consent_code")
-      .join(participants, Seq("participant_fhir_id"))
-      .join(family, array_contains(col("family_members_id"), col("participant_fhir_id")))
-      .drop("family_members_id")
-      .join(relations, Seq("participant_fhir_id"), "left" )
-      .join(affectedStatus, Seq("participant_fhir_id"), "left" )
-      .withColumn("affected_status", coalesce($"affected_status", lit(false)))*/
-
+  override def transformSingle(data: Map[String, DataFrame], lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime)(implicit spark: SparkSession): DataFrame = ???
 }

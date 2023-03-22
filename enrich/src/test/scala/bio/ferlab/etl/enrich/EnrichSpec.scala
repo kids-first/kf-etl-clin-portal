@@ -1,3 +1,5 @@
+package bio.ferlab.etl.enrich
+
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
