@@ -1,4 +1,4 @@
-package bio.ferlab.enrich.etl
+package bio.ferlab.etl.enrich
 
 import bio.ferlab.datalake.spark3.SparkApp
 
@@ -14,5 +14,10 @@ object Enrich extends SparkApp {
 
   jobName match {
     case "histology" => new HistologyEnricher(studies).run()
+    case "specimen" => new SpecimenEnricher(studies).run()
+    case "all" =>
+      new HistologyEnricher(studies).run()
+      new SpecimenEnricher(studies).run()
+
   }
 }

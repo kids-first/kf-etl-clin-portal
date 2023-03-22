@@ -1,4 +1,4 @@
-package bio.ferlab.enrich.etl
+package bio.ferlab.etl.enrich
 
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.ETLSingleDestination

@@ -114,6 +114,37 @@ object ConfigurationGenerator extends App {
       table = Some(TableConf("database", "histology_disease")),
       partitionby = partitionByStudyId,
       writeoptions = WriteOptions.DEFAULT_OPTIONS ++ Map("overwriteSchema" -> "true")
+    ),
+    DatasetConf(
+      id = "enriched_specimen",
+      storageid = storage,
+      path = s"/enriched/specimen",
+      format = DELTA,
+      loadtype = OverWritePartition,
+      table = Some(TableConf("database", "enriched_specimen")),
+      partitionby = partitionByStudyId,
+      writeoptions = WriteOptions.DEFAULT_OPTIONS ++ Map("overwriteSchema" -> "true")
+    )
+  ) ++ Seq(
+    DatasetConf(
+      id = "normalized_occurrences",
+      storageid = storage,
+      path = s"/mormalized/occurrences",
+      format = DELTA,
+      loadtype = OverWritePartition,
+      table = Some(TableConf("database", "normalized_occurrences")),
+      partitionby = List("study_id", "chromosome"),
+      writeoptions = WriteOptions.DEFAULT_OPTIONS ++ Map("overwriteSchema" -> "true")
+    ),
+    DatasetConf(
+      id = "enriched_specimen",
+      storageid = storage,
+      path = s"/enriched/specimen",
+      format = DELTA,
+      loadtype = OverWritePartition,
+      table = Some(TableConf("database", "enriched_specimen")),
+      partitionby = partitionByStudyId,
+      writeoptions = WriteOptions.DEFAULT_OPTIONS ++ Map("overwriteSchema" -> "true")
     )
   ) ++ Seq(
     Index("study_centric", partitionByStudyId),

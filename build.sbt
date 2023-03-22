@@ -1,10 +1,9 @@
 import sbtassembly.AssemblyPlugin.autoImport.assembly
 
-
 lazy val fhavro_export = project in file("fhavro-export")
 
 val sparkDepsSetting = Seq(
-  libraryDependencies ++= Seq("bio.ferlab" %% "datalake-spark3" % "5.0.1",
+  libraryDependencies ++= Seq("bio.ferlab" %% "datalake-spark3" % "5.7.0",
     "org.apache.spark" %% "spark-sql" % "3.3.0" % Provided, //emr-6.9.0
     "org.apache.spark" %% "spark-hive" % "3.3.0" % Provided, //emr-6.9.0
     "org.apache.hadoop" % "hadoop-client" % "3.3.3" % Provided, //emr-6.9.0
@@ -34,7 +33,8 @@ val commonSettings = Seq(
       val oldStrategy = (assembly / assemblyMergeStrategy).value
       oldStrategy(x)
   },
-  assembly / test := {}
+  assembly / test := {},
+  resolvers += "Sonatype OSS Releases" at "https://s01.oss.sonatype.org/content/repositories/releases"
 
 
 )
@@ -44,6 +44,8 @@ lazy val dataservice_export = (project in file("dataservice-export")).dependsOn(
 lazy val import_task = (project in file("import-task")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
 
 lazy val prepare_index = (project in file("prepare-index")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
+
+lazy val variant_task = (project in file("variant-task")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
 
 lazy val index_task = (project in file("index-task")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
 
