@@ -25,7 +25,7 @@ if [[ ! -f $(pwd)/conf/spark-defaults.conf ]]; then
 fi
 
 # Execute fhavro-export
-docker run -it -e FHIR_URL=${FHIR_SERVER} -e AWS_REGION=${REGION} -e BUCKET=${S3_BUCKET} --rm -v $(pwd):/app amazoncorretto:11 java -jar /app/fhavro-export.jar ${RELEASE_ID} ${STUDY_ID} default
+docker run -it -e FHIR_URL=${FHIR_SERVER} -e AWS_REGION=${REGION} -e BUCKET=${S3_BUCKET} --rm -v $(pwd):/app amazoncorretto:11 java -jar /app/fhavro-export.jar ${RELEASE_ID} ${STUDY_ID} ucsf
 
 # Execute import-task
 docker run -it --rm \
