@@ -27,7 +27,7 @@ if [[ ! -f $(pwd)/conf/spark-defaults.conf ]]; then
 fi
 
 # Execute fhavro-export
-docker run -it -e FHIR_URL=${FHIR_SERVER} -e AWS_REGION=${REGION} -e BUCKET=${S3_BUCKET} --rm -v $(pwd):/app amazoncorretto:11 java -jar /app/fhavro-export.jar ${RELEASE_ID} ${STUDY_ID} ucsf
+docker run -it -e FHIR_URL=${FHIR_SERVER} -e AWS_REGION=${REGION} -e BUCKET=${S3_BUCKET} --rm -v $(pwd)/work-dir:/app amazoncorretto:11 java -jar /app/fhavro-export.jar ${RELEASE_ID} ${STUDY_ID} ucsf
 
 # Execute import-task
 docker run -it --rm \
@@ -45,7 +45,7 @@ docker run -it --rm \
 -v /root/kf-etl-clin-portal/bin/work-dir:/opt/spark/work-dir \
 -e AWS_REGION=${REGION} \
 -p 4040:4040 apache/spark:3.3.1 \
-/opt/spark/bin/spark-submit --deploy-mode client --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --class bio.ferlab.enrich.etl.Enrich enrich.jar config/ucsf.conf default ${STUDY_ID}
+/opt/spark/bin/spark-submit --deploy-mode client --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --class bio.ferlab.etl.enrich.Enrich enrich.jar config/ucsf.conf default ${STUDY_ID}
 
 # Execute prepare-index
 docker run -it --rm \
@@ -101,4 +101,4 @@ docker run -it --rm \
 /opt/spark/bin/spark-submit --deploy-mode client --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --class bio.ferlab.fhir.etl.IndexTask index-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDY_ID} biospecimen_centric config/ucsf.conf
 
 # Execute publish-task
-docker run -it --rm -v $(pwd):/app -e ES_USERNAME=${ES_USERNAME} -e ES_PASSWORD=${ES_PASSWORD} amazoncorretto:11 java -jar /app/publish-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDY_ID} all
+docker run -it --rm -v $(pwd)/work-dir:/app -e ES_USERNAME=${ES_USERNAME} -e ES_PASSWORD=${ES_PASSWORD} amazoncorretto:11 java -jar /app/publish-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDY_ID} all
