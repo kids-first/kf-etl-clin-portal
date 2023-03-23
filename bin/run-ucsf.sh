@@ -1,6 +1,8 @@
 # Config
 set -e
 RELEASE_ID=${1}
+ES_USERNAME=${2}
+ES_PASSWORD=${3}
 STUDY_ID="GIMS"
 KF_BUCKET="s3://kf-strides-232196027141-datalake-qa/jobs"
 REGION=us-west-2
@@ -60,6 +62,8 @@ docker run -it --rm \
 -v /root/kf-etl-clin-portal/bin/work-dir/ivy:/tmp/ivy \
 -v /root/kf-etl-clin-portal/bin/work-dir:/opt/spark/work-dir \
 -e AWS_REGION=${REGION} \
+-e ES_USERNAME=${ES_USERNAME} \
+-e ES_PASSWORD=${ES_PASSWORD} \
 -p 4040:4040 apache/spark:3.3.1 \
 /opt/spark/bin/spark-submit --deploy-mode client --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --class bio.ferlab.fhir.etl.IndexTask index-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDY_ID} study_centric config/ucsf.conf
 
@@ -69,6 +73,8 @@ docker run -it --rm \
 -v /root/kf-etl-clin-portal/bin/work-dir/ivy:/tmp/ivy \
 -v /root/kf-etl-clin-portal/bin/work-dir:/opt/spark/work-dir \
 -e AWS_REGION=${REGION} \
+-e ES_USERNAME=${ES_USERNAME} \
+-e ES_PASSWORD=${ES_PASSWORD} \
 -p 4040:4040 apache/spark:3.3.1 \
 /opt/spark/bin/spark-submit --deploy-mode client --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --class bio.ferlab.fhir.etl.IndexTask index-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDY_ID} participant_centric config/ucsf.conf
 
@@ -78,6 +84,8 @@ docker run -it --rm \
 -v /root/kf-etl-clin-portal/bin/work-dir/ivy:/tmp/ivy \
 -v /root/kf-etl-clin-portal/bin/work-dir:/opt/spark/work-dir \
 -e AWS_REGION=${REGION} \
+-e ES_USERNAME=${ES_USERNAME} \
+-e ES_PASSWORD=${ES_PASSWORD} \
 -p 4040:4040 apache/spark:3.3.1 \
 /opt/spark/bin/spark-submit --deploy-mode client --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --class bio.ferlab.fhir.etl.IndexTask index-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDY_ID} file_centric config/ucsf.conf
 
@@ -87,8 +95,10 @@ docker run -it --rm \
 -v /root/kf-etl-clin-portal/bin/work-dir/ivy:/tmp/ivy \
 -v /root/kf-etl-clin-portal/bin/work-dir:/opt/spark/work-dir \
 -e AWS_REGION=${REGION} \
+-e ES_USERNAME=${ES_USERNAME} \
+-e ES_PASSWORD=${ES_PASSWORD} \
 -p 4040:4040 apache/spark:3.3.1 \
 /opt/spark/bin/spark-submit --deploy-mode client --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --class bio.ferlab.fhir.etl.IndexTask index-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDY_ID} biospecimen_centric config/ucsf.conf
 
 # Execute publish-task
-docker run -it --rm -v $(pwd):/app amazoncorretto:11 java -jar /app/publish-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDY_ID} all
+docker run -it --rm -v $(pwd):/app -e ES_USERNAME=${ES_USERNAME} -e ES_PASSWORD=${ES_PASSWORD} amazoncorretto:11 java -jar /app/publish-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDY_ID} all

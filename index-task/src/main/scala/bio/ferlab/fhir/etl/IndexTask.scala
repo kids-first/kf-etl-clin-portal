@@ -14,17 +14,20 @@ object IndexTask extends App {
   println(s"ARGS: " + args.mkString("[", ", ", "]"))
 
   val Array(
-  esNodes,          // http://localhost:9200
-  esPort,           // 9200
-  release_id,       // release id
-  study_ids,        // study ids separated by ;
-  jobType,          // study_centric or participant_centric or file_centric or biospecimen_centric
-  configFile        // config/qa-[project].conf or config/prod.conf or config/dev-[project].conf
+  esNodes, // http://localhost:9200
+  esPort, // 9200
+  release_id, // release id
+  study_ids, // study ids separated by ;
+  jobType, // study_centric or participant_centric or file_centric or biospecimen_centric
+  configFile // config/qa-[project].conf or config/prod.conf or config/dev-[project].conf
   ) = args
 
   implicit val conf: Configuration = ConfigurationLoader.loadFromResources[SimpleConfiguration](configFile)
 
-  val esConfigs = Map(
+  private val esUsername = sys.env.get("ES_USERNAME")
+  private val esPassword = sys.env.get("ES_PASSWORD")
+
+  private val defaultEsConfigs = Map(
     "es.index.auto.create" -> "true",
     "es.net.ssl" -> "true",
     "es.net.ssl.cert.allow.self.signed" -> "true",
@@ -34,9 +37,13 @@ object IndexTask extends App {
     "spark.es.nodes.wan.only" -> "true",
     "es.port" -> esPort)
 
-  val sparkConfigs: SparkConf =
+  private val esConfigs = esUsername.map(username =>
+    defaultEsConfigs ++ Map("es.net.http.auth.user" -> username, "es.net.http.auth.pass" -> esPassword.get)
+  ).getOrElse(defaultEsConfigs)
+
+  private val sparkConfigs: SparkConf =
     (conf.sparkconf ++ esConfigs)
-      .foldLeft(new SparkConf()){ case (c, (k, v)) => c.set(k, v) }
+      .foldLeft(new SparkConf()) { case (c, (k, v)) => c.set(k, v) }
 
   implicit val spark: SparkSession = SparkSession.builder
     .config(sparkConfigs)
@@ -48,7 +55,7 @@ object IndexTask extends App {
 
   val templatePath = s"${conf.storages.find(_.id == "storage").get.path}/templates/template_$jobType.json"
 
-  implicit val esClient: ElasticSearchClient = new ElasticSearchClient(esNodes.split(',').head, None, None)
+  implicit val esClient: ElasticSearchClient = new ElasticSearchClient(esNodes.split(',').head, esUsername, esPassword)
 
   val ds: DatasetConf = jobType.toLowerCase match {
     case "study_centric" => conf.getDataset("es_index_study_centric")
