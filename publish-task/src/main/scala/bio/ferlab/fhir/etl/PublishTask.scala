@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory
 import scala.util.{Failure, Try}
 
 object PublishTask extends App {
-  val log = LoggerFactory.getLogger("publish")
+  private val log = LoggerFactory.getLogger("publish")
   println(s"ARGS: " + args.mkString("[", ", ", "]"))
 
   val Array(
@@ -17,28 +17,15 @@ object PublishTask extends App {
   jobTypes, // study_centric or participant_centric or file_centric or biospecimen_centric or all. can be multivalue spearate by ,
   ) = args
 
-  val (esUsername, esPassword) = if (args.length == 7) {
-    (Some(args(5)), Some(args(6)))
-  } else {
-    (None, None)
-  }
-
-  val esConfigs = Map(
-    "es.index.auto.create" -> "true",
-    "es.net.ssl" -> "true",
-    "es.net.ssl.cert.allow.self.signed" -> "true",
-    "es.nodes" -> esNodes,
-    "es.nodes.wan.only" -> "true",
-    "es.wan.only" -> "true",
-    "spark.es.nodes.wan.only" -> "true",
-    "es.port" -> esPort)
+  private val esUsername = sys.env.get("ES_USERNAME")
+  private val esPassword = sys.env.get("ES_PASSWORD")
 
   implicit val esClient: ElasticSearchClient = new ElasticSearchClient(esNodes.split(',').head, esUsername, esPassword)
 
-  val studyList = study_ids.split(",")
+  private val studyList = study_ids.split(",")
 
-  val jobs = if (jobTypes == "all") Seq("biospecimen_centric", "participant_centric", "study_centric", "file_centric") else jobTypes.split(",").toSeq
-  val results: Seq[Result[Unit]] = jobs.flatMap { job =>
+  private val jobs = if (jobTypes == "all") Seq("biospecimen_centric", "participant_centric", "study_centric", "file_centric") else jobTypes.split(",").toSeq
+  private val results: Seq[Result[Unit]] = jobs.flatMap { job =>
     studyList.map(studyId => Result(job, studyId, Try {
       val newIndexName = s"${job}_${studyId}_$release_id".toLowerCase
       println(s"Add $newIndexName to alias $job")
