@@ -1,6 +1,8 @@
 declare -A PROJECT_TO_NET_CONF
 PROJECT_TO_NET_CONF["subnet_kf-strides_qa"]="subnet-0f0c909ec60b377ce"
 PROJECT_TO_NET_CONF["es_kf-strides_qa"]="https://vpc-kf-arranger-blue-es-service-exwupkrf4dyupg24dnfmvzcwri.us-east-1.es.amazonaws.com"
+PROJECT_TO_NET_CONF["subnet_kf-strides_prd"]="subnet-00aab84919d5a44e2"
+PROJECT_TO_NET_CONF["es_kf-strides_prd"]="https://vpc-kf-arranger-blue-es-prd-4gbc2zkvm5uttysiqkcbzwxqeu.us-east-1.es.amazonaws.com"
 PROJECT_TO_NET_CONF["subnet_include_qa"]="subnet-0f1161ac2ee2fba5b"
 PROJECT_TO_NET_CONF["es_include_qa"]="https://vpc-include-arranger-blue-es-qa-xf3ttht4hjmxjfoh5u5x4jnw34.us-east-1.es.amazonaws.com"
 PROJECT_TO_NET_CONF["subnet_include_prd"]="subnet-0cdbe9ba6231146b5"
