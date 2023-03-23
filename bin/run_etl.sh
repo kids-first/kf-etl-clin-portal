@@ -2,6 +2,15 @@
 
 source "$(dirname "$0")/utils.sh"
 
+truncate_emr_name_if_needed() {
+  local name=$1
+  if [ ${#name} -ge 256 ]; then
+    echo "${name}" | awk '{print substr($0, 1, 253) "..."}'
+  else
+    echo "${name}"
+  fi
+}
+
 build_fhavro_file_arg_suffix() {
   # needed to accommodate file conventions in fhavro-export resources.
   # (kf-strides vs kfdrc)
@@ -339,7 +348,7 @@ SG_SLAVE=$(aws ec2 describe-security-groups --filters Name=group-name,Values=Ela
 #Once the emr cluster is successfully created, if one needs to access the cluster then:
 #  - grab the id instance (for example, in the aws console);
 #  - run this command: aws ssm start-session --target <INSTANCE ID>;
-
+EMR_NAME=$(truncate_emr_name_if_needed "Portal ETL - All Steps - ${ENV} - ${RELEASE_ID} - ${STUDIES}")
 aws emr create-cluster \
   --applications Name=Hadoop Name=Spark \
   --ec2-attributes "{\"InstanceProfile\":\"${INSTANCE_PROFILE}\",\"SubnetId\":\"${SUBNET}\", \"ServiceAccessSecurityGroup\":\"${SG_SERVICE}\", \"EmrManagedMasterSecurityGroup\":\"${SG_MASTER}\", \"EmrManagedSlaveSecurityGroup\":\"${SG_SLAVE}\"}" \
@@ -349,7 +358,7 @@ aws emr create-cluster \
   --bootstrap-actions Path="s3://${BUCKET}/jobs/bootstrap-actions/enable-ssm.sh" Path="s3://${BUCKET}/jobs/bootstrap-actions/install-java11.sh" \
   --steps "${STEPS}" \
   --log-uri "s3n://${BUCKET}/jobs/elasticmapreduce/" \
-  --name "Portal ETL - All Steps - ${ENV} - ${RELEASE_ID} - ${STUDIES}" \
+  --name "${EMR_NAME}" \
   --instance-groups "[{\"InstanceCount\":${INSTANCE_COUNT},\"InstanceGroupType\":\"CORE\",\"InstanceType\":\"m5.xlarge\",\"Name\":\"Core - 2\"},{\"InstanceCount\":1,\"EbsConfiguration\":{\"EbsBlockDeviceConfigs\":[{\"VolumeSpecification\":{\"SizeInGB\":32,\"VolumeType\":\"gp2\"},\"VolumesPerInstance\":2}]},\"InstanceGroupType\":\"MASTER\",\"InstanceType\":\"${INSTANCE_TYPE}\",\"Name\":\"Master - 1\"}]" \
   --scale-down-behavior TERMINATE_AT_TASK_COMPLETION \
   --configurations file://./spark-config.json \
