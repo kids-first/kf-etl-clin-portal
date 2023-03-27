@@ -55,6 +55,55 @@ pipeline {
      }
    }
 
+   stage('Approve deploying ETL in prd') {
+      options {
+        timeout(time: 1, unit: 'HOURS')
+      }
+      when {
+        expression {
+          return env.BRANCH_NAME == 'master';
+        }
+      }
+      environment {
+        APP_LEVEL = "prd"
+      }
+      steps {
+        script {
+            slackSend (color: '#FFFF00', channel: "${slackResponse.threadId}", message: ":sweat_smile: ${env.JOB_NAME} - ${env.BRANCH_NAME}[${env.BUILD_NUMBER}]: Stage ${STAGE_NAME} in ${env.APP_LEVEL} (${env.BUILD_URL}) <@UKGH3QN65>, <@U8A3WUF8D>", replyBroadcast: true)
+            env.DEPLOY_TO_PRD = input message: 'User input required',
+            submitter: "D3B_JENKINS_ADMINS",
+            parameters: [choice(name: 'kf-etl-clin-portal: Deploy to PRD Environment', choices: 'no\nyes', description: 'Choose "yes" if you want to deploy the PRD server')]
+        }
+      }
+      post {
+        failure {
+          script {
+            slackSend (color: '#ff0000', channel: "${slackResponse.threadId}", message: ":x: ${env.JOB_NAME} - ${env.BRANCH_NAME}[${env.BUILD_NUMBER}]: Stage ${STAGE_NAME} in ${env.APP_LEVEL} (${env.BUILD_URL})")
+          }
+        }
+      }
+    }
+
+   stage('Deploy prd'){
+     when {
+       expression {
+         return env.BRANCH_NAME == 'master' && env.DEPLOY_TO_PRD == 'yes';
+       }
+     }
+     steps{
+       pending("${env.JOB_NAME}","prd","${slackResponse.threadId}")
+       sh '''
+          ./deploy.sh prd
+         '''
+       success("${env.JOB_NAME}","prd","${slackResponse.threadId}")
+     }
+     post {
+       failure {
+         fail("${env.JOB_NAME}","prd","${slackResponse.threadId}")
+       }
+     }
+   }
+
   }
 }
 
