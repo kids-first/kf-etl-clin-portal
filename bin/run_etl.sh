@@ -4,8 +4,11 @@ source "$(dirname "$0")/utils.sh"
 
 truncate_emr_name_if_needed() {
   local name=$1
-  if [ ${#name} -ge 256 ]; then
-    echo "${name}" | awk '{print substr($0, 1, 253) "..."}'
+  MAX_EMR_NAME_LENGTH=256
+  if [ ${#name} -ge "$MAX_EMR_NAME_LENGTH" ]; then
+    DOTS='...'
+    DOTS_LENGTH="${#DOTS}"
+    echo | awk -v name="$name" -v end=$((MAX_EMR_NAME_LENGTH-DOTS_LENGTH)) -v dots="$DOTS" '{print substr(name, 1, end) dots}'
   else
     echo "${name}"
   fi
@@ -31,7 +34,7 @@ usage() {
   echo "--instance-count    instance count"
   echo "--instance-profile    instance profile"
   echo "--service-role    aws service role"
-  echo "--until-step    Enrich"
+  echo "--skip-steps    'Download and Run Fhavro-export,Import Task,Enrich,Prepare Index,Index File'"
   echo "-h, --help    display usage"
   echo
   echo "Example(s):"
@@ -39,7 +42,7 @@ usage() {
   exit 1
 }
 
-PARSED_ARGUMENTS=$(getopt -a -n run_etl -o p:r:s:b:e:h --long project:,release:,studies:,bucket:,environment:,instance-type:,instance-count:,instance-profile:,service-role:,help,until-step: -- "$@")
+PARSED_ARGUMENTS=$(getopt -a -n run_etl -o p:r:s:b:e:h --long project:,release:,studies:,bucket:,environment:,instance-type:,instance-count:,instance-profile:,service-role:,help,skip-steps: -- "$@")
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then
   usage
@@ -55,7 +58,7 @@ PROJECT=$(unset)
 STUDIES=$(unset)
 INSTANCE_PROFILE=$(unset)
 SERVICE_ROLE=$(unset)
-UNTIL_STEP_NAME=$(unset)
+SKIP_STEPS=$(unset)
 
 while :; do
   case "$1" in
@@ -95,8 +98,8 @@ while :; do
     SERVICE_ROLE="$2"
     shift 2
     ;;
-  --until-step)
-    UNTIL_STEP_NAME="$2"
+  --skip-steps)
+    SKIP_STEPS="$2"
     shift 2
     ;;
   --)
@@ -331,13 +334,9 @@ EOF
 )
 fi
 
-# Remove all steps before $UNTIL_STEP_NAME if it exists - Allows to skip tests if needed.
-if [ -n "$UNTIL_STEP_NAME" ]; then
-  STEP_FROM="$(echo "$STEPS" | jq --arg step "$UNTIL_STEP_NAME" '[.[].Name] | to_entries | .[] | select(.value == $step) | .key')"
-  if [ -z "$STEP_FROM" ]; then
-    STEP_FROM=0
-  fi
-  STEPS="$(echo "$STEPS" | jq --arg from "$STEP_FROM" '.[($from|tonumber):]')"
+# Remove all steps before $SKIP_STEPS if it exists - Allows to skip tests if needed.
+if [ -n "$SKIP_STEPS" ]; then
+  STEPS="$(echo "$STEPS" | jq --arg blacklist "$SKIP_STEPS" '[.[] | select(.Name as $name | $blacklist | index($name) | not)]')"
 fi
 
 SG_SERVICE=$(aws ec2 describe-security-groups --filters Name=group-name,Values=ElasticMapReduce-ServiceAccess-"${ENV}"-* --query "SecurityGroups[*].{Name:GroupName,ID:GroupId}" | jq -r '.[0].ID')
