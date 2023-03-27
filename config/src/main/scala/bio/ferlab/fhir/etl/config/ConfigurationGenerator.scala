@@ -14,11 +14,8 @@ object ConfigurationGenerator extends App {
   val pInclude = "include"
   val pKfStrides = "kf-strides"
 
-  private def populateTable(project: String, sources: List[DatasetConf], database: String): List[DatasetConf] = {
-    val vitalStatusTableNames = List("raw_vital_status", "normalized_vital_status")
-    sources
-      .filter(ds => if (project == pKfStrides) !(vitalStatusTableNames contains ds.id) else true)
-      .map(ds => ds.copy(table = ds.table.map(t => TableConf(database, t.name))))
+  private def populateTable(sources: List[DatasetConf], database: String): List[DatasetConf] = {
+    sources.map(ds => ds.copy(table = ds.table.map(t => TableConf(database, t.name))))
   }
 
   def isFlatSpecimenModel(project: String): Boolean = project == pKfStrides
@@ -188,7 +185,7 @@ object ConfigurationGenerator extends App {
       storages = List(
         StorageConf(storage, "s3a://storage", S3)
       ),
-      sources = populateTable(project, sources, conf(project)("localDbName")),
+      sources = populateTable(sources, conf(project)("localDbName")),
       args = args.toList,
       sparkconf = Map(
         "spark.databricks.delta.retentionDurationCheck.enabled" -> "false",
@@ -217,7 +214,7 @@ object ConfigurationGenerator extends App {
       storages = List(
         StorageConf(storage, s"s3a://${conf(project)("bucketNamePrefix")}-qa", S3)
       ),
-      sources = populateTable(project, sources, conf(project)("qaDbName")),
+      sources = populateTable(sources, conf(project)("qaDbName")),
       args = args.toList,
       sparkconf = spark_conf.++(Map("spark.fhir.server.url" -> conf(project)("fhirQa")))
     ),
@@ -228,7 +225,7 @@ object ConfigurationGenerator extends App {
       storages = List(
         StorageConf(storage, s"s3a://${conf(project)("bucketNamePrefix")}-prd", S3)
       ),
-      sources = populateTable(project, sources, conf(project)("prdDbName")),
+      sources = populateTable(sources, conf(project)("prdDbName")),
       args = args.toList,
       sparkconf = spark_conf.++(Map("spark.fhir.server.url" -> conf(project)("fhirPrd")))
     ),
