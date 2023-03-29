@@ -20,3 +20,5 @@ case class SEQUENCING_EXPERIMENT(
                                   external_id: Option[String] = None,
                                   sequencing_center_id: Option[String] = None
                                 )
+
+case class SEQUENCING_EXPERIMENT_ROW_PARTITIONED_BY_STUDY(study_id: String = "SD_Z6MWD3H0", experiment_strategy: String = "WGS")
