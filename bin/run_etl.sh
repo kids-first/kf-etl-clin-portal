@@ -21,6 +21,13 @@ build_fhavro_file_arg_suffix() {
   echo "${suffix/"kf-strides"/"kfdrc"}"
 }
 
+filter_steps() {
+  local allSteps=$1
+  # Comma-separated list
+  local stepsToExclude="${2:-''}"
+  echo "$allSteps" | jq --arg blacklist "$stepsToExclude" '[.[] | select(.Name as $name | $blacklist | index($name) | not)]'
+}
+
 usage() {
   echo "Usage: $0 [arguments]"
   echo "Run ETL for a given project (Kids-First or Include)"
@@ -332,11 +339,13 @@ STEPS=$(
 ]
 EOF
 )
+STEPS_TO_AVOID_WHEN_INCLUDE="Export Dataservice"
+STEPS="$(filter_steps "$STEPS" "$STEPS_TO_AVOID_WHEN_INCLUDE")"
 fi
 
 # Remove all steps before $SKIP_STEPS if it exists - Allows to skip tests if needed.
 if [ -n "$SKIP_STEPS" ]; then
-  STEPS="$(echo "$STEPS" | jq --arg blacklist "$SKIP_STEPS" '[.[] | select(.Name as $name | $blacklist | index($name) | not)]')"
+  STEPS="$(filter_steps "$STEPS" "$SKIP_STEPS")"
 fi
 
 SG_SERVICE=$(aws ec2 describe-security-groups --filters Name=group-name,Values=ElasticMapReduce-ServiceAccess-"${ENV}"-* --query "SecurityGroups[*].{Name:GroupName,ID:GroupId}" | jq -r '.[0].ID')
