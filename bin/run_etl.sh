@@ -24,8 +24,8 @@ build_fhavro_file_arg_suffix() {
 filter_steps() {
   local allSteps=$1
   # Comma-separated list
-  local stepsToExcludes="${2:-''}"
-  echo "$allSteps" | jq --arg blacklist "$stepsToExcludes" '[.[] | select(.Name as $name | $blacklist | index($name) | not)]'
+  local stepsToExclude="${2:-''}"
+  echo "$allSteps" | jq --arg blacklist "$stepsToExclude" '[.[] | select(.Name as $name | $blacklist | index($name) | not)]'
 }
 
 usage() {
