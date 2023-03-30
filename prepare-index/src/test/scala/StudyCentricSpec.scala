@@ -19,9 +19,9 @@ class StudyCentricSpec extends AnyFlatSpec with Matchers with WithSparkSession  
         BIOSPECIMEN(fhir_id = "2", `specimen_id` = "id2")
       ).toDF(),
       "normalized_sequencing_experiment" -> Seq(
-        SEQUENCING_EXPERIMENT_ROW_PARTITIONED_BY_STUDY(experiment_strategy = "Whole Genome Sequencing"),
-        SEQUENCING_EXPERIMENT_ROW_PARTITIONED_BY_STUDY(),
-        SEQUENCING_EXPERIMENT_ROW_PARTITIONED_BY_STUDY(study_id = "unknown")
+        SEQUENCING_EXPERIMENT_INPUT(experiment_strategy = "Whole Genome Sequencing"),
+        SEQUENCING_EXPERIMENT_INPUT(),
+        SEQUENCING_EXPERIMENT_INPUT(study_id = "unknown")
       ).toDF()
     )
 
@@ -48,7 +48,7 @@ class StudyCentricSpec extends AnyFlatSpec with Matchers with WithSparkSession  
       "normalized_document_reference" -> Seq(DOCUMENTREFERENCE(), DOCUMENTREFERENCE(), DOCUMENTREFERENCE()).toDF(),
       "normalized_group" -> Seq[GROUP]().toDF(),
       "normalized_specimen" -> Seq(BIOSPECIMEN()).toDF(),
-      "normalized_sequencing_experiment" -> Seq(SEQUENCING_EXPERIMENT_ROW_PARTITIONED_BY_STUDY()).toDF()
+      "normalized_sequencing_experiment" -> Seq(SEQUENCING_EXPERIMENT_INPUT()).toDF()
     )
 
     val output = new StudyCentric(List("SD_Z6MWD3H0"))(conf).transform(data)
