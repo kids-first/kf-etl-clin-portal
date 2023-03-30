@@ -2,6 +2,7 @@ package model
 
 case class SEQUENCING_EXPERIMENT_INPUT(
                                         kf_id: String = "SE_1H1QH9CM",
+                                        study_id: String = "SD_Z6MWD3H0",
                                         created_at: Option[String] = None,
                                         modified_at: Option[String] = None,
                                         experiment_date: Option[String] = None,

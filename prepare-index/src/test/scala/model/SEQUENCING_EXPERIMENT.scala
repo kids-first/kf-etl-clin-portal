@@ -20,3 +20,4 @@ case class SEQUENCING_EXPERIMENT(
                                   external_id: Option[String] = None,
                                   sequencing_center_id: Option[String] = None
                                 )
+

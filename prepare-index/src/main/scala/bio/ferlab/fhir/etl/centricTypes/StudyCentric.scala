@@ -4,7 +4,7 @@ import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.ETLSingleDestination
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
 import bio.ferlab.datalake.spark3.utils.Coalesce
-import org.apache.spark.sql.functions.{array, coalesce, col, collect_set, count, filter, lit, size}
+import org.apache.spark.sql.functions.{array, array_union, coalesce, col, collect_set, count, filter, lit, size}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
@@ -17,10 +17,18 @@ class StudyCentric(studyIds: List[String])(implicit configuration: Configuration
   val normalized_patient: DatasetConf = conf.getDataset("normalized_patient")
   val normalized_group: DatasetConf = conf.getDataset("normalized_group")
   val normalized_specimen: DatasetConf = conf.getDataset("normalized_specimen")
+  val normalized_sequencing_experiment: DatasetConf = conf.getDataset("normalized_sequencing_experiment")
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
-    Seq(normalized_researchstudy, normalized_drs_document_reference, normalized_patient, normalized_group, normalized_specimen)
+    Seq(
+      normalized_researchstudy,
+      normalized_drs_document_reference,
+      normalized_patient,
+      normalized_group,
+      normalized_specimen,
+      normalized_sequencing_experiment
+    )
       .map(ds => ds.id -> ds.read
         .where(col("study_id").isin(studyIds: _*))
       ).toMap
@@ -35,9 +43,10 @@ class StudyCentric(studyIds: List[String])(implicit configuration: Configuration
     val countPatientDf = data(normalized_patient.id).groupBy("study_id").count().withColumnRenamed("count", "participant_count")
     val countFamilyDf = data(normalized_group.id).filter(size(col("family_members")).gt(1)).groupBy("study_id").count().withColumnRenamed("count", "family_count")
 
-    val countFileDf = data(normalized_drs_document_reference.id).groupBy("study_id")
+    val countFileDf = data(normalized_drs_document_reference.id)
+      .groupBy("study_id")
       .agg(count(lit(1)) as "file_count",
-        collect_set(col("experiment_strategy")) as "experimental_strategy",
+        collect_set(col("experiment_strategy")) as "experimental_strategy_file",
         collect_set(col("data_category")) as "data_category",
         collect_set(col("controlled_access")) as "controlled_access"
       )
@@ -48,6 +57,11 @@ class StudyCentric(studyIds: List[String])(implicit configuration: Configuration
         count(lit(1)) as "biospecimen_count",
       )
 
+    val aggSeqExpDf = data(normalized_sequencing_experiment.id)
+      .groupBy("study_id")
+      .agg(
+        collect_set(col("experiment_strategy")) as "experimental_strategy_seq_exp"
+      )
     val transformedStudyDf = studyDF
       .withColumnRenamed("name", "study_name")
       .join(countPatientDf, Seq("study_id"), "left_outer")
@@ -62,6 +76,9 @@ class StudyCentric(studyIds: List[String])(implicit configuration: Configuration
         col("study_name"), col("study_code"), col("external_id")
       ))
       .withColumn("search_text", filter(col("search_text"), x => x.isNotNull && x =!= ""))
+      .join(aggSeqExpDf, Seq("study_id"), "left_outer")
+      .withColumn("experimental_strategy", array_union(col("experimental_strategy_seq_exp"), col("experimental_strategy_file")))
+      .drop("experimental_strategy_seq_exp", "experimental_strategy_file")
 
     transformedStudyDf
   }
