@@ -12,7 +12,7 @@ class StudyCentricSpec extends AnyFlatSpec with Matchers with WithSparkSession  
     val data: Map[String, DataFrame] = Map(
       "normalized_research_study" -> Seq(RESEARCHSTUDY()).toDF(),
       "normalized_patient" -> Seq(PATIENT(), PATIENT()).toDF(),
-      "normalized_document_reference" -> Seq(DOCUMENTREFERENCE(), DOCUMENTREFERENCE(), DOCUMENTREFERENCE()).toDF(),
+      "normalized_document_reference" -> Seq(DOCUMENTREFERENCE(`experiment_strategy` = "RNASeq"), DOCUMENTREFERENCE(), DOCUMENTREFERENCE()).toDF(),
       "normalized_group" -> Seq(GROUP(), GROUP()).toDF(),
       "normalized_specimen" -> Seq(
         BIOSPECIMEN(fhir_id = "1", `specimen_id` = "id1"),
@@ -36,7 +36,7 @@ class StudyCentricSpec extends AnyFlatSpec with Matchers with WithSparkSession  
           `participant_count` = 2,
           `file_count` = 3,
           `biospecimen_count` = 2,
-          `experimental_strategy` = Seq("WGS", "Whole Genome Sequencing")
+          `experimental_strategy` = Seq("WGS", "Whole Genome Sequencing", "RNASeq")
         )
       )
   }

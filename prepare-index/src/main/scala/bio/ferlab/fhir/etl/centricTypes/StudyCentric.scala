@@ -4,7 +4,7 @@ import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.ETLSingleDestination
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
 import bio.ferlab.datalake.spark3.utils.Coalesce
-import org.apache.spark.sql.functions.{array, coalesce, col, collect_set, count, filter, lit, size}
+import org.apache.spark.sql.functions.{array, array_union, coalesce, col, collect_set, count, filter, lit, size}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
@@ -46,6 +46,7 @@ class StudyCentric(studyIds: List[String])(implicit configuration: Configuration
     val countFileDf = data(normalized_drs_document_reference.id)
       .groupBy("study_id")
       .agg(count(lit(1)) as "file_count",
+        collect_set(col("experiment_strategy")) as "experimental_strategy_file",
         collect_set(col("data_category")) as "data_category",
         collect_set(col("controlled_access")) as "controlled_access"
       )
@@ -59,7 +60,7 @@ class StudyCentric(studyIds: List[String])(implicit configuration: Configuration
     val aggSeqExpDf = data(normalized_sequencing_experiment.id)
       .groupBy("study_id")
       .agg(
-        collect_set(col("experiment_strategy")) as "experimental_strategy"
+        collect_set(col("experiment_strategy")) as "experimental_strategy_seq_exp"
       )
     val transformedStudyDf = studyDF
       .withColumnRenamed("name", "study_name")
@@ -76,6 +77,8 @@ class StudyCentric(studyIds: List[String])(implicit configuration: Configuration
       ))
       .withColumn("search_text", filter(col("search_text"), x => x.isNotNull && x =!= ""))
       .join(aggSeqExpDf, Seq("study_id"), "left_outer")
+      .withColumn("experimental_strategy", array_union(col("experimental_strategy_seq_exp"), col("experimental_strategy_file")))
+      .drop("experimental_strategy_seq_exp", "experimental_strategy_file")
 
     transformedStudyDf
   }
