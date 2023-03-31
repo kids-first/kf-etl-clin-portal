@@ -61,7 +61,7 @@ object UCSFVariantIndexTask extends App {
 
   val indexName = chromosome match {
     case "all" => s"${jobType}_$release_id".toLowerCase
-    case c => s"${jobType}_${release_id}_${c}".toLowerCase
+    case c => s"${jobType}_${c}_${release_id}".toLowerCase
   }
 
 
