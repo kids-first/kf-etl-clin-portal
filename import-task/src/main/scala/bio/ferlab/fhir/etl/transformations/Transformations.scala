@@ -1,7 +1,7 @@
 package bio.ferlab.fhir.etl.transformations
 
 import bio.ferlab.datalake.spark3.transformation.{Custom, Drop, Transformation}
-import bio.ferlab.fhir.etl.Utils.{extractFirstForSystem, _}
+import bio.ferlab.fhir.etl.Utils.{extractFirstForSystem, extractFirstMatchingSystem, _}
 import bio.ferlab.fhir.etl._
 import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.sql.functions.{col, collect_list, explode, filter, regexp_extract, struct, when, _}
@@ -10,7 +10,6 @@ import org.apache.spark.sql.types.BooleanType
 object Transformations {
 
   val patternPractitionerRoleResearchStudy = "PractitionerRole\\/([0-9]+)"
-  val conditionTypeR = "^https:\\/\\/[A-Za-z0-9-_.\\/]+\\/([A-Za-z0-9]+)"
 
   val officialIdentifier: Column = extractOfficial(col("identifier"))
 
@@ -150,12 +149,23 @@ object Transformations {
         "investigator_id",
         regexp_extract(col("principalInvestigator")("reference"), patternPractitionerRoleResearchStudy, 1)
       )
-      .withColumn("study_code", col("keyword")(1)("coding")(0)("code"))
-      .withColumn("program", firstSystemEquals(flatten(col("keyword.coding")), SYS_PROGRAMS)("display"))
+      .withColumn("study_code_fallback", col("keyword")(1)("coding")(0)("code"))
+      .withColumn("study_code_from_system", extractFirstMatchingSystem(flatten(col("keyword.coding")), Seq(SYS_SHORT_CODE_KF))("display"))
+      .withColumn("study_code", coalesce(col("study_code_from_system"), col("study_code_fallback")))
+      .withColumn("program",  extractFirstMatchingSystem(flatten(col("keyword.coding")), Seq(SYS_PROGRAMS_KF, SYS_PROGRAMS_INCLUDE))("display"))
       .withColumn("website", extractDocUrl(col("relatedArtifact"))("url"))
       .withColumn("domain", col("category")(0)("text"))
     ),
-    Drop("title", "identifier", "principalInvestigator", "keyword", "relatedArtifact", "category")
+    Drop(
+      "title",
+      "identifier",
+      "principalInvestigator",
+      "keyword",
+      "relatedArtifact",
+      "category",
+      "study_code_fallback",
+      "study_code_from_system"
+    )
   )
 
   val documentreferenceMappings: List[Transformation] = List(

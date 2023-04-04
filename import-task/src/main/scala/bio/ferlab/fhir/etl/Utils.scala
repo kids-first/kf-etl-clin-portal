@@ -30,6 +30,7 @@ object Utils {
   def extractSpecimenNcitAnatomySiteId(xs: Column): Column = filter(xs, x => x("code").startsWith("NCIT:"))(0)("code")
   def extractKfSpecimenConsentType(xs: Column): Column = filter(xs, x => x("system").contains("consent_type"))(0)("code")
   def extractLatestDid(urlCol: Column): Column = when(urlCol.startsWith(DRS_HOSTNAME), DRS_HOSTNAME).otherwise("")
+  def extractFirstMatchingSystem(column: Column, systemUrls: Seq[String]): Column =  filter(column, c => c("system").isin(systemUrls:_*))(0)
 
   val extractAclFromList: UserDefinedFunction =
     udf((arr: Seq[String], studyId: String) => arr.filter(e => e != null && ((e matches actCodeR) || (e == studyId))))
