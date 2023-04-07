@@ -1,6 +1,6 @@
 @Library(value="kids-first/aws-infra-jenkins-shared-libraries", changelog=false) _
 simple_pipeline {
    stage_name_1 = "run_etl.sh"
-   script_1 = "cd bin && ./run_etl.sh -p kf-strides -r re_data_ops_01 -s SD_Z6MWD3H0,SD_BHJXBDQK,SD_DYPMEHHF,SD_PREASA7S  -e qa --instance-type m5.8xlarge --instance-count 1 -b kf-strides-232196027141-datalake-qa --instance-profile kf-variant-emr-ec2-qa-profile --service-role kf-variant-emr-qa-role"
+   script_1 = "cd bin && ./run_etl.sh -p kf-strides -r re_data_ops_01 -s SD_Z6MWD3H0,SD_BHJXBDQK,SD_DYPMEHHF,SD_PREASA7S  -e qa --instance-type m5.8xlarge --instance-count 1 -b kf-strides-232196027141-datalake-qa --instance-profile kf-variant-emr-ec2-qa-profile --service-role kf-variant-emr-qa-role --skip-steps 'Download and Run Fhavro-export,Export Dataservice,Import Task,Enrich'"
    projectName = "kf-etl-clin-portal"
 }
