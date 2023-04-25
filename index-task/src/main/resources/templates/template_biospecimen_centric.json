@@ -480,7 +480,8 @@
                   "type": "keyword"
                 },
                 "external_id": {
-                  "type": "keyword"
+                  "type": "keyword",
+                  "normalizer" : "custom_normalizer"
                 },
                 "family_count": {
                   "type": "long"
@@ -558,7 +559,8 @@
               "type": "keyword"
             },
             "external_id": {
-              "type": "keyword"
+              "type": "keyword",
+              "normalizer" : "custom_normalizer"
             },
             "family_count": {
               "type": "long"
