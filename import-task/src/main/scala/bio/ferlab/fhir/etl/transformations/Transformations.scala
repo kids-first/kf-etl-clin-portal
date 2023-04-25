@@ -16,14 +16,15 @@ object Transformations {
   val patientMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id", "study_id", "release_id", "gender", "ethnicity", "identifier", "race")
-      .withColumn("external_id", filter(col("identifier"), c => c("system").isNull)(0)("value"))
-      // TODO is_proband
+      .withColumn("external_id_from_no_system", filter(col("identifier"), c => c("system").isNull)(0)("value"))
+      .withColumn("external_id_from_secondary_use", filter(col("identifier"), c => c("use") === "secondary" )(0)("value"))
+      .withColumn("external_id", coalesce(col("external_id_from_secondary_use"), col("external_id_from_no_system")))
       .withColumn("participant_id", officialIdentifier)
       .withColumn("race_omb", ombCategory(col("race.ombCategory")))
       .withColumn("ethnicity", ombCategory(col("ethnicity.ombCategory")))
       .withColumn("race", when(col("race_omb").isNull && lower(col("race.text")) === "more than one race", upperFirstLetter(col("race.text"))).otherwise(col("race_omb")))
     ),
-    Drop("identifier", "race_omb")
+    Drop("identifier", "race_omb", "external_id_from_no_system", "external_id_from_secondary_use")
   )
 
   val researchSubjectMappings: List[Transformation] = List(
