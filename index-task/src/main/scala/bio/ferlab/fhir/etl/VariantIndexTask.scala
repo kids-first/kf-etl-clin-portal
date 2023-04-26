@@ -1,15 +1,14 @@
 package bio.ferlab.fhir.etl
 
-import bio.ferlab.datalake.commons.config.{Configuration, ConfigurationLoader, DatasetConf, SimpleConfiguration}
+import bio.ferlab.datalake.commons.config.{Configuration, ConfigurationLoader, SimpleConfiguration}
 import bio.ferlab.datalake.spark3.elasticsearch.{ElasticSearchClient, Indexer}
-import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import pureconfig.generic.auto._
 import pureconfig.module.enum._
 
-object UCSFVariantIndexTask extends App {
+object VariantIndexTask extends App {
 
   println(s"ARGS: " + args.mkString("[", ", ", "]"))
 
@@ -17,8 +16,7 @@ object UCSFVariantIndexTask extends App {
   esNodes, // http://localhost:9200
   esPort, // 9200
   release_id, // release id
-  study_ids, // study ids separated by ;
-  jobType, // study_centric or participant_centric or file_centric or biospecimen_centric
+  jobType, // variant_centric, variants_suggestions, gene_centric, genes_suggestions
   configFile, // config/qa-[project].conf or config/prod.conf or config/dev-[project].conf
   input,
   chromosome
