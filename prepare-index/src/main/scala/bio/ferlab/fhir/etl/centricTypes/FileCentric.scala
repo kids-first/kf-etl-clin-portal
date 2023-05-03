@@ -2,12 +2,10 @@ package bio.ferlab.fhir.etl.centricTypes
 
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.ETLSingleDestination
-import bio.ferlab.datalake.spark3.etl.v2.ETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
-import bio.ferlab.datalake.spark3.utils.Coalesce
 import bio.ferlab.fhir.etl.common.Utils._
-import org.apache.spark.sql.functions.{col, collect_list, concat, lit, struct}
-import org.apache.spark.sql.{DataFrame, SparkSession, functions}
+import org.apache.spark.sql.functions.{col, concat, lit, struct}
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
 
@@ -45,6 +43,4 @@ class FileCentric(studyIds: List[String])(implicit configuration: Configuration)
     transformedFile
 
   }
-
-  override def defaultRepartition: DataFrame => DataFrame = Coalesce(20)
 }

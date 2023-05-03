@@ -2,9 +2,7 @@ package bio.ferlab.fhir.etl.centricTypes
 
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.ETLSingleDestination
-import bio.ferlab.datalake.spark3.etl.v2.ETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
-import bio.ferlab.datalake.spark3.utils.Coalesce
 import bio.ferlab.fhir.etl.common.Utils._
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -44,5 +42,4 @@ class ParticipantCentric(studyIds: List[String])(implicit configuration: Configu
     transformedParticipant
   }
 
-  override def defaultRepartition: DataFrame => DataFrame = Coalesce(20)
 }

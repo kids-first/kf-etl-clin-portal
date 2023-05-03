@@ -2,15 +2,13 @@ package bio.ferlab.fhir.etl.centricTypes
 
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.ETLSingleDestination
-import bio.ferlab.datalake.spark3.etl.v2.ETL
+import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits._
+import bio.ferlab.fhir.etl.common.OntologyUtils.firstCategory
 import bio.ferlab.fhir.etl.common.Utils._
 import org.apache.spark.sql.functions.{col, lit, struct}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
-import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits._
-import bio.ferlab.datalake.spark3.utils.Coalesce
-import bio.ferlab.fhir.etl.common.OntologyUtils.firstCategory
 
 class SimpleParticipant(studyIds: List[String])(implicit configuration: Configuration) extends ETLSingleDestination {
 
@@ -62,6 +60,4 @@ class SimpleParticipant(studyIds: List[String])(implicit configuration: Configur
 
     transformedParticipant
   }
-
-  override def defaultRepartition: DataFrame => DataFrame = Coalesce(20)
 }

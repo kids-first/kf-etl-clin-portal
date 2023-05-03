@@ -1,9 +1,11 @@
 #!/bin/bash
+set -x
 
 release_id=$1
-study_id=$2
-env=${3:-"qa"}
-index=${4:-"all"}
+chromosome=${2:-"all"}
+job=${3:-"variant_centric"}
+input=${4:-"s3a://include-373997854230-datalake-qa/es_index/genomic"}
+env=${4:-"qa"}
 instance_type="m5.4xlarge"
 instance_count="1"
 if [ "$env" = "prd" ]
@@ -17,26 +19,30 @@ fi
 
 steps=$(cat <<EOF
 [
-  {
-    "Type":"CUSTOM_JAR",
-    "Name":"Cleanup jars",
-    "ActionOnFailure":"TERMINATE_CLUSTER",
-    "Jar":"command-runner.jar",
-    "Args":[
-      "bash","-c",
-      "sudo rm -f /usr/lib/spark/jars/spark-avro.jar"
-    ]
-  },
-  {
-    "Type":"CUSTOM_JAR",
-    "Name":"Publish",
-    "ActionOnFailure":"TERMINATE_CLUSTER",
-    "Jar":"command-runner.jar",
-    "Args":[
-      "bash","-c",
-      "aws s3 cp s3://include-373997854230-datalake-${env}/jobs/publish-task.jar /home/hadoop; cd /home/hadoop; /usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar publish-task.jar ${es} 443 ${release_id} ${study_id} ${index}"
-    ]
-  }
+   {
+     "Args": [
+       "spark-submit",
+       "--deploy-mode",
+       "client",
+       "--class",
+       "bio.ferlab.fhir.etl.VariantIndexTask",
+       "s3a://include-373997854230-datalake-${env}/jobs/index-task.jar",
+       "${es}",
+       "443",
+       "${release_id}",
+       "${job}",
+       "config/${env}-include.conf",
+       "${input}/${job}_${release_id}",
+       "${chromosome}"
+     ],
+     "Type": "CUSTOM_JAR",
+     "ActionOnFailure": "CONTINUE",
+     "Jar": "command-runner.jar",
+     "Properties": "",
+     "Name": "Index ${job} - ${release_id} - ${chromosome}"
+   }
+
+
 ]
 EOF
 )
@@ -51,7 +57,7 @@ aws emr create-cluster \
   --bootstrap-actions Path="s3://include-373997854230-datalake-${env}/jobs/bootstrap-actions/enable-ssm.sh" Path="s3://include-373997854230-datalake-${env}/jobs/bootstrap-actions/install-java11.sh" \
   --steps "${steps}" \
   --log-uri "s3n://include-373997854230-datalake-${env}/jobs/elasticmapreduce/" \
-  --name "Portal ETL - Publish index ${index} - ${env} ${release_id} ${study_id}" \
+  --name "Portal ETL - Index Variant - ${env} ${release_id} ${job} ${chromosome}" \
   --instance-groups "[{\"InstanceCount\":${instance_count},\"InstanceGroupType\":\"CORE\",\"InstanceType\":\"${instance_type}\",\"Name\":\"Core - 2\"},{\"InstanceCount\":1,\"EbsConfiguration\":{\"EbsBlockDeviceConfigs\":[{\"VolumeSpecification\":{\"SizeInGB\":32,\"VolumeType\":\"gp2\"},\"VolumesPerInstance\":2}]},\"InstanceGroupType\":\"MASTER\",\"InstanceType\":\"m5.xlarge\",\"Name\":\"Master - 1\"}]" \
   --scale-down-behavior TERMINATE_AT_TASK_COMPLETION \
   --configurations file://./spark-config.json \

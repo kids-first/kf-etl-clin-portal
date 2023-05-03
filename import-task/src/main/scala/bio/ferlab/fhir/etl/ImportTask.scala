@@ -6,7 +6,6 @@ import bio.ferlab.fhir.etl.config.ETLConfiguration
 import bio.ferlab.fhir.etl.fhavro.FhavroToNormalizedMappings
 import org.slf4j.{Logger, LoggerFactory}
 import pureconfig.generic.auto._
-import pureconfig.module.enum._
 
 object ImportTask extends SparkAppWithConfig[ETLConfiguration] {
   val LOGGER: Logger = LoggerFactory.getLogger(getClass)

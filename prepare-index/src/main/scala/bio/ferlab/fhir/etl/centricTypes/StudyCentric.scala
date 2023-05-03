@@ -3,8 +3,7 @@ package bio.ferlab.fhir.etl.centricTypes
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.ETLSingleDestination
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
-import bio.ferlab.datalake.spark3.utils.Coalesce
-import org.apache.spark.sql.functions.{array, array_union, coalesce, col, collect_set, count, filter, lit, size}
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
@@ -83,6 +82,5 @@ class StudyCentric(studyIds: List[String])(implicit configuration: Configuration
     transformedStudyDf
   }
 
-  override def defaultRepartition: DataFrame => DataFrame = Coalesce(20)
 
 }

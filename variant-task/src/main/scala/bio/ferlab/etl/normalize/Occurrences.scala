@@ -6,13 +6,12 @@ import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits._
 import bio.ferlab.datalake.spark3.implicits.GenomicImplicits._
 import bio.ferlab.datalake.spark3.implicits.GenomicImplicits.columns._
 import bio.ferlab.datalake.spark3.implicits.SparkUtils.filename
-import bio.ferlab.datalake.spark3.utils.RepartitionByColumns
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession, functions}
 
 import java.time.LocalDateTime
 
-class Occurrences(studyId: String, releaseId: String, vcfV1Pattern: String, vcfV2pattern: String, referenceGenomePath:Option[String])(implicit configuration: Configuration) extends ETLSingleDestination {
+class Occurrences(studyId: String, releaseId: String, vcfV1Pattern: String, vcfV2pattern: String, referenceGenomePath: Option[String])(implicit configuration: Configuration) extends ETLSingleDestination {
   private val enriched_specimen: DatasetConf = conf.getDataset("enriched_specimen")
   private val document_reference: DatasetConf = conf.getDataset("normalized_document_reference")
   override val mainDestination: DatasetConf = conf.getDataset("normalized_snv")
@@ -175,8 +174,6 @@ class Occurrences(studyId: String, releaseId: String, vcfV1Pattern: String, vcfV
       .withColumn("zygosity", zygosity(col("calls")))
     occurrences
   }
-
-  override def defaultRepartition: DataFrame => DataFrame = RepartitionByColumns(Seq("chromosome"), Some(100))
 
   override def replaceWhere: Option[String] = Some(s"study_id = '$studyId'")
 

@@ -4,6 +4,7 @@ import bio.ferlab.datalake.commons.config.Format.{AVRO, DELTA, JSON, PARQUET}
 import bio.ferlab.datalake.commons.config.LoadType.{OverWrite, OverWritePartition, Read}
 import bio.ferlab.datalake.commons.config._
 import bio.ferlab.datalake.commons.file.FileSystemType.S3
+import pureconfig.generic.auto._
 
 case class SourceConfig(entityType: String, partitionBy: List[String])
 
@@ -59,7 +60,8 @@ object ConfigurationGenerator extends App {
         loadtype = if (source.partitionBy.nonEmpty) OverWritePartition else OverWrite,
         table = Some(TableConf("database", tableName)),
         partitionby = source.partitionBy,
-        writeoptions = WriteOptions.DEFAULT_OPTIONS ++ Map("overwriteSchema" -> "true")
+        writeoptions = WriteOptions.DEFAULT_OPTIONS ++ Map("overwriteSchema" -> "true"),
+        repartition = Some(Coalesce(10))
       )
     )
   })
@@ -102,7 +104,9 @@ object ConfigurationGenerator extends App {
       path = s"/es_index/fhir/simple_participant",
       format = PARQUET,
       loadtype = OverWrite,
-      partitionby = partitionByStudyId
+      partitionby = partitionByStudyId,
+      repartition = Some(Coalesce(20))
+
     )
   ) ++ Seq(
     DatasetConf(
@@ -129,12 +133,13 @@ object ConfigurationGenerator extends App {
     DatasetConf(
       id = "normalized_occurrences",
       storageid = storage,
-      path = s"/mormalized/occurrences",
+      path = s"/normalized/occurrences",
       format = DELTA,
       loadtype = OverWritePartition,
       table = Some(TableConf("database", "normalized_occurrences")),
       partitionby = List("study_id", "chromosome"),
-      writeoptions = WriteOptions.DEFAULT_OPTIONS ++ Map("overwriteSchema" -> "true")
+      writeoptions = WriteOptions.DEFAULT_OPTIONS ++ Map("overwriteSchema" -> "true"),
+      repartition = Some(RepartitionByColumns(Seq("chromosome"), Some(100)))
     ),
     DatasetConf(
       id = "enriched_specimen",
@@ -160,7 +165,8 @@ object ConfigurationGenerator extends App {
         format = PARQUET,
         loadtype = OverWrite,
         table = Some(TableConf("database", s"es_index_${index.name}")),
-        partitionby = index.partitionBy
+        partitionby = index.partitionBy,
+        repartition = Some(Coalesce(20))
       )
     )
   })).toList
