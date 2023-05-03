@@ -1,6 +1,6 @@
 @Library(value="kids-first/aws-infra-jenkins-shared-libraries", changelog=false) _
 simple_pipeline {
    stage_name_1 = "run_etl.sh"
-   script_1 = "cd bin && ./run_etl.sh -p include -r re_070 -s ABC-DS,DSC,BRI-DSR,DS-Sleep,X01-deSmith,X01-Hakon -e qa --instance-type m5.8xlarge --instance-count 1 -b include-373997854230-datalake-qa --instance-profile include-ec2-qa-profile --service-role include-datalake-emr-qa-role"
+   script_1 = "cd bin && ./run_etl.sh -p include -r re_071 -s ABC-DS,DSC,BRI-DSR,DS-Sleep,X01-deSmith,X01-Hakon -e qa --instance-type m5.8xlarge --instance-count 1 -b include-373997854230-datalake-qa --instance-profile include-ec2-qa-profile --service-role include-datalake-emr-qa-role"
    projectName = "include-etl-clin-portal"
 }
