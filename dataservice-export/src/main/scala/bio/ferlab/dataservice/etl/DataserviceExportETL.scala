@@ -1,16 +1,16 @@
 package bio.ferlab.dataservice.etl
 
 import akka.actor.ActorSystem
-import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
+import bio.ferlab.datalake.commons.config.{Coalesce, Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.v2.ETL
-import bio.ferlab.datalake.spark3.utils.Coalesce
 import bio.ferlab.dataservice.etl.model.{ESequencingCenter, ESequencingExperiment, ESequencingExperimentGenomicFile}
 import org.apache.spark.sql.functions.lit
 import org.apache.spark.sql.{DataFrame, SparkSession}
-import scala.reflect.runtime.universe.TypeTag
+
 import java.time.LocalDateTime
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.reflect.runtime.universe.TypeTag
 
 class DataserviceExportETL(val releaseId: String,
                            val studyIds: List[String],

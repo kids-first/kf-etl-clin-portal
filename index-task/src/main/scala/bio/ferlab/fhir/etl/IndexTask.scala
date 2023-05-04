@@ -7,7 +7,6 @@ import org.apache.spark.SparkConf
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import pureconfig.generic.auto._
-import pureconfig.module.enum._
 
 object IndexTask extends App {
 
