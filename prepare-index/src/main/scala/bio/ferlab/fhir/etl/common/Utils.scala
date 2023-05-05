@@ -217,12 +217,6 @@ object Utils {
 
       val participantReformat = participantDf.select(struct(col("*")) as "participant")
 
-      fileWithBiospecimen.show(10,false)
-      participantReformat.show(10,false)
-      fileWithBiospecimen
-        .join(participantReformat, col("participant_file_fhir_id") === col("participant.fhir_id"))
-        .show(false)
-
       fileWithBiospecimen
         .join(participantReformat, col("participant_file_fhir_id") === col("participant.fhir_id"))
         .withColumn("participant", struct(col("participant.*"), col("biospecimens")))
@@ -230,8 +224,6 @@ object Utils {
         .groupBy(col("fhir_id"))
         .agg(collect_list(col("participant")) as "participants", first("file") as "file", count(lit(1)) as "nb_participants", sum("nb_biospecimens") as "nb_biospecimens")
         .select(col("file.*"), col("participants"), col("nb_participants"), col("nb_biospecimens"))
-
-
     }
 
     def addSequencingExperiment(sequencingExperiment:DataFrame, sequencingExperimentGenomicFile:DataFrame): DataFrame = {

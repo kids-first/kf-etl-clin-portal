@@ -13,7 +13,7 @@ object FhavroToNormalizedMappings {
   val pattern: Regex = "raw_([A-Za-z0-9-_]+)".r
 
   def generateFhirIdColumValueFromIdColum(): Column =
-    regexp_extract(col("id"), "^https?:\\/\\/.*/(\\p{Alnum}+)/_history[\\?|/].*$", 1)
+    regexp_extract(col("id"), "^https?:\\/\\/.+\\/([A-Za-z0-9\\-\\.]{1,64})\\/_history.*$", 1)
 
   def defaultTransformations(releaseId: String): List[Transformation] = {
     List(Custom(_
