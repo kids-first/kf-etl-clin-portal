@@ -42,13 +42,6 @@ class FileCentric(studyIds: List[String])(implicit configuration: Configuration)
         .withColumn("file_facet_ids", struct(col("fhir_id") as "file_fhir_id_1", col("fhir_id") as "file_fhir_id_2"))
         .addSequencingExperiment(data(normalized_sequencing_experiment.id), data(normalized_sequencing_experiment_genomic_file.id))
 
-    println(fileDF.show(10, truncate = false))
-    println(fileDF.addStudy(data(es_index_study_centric.id)).show(10, truncate = false))
-    println(fileDF
-      .addStudy(data(es_index_study_centric.id))
-      .addFileParticipantsWithBiospecimen(data(simple_participant.id), data(normalized_specimen.id)).show(10, truncate = false))
-    println(transformedFile.show(10, truncate = false))
-
     transformedFile
 
   }
