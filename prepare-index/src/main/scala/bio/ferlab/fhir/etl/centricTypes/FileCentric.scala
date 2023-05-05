@@ -33,6 +33,7 @@ class FileCentric(studyIds: List[String])(implicit configuration: Configuration)
     val fileDF = data(normalized_drs_document_reference.id)
     val fhirUrl = spark.conf.get("spark.fhir.server.url")
 
+
     val transformedFile =
       fileDF
         .addStudy(data(es_index_study_centric.id))
@@ -40,6 +41,14 @@ class FileCentric(studyIds: List[String])(implicit configuration: Configuration)
         .withColumn("fhir_document_reference", concat(lit(fhirUrl), lit("/DocumentReference?identifier="), col("file_id")))
         .withColumn("file_facet_ids", struct(col("fhir_id") as "file_fhir_id_1", col("fhir_id") as "file_fhir_id_2"))
         .addSequencingExperiment(data(normalized_sequencing_experiment.id), data(normalized_sequencing_experiment_genomic_file.id))
+
+    println(fileDF.show(10, truncate = false))
+    println(fileDF.addStudy(data(es_index_study_centric.id)).show(10, truncate = false))
+    println(fileDF
+      .addStudy(data(es_index_study_centric.id))
+      .addFileParticipantsWithBiospecimen(data(simple_participant.id), data(normalized_specimen.id)).show(10, truncate = false))
+    println(transformedFile.show(10, truncate = false))
+
     transformedFile
 
   }
