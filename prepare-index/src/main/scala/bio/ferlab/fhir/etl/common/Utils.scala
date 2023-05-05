@@ -216,6 +216,13 @@ object Utils {
         .agg(collect_list(col("biospecimen")) as "biospecimens", first("file") as "file", count(col("biospecimen_unique_id")) as "nb_biospecimens")
 
       val participantReformat = participantDf.select(struct(col("*")) as "participant")
+
+      fileWithBiospecimen.show(10,false)
+      participantReformat.show(10,false)
+      fileWithBiospecimen
+        .join(participantReformat, col("participant_file_fhir_id") === col("participant.fhir_id"))
+        .show(false)
+
       fileWithBiospecimen
         .join(participantReformat, col("participant_file_fhir_id") === col("participant.fhir_id"))
         .withColumn("participant", struct(col("participant.*"), col("biospecimens")))
