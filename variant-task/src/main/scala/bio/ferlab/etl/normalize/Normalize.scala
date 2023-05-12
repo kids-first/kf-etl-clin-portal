@@ -12,7 +12,8 @@ object Normalize extends SparkApp {
   spark.sparkContext.setLogLevel("WARN")
 
   jobName match {
-    case "occurrences" => new Occurrences(studyId, releaseId, v1Pattern, v2Pattern, Some(referenceGenomePath)).run()
+    case "snv" => new SNV(studyId, releaseId, v1Pattern, v2Pattern, Some(referenceGenomePath)).run()
+    case "consequences" => new Consequences(studyId, v1Pattern, v2Pattern, Some(referenceGenomePath)).run()
   }
 
 }
