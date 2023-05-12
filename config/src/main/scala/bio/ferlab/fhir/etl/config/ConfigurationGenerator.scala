@@ -1,7 +1,7 @@
 package bio.ferlab.fhir.etl.config
 
 import bio.ferlab.datalake.commons.config.Format.{AVRO, DELTA, JSON, PARQUET}
-import bio.ferlab.datalake.commons.config.LoadType.{OverWrite, OverWritePartition, Read}
+import bio.ferlab.datalake.commons.config.LoadType.{OverWrite, OverWritePartition, Read, Scd1}
 import bio.ferlab.datalake.commons.config._
 import bio.ferlab.datalake.commons.file.FileSystemType.S3
 import pureconfig.generic.auto._
@@ -131,15 +131,26 @@ object ConfigurationGenerator extends App {
     )
   ) ++ Seq(
     DatasetConf(
-      id = "normalized_occurrences",
+      id = "normalized_snv",
       storageid = storage,
-      path = s"/normalized/occurrences",
+      path = s"/normalized/snv",
       format = DELTA,
       loadtype = OverWritePartition,
-      table = Some(TableConf("database", "normalized_occurrences")),
+      table = Some(TableConf("database", "normalized_snv")),
       partitionby = List("study_id", "chromosome"),
       writeoptions = WriteOptions.DEFAULT_OPTIONS ++ Map("overwriteSchema" -> "true"),
       repartition = Some(RepartitionByColumns(Seq("chromosome"), Some(100)))
+    ),
+    DatasetConf(
+      id = "normalized_consequences",
+      storageid = storage,
+      path = "/normalized/consequences",
+      format = DELTA,
+      loadtype = Scd1,
+      partitionby = List("chromosome"),
+      table = Some(TableConf("database", "normalized_consequences")),
+      keys = List("chromosome", "start", "reference", "alternate", "ensembl_transcript_id"),
+      repartition = Some(RepartitionByColumns(Seq("chromosome"), Some(10)))
     ),
     DatasetConf(
       id = "enriched_specimen",
