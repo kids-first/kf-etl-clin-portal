@@ -40,3 +40,6 @@ aws s3 cp --recursive index-task/target/scala-2.12/classes/templates/ $template_
 echo "Copy enrich.jar ..."
 aws s3 cp enrich/target/scala-2.12/enrich.jar $job_dest
 
+echo "Copy variant-task.jar ..."
+aws s3 cp variant-task/target/scala-2.12/variant-task.jar $job_dest
+
