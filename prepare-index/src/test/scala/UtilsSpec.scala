@@ -163,7 +163,7 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
     ).toDF()
 
     val inputFamilies = Seq(
-      GROUP(`fhir_id` = "111", `family_id` = "FM_111", `family_members` = Seq(("FTH", false), ("MTH", false), ("SON", false)), `family_members_id` = Seq("FTH", "MTH", "SON")),
+      GROUP(`fhir_id` = "111", `family_id` = "FM_111", `family_members` = Seq(("FTH", false), ("MTH", false), ("SON", false)), `family_members_id` = Seq("FTH", "MTH", "SON"), family_type_from_system = Some("Trio")),
       GROUP(`fhir_id` = "222", `family_id` = "FM_222", `family_members` = Seq(("44", false)), `family_members_id` = Seq("44"))
     ).toDF()
 
