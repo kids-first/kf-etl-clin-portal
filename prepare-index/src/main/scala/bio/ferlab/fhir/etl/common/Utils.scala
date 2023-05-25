@@ -344,7 +344,7 @@ object Utils {
         .select("participant1_fhir_id", "participant1_id", "participant2_fhir_id", "participant1_to_participant_2_relationship")
 
       val reformatFamily = familyDf
-        .select(col("family_members_id"), col("fhir_id") as "family_fhir_id", col("family_id"))
+        .select(col("family_members_id"), col("fhir_id") as "family_fhir_id", col("family_id"), col("family_type_from_system"))
 
       val joinFamily = reformatFamily.join(reformatFamilyRelationship, array_contains(col("family_members_id"), col("participant1_fhir_id")), "left_outer")
 
@@ -359,20 +359,27 @@ object Utils {
           )
         ) as "relations",
         first("family_members_id") as "family_members_id",
-        first("family_fhir_id") as "family_fhir_id"
+        first("family_fhir_id") as "family_fhir_id",
+        collect_list(col("family_type_from_system")) as "family_type_from_system_test",
+        first(col("family_type_from_system")) as "family_type_from_system"
       )
         .withColumn("all_relations", collect_set(col("relations.relation")).over(windowSpec))
         .withColumn("has_father", exists(col("all_relations"), relation => array_contains(relation, "father")))
         .withColumn("has_mother", exists(col("all_relations"), relation => array_contains(relation, "mother")))
         .withColumn("has_both_parent", exists(col("all_relations"), relation => array_contains(relation, "father") && array_contains(relation, "mother")))
         .withColumn("nb_members", size(col("family_members_id")))
-        .withColumn("family_type",
+        .withColumn("family_type_computation",
           when(col("has_both_parent") && col("nb_members") >= 3,
             when(col("nb_members") === 3, "trio").otherwise("trio+")
           ).when((col("has_father") || col("has_mother")) && col("nb_members") >= 2,
             when(col("nb_members") === 2, "duo").otherwise("duo+")
           ).when(col("nb_members") === 0, "proband-only")
             .otherwise("other")
+        )
+        .withColumn("family_type",
+          // lower to make sure that we match values from col("family_type_computation") (all lower case)
+          when(col("family_type_from_system").isNotNull, lower(col("family_type_from_system")))
+            .otherwise(col("family_type_computation"))
         )
         .withColumn("family", struct(
           filter(col("relations"), c => c("relation") === "father")(0)("related_participant_id") as "father_id",
@@ -381,15 +388,15 @@ object Utils {
           col("family_fhir_id") as "fhir_id",
           col("family_id") as "family_id"
         ))
-        .select("family_type", "family","participant2_fhir_id")
+        .select("family_type", "family", "participant2_fhir_id")
 
       df.join(family, col("fhir_id") === col("participant2_fhir_id"), "left_outer")
         .drop("participant2_fhir_id")
         .withColumn("family_type", coalesce(col("family_type"), lit("proband-only")))
+        .drop("family_type_from_system", "family_type_computation")
         .join(reformatFamily, array_contains(col("family_members_id"), col("fhir_id")), "left_outer")
         .drop("family_fhir_id", "family_members_id")
         .withColumnRenamed("family_id", "families_id")
-
     }
   }
 }
