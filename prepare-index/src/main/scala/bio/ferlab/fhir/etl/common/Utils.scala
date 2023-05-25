@@ -378,8 +378,7 @@ object Utils {
         )
         .withColumn("family_type",
           // lower to make sure that we match values from col("family_type_computation") (all lower case)
-          when(col("family_type_from_system").isNotNull, lower(col("family_type_from_system")))
-            .otherwise(col("family_type_computation"))
+          coalesce(lower(col("family_type_from_system")), col("family_type_computation"))
         )
         .withColumn("family", struct(
           filter(col("relations"), c => c("relation") === "father")(0)("related_participant_id") as "father_id",
