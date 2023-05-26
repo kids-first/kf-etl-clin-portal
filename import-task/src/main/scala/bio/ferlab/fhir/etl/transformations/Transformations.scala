@@ -283,7 +283,7 @@ object Transformations {
         .withColumn("parent_id", extractReferenceId(col("parent.reference")))
         .withColumn("parent_0", struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(0) as "level"))
         .withColumn("external_collection_sample_id", if (isFlatSpecimenModel) extractSpecimenSecondaryIdentifier(col("identifier"), "external_sample_id") else nullLitStr())
-        .withColumn("external_sample_id", if (isFlatSpecimenModel) extractSpecimenSecondaryIdentifier(col("identifier"), "external_aliquot_id") else nullLitStr())
+        .withColumn("external_sample_id", extractSpecimenSecondaryIdentifier(col("identifier"), if(isFlatSpecimenModel) "external_aliquot_id" else "/specimen"))
         .withColumn("method_of_sample_procurement", col("collection.method.text"))
         .withColumn("ncit_anatomy_site_id", extractSpecimenNcitAnatomySiteId(col("collection.bodySite.coding")))
         .withColumn("anatomy_site", col("collection.bodySite.text"))
