@@ -47,8 +47,6 @@ object Utils {
 
   val extractOfficial: Column => Column = (identifiers: Column) => coalesce(filter(identifiers, identifier => identifier("use") === "official")(0)("value"), identifiers(0)("value"))
 
-  val extractFirstSystemWithGivenSuffix: (Column, String) => Column = (column: Column, suffix: String) => filter(column, c=> c("system").endsWith(suffix))(0)
-
   val codingClassify: UserDefinedFunction =
     udf((arr: Seq[(String, String, String, String, String, String)]) =>
       arr.map(

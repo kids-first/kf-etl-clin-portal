@@ -230,7 +230,7 @@ object Transformations {
       .withColumn("exploded_member_entity", extractReferenceId(col("exploded_member")("entity")("reference")))
       .withColumn("exploded_member_inactive", col("exploded_member")("inactive"))
       .withColumn("family_members", struct("exploded_member_entity", "exploded_member_inactive"))
-      .withColumn("family_type_from_system", extractFirstSystemWithGivenSuffix(col("code")("coding"), SYS_SUFFIX_FOR_FAMILY_TYPE_IN_INCLUDE)("display"))
+      .withColumn("family_type_from_system", firstSystemEquals(col("code")("coding"), SYS_FAMILY_TYPES)("display"))
       .groupBy("fhir_id", "study_id", "family_id", "external_id", "type", "release_id")
       .agg(
         collect_list("family_members") as "family_members",
