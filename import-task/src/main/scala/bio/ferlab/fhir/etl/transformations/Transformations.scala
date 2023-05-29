@@ -263,11 +263,17 @@ object Transformations {
 
   val nullLitStr = () => lit(null).cast("string")
 
+  private def extractSpSampleType(isFlatSpecimenModel: Boolean): Column = if (isFlatSpecimenModel) {
+    col("type")("coding")(1)("display")
+  } else {
+    filter(col("type")("coding"), c => c("system").endsWith("/specimen/sample_type"))(0)("display")
+  }
+
   def specimenMappings(isFlatSpecimenModel: Boolean): List[Transformation] = List(
     Custom { input =>
       val specimen = input
         .select("fhir_id", "release_id", "study_id", "type", "identifier", "collection", "subject", "status", "container", "parent", "processing", "meta")
-        .withColumn("sample_type", if (isFlatSpecimenModel) col("type")("coding")(1)("display") else col("type")("text"))
+        .withColumn("sample_type", extractSpSampleType(isFlatSpecimenModel))
         .withColumn("sample_id", officialIdentifier)
         .withColumn("laboratory_procedure", col("processing")(0)("description"))
         .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
