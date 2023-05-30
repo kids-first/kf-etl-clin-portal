@@ -1,4 +1,4 @@
-package bio.ferlab.etl.normalize
+package bio.ferlab.etl.normalized
 
 import bio.ferlab.datalake.spark3.SparkApp
 

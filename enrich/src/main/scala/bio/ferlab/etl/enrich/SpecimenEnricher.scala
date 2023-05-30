@@ -50,7 +50,7 @@ class SpecimenEnricher(studyIds: List[String])(implicit configuration: Configura
       ))
       .drop("relations")
 
-    data(specimen.id).select($"sample_id", $"fhir_id" as "sample_fhir_id", $"participant_fhir_id", $"consent_code")
+    data(specimen.id).select($"sample_id", $"fhir_id" as "sample_fhir_id", $"participant_fhir_id", $"consent_type", $"study_id")
       .join(participants, Seq("participant_fhir_id"))
       .join(familyDF, array_contains(col("family_members_id"), col("participant_fhir_id")))
       .drop("family_members_id")
