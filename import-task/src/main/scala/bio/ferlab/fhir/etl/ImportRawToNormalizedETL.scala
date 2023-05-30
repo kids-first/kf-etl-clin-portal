@@ -24,5 +24,5 @@ class ImportRawToNormalizedETL(override val source: DatasetConf,
       .where(col("study_id").isin(studyIds: _*))
     )
   }
-
+  override def replaceWhere: Option[String] = Some(s"study_id in ('${studyIds.mkString(", ")}')")
 }
