@@ -5,6 +5,7 @@ import bio.ferlab.fhir.etl.config.FhirRequest
 import bio.ferlab.fhir.etl.fhir.FhirServerSuite
 import bio.ferlab.fhir.etl.minio.MinioServerSuite
 import bio.ferlab.fhir.etl.task.FhavroExporter
+import org.apache.avro.generic.GenericRecord
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -31,6 +32,12 @@ class FhavroExporterTest extends AnyFlatSpec with FhirServerSuite with MinioServ
     val fhavroExporter = new FhavroExporter("input", "re_001", "SD_001")
     val resources = fhavroExporter.requestExportFor(fhirRequest)
     val schema = Fhavro.loadSchemaFromResources("schema/patient.avsc")
-    fhavroExporter.convertResourcesToGenericRecords(schema, resources).length shouldBe 2
+    val records: List[GenericRecord] = fhavroExporter.convertBundleEntriesToGenericRecords(schema, resources)
+    records.length shouldBe 2
+    val firstRecord = records.head
+    val fullUrl = firstRecord.get("fullUrl")
+    assert(fullUrl.isInstanceOf[String], s"fullUrl should be an instance of string, not instance of ${fullUrl.getClass.toString}")
+    fullUrl.asInstanceOf[String] should startWith(s"http://$fhirBaseUrl/Patient/")
+
   }
 }

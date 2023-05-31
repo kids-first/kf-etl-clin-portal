@@ -23,7 +23,7 @@ object Config {
 
   val LOGGER: Logger = LoggerFactory.getLogger(getClass)
 
-  def readConfiguration(env: String): ValidatedNel[String, Config] = {
+  def readConfiguration(env: Option[String]): ValidatedNel[String, Config] = {
     val confResult: Result[Config] = loadConfiguration(env)
     confResult match {
       case Left(errors) =>
@@ -33,8 +33,8 @@ object Config {
     }
   }
 
-  private def loadConfiguration(environment: String): Result[Config] = {
+  private def loadConfiguration(environment: Option[String]): Result[Config] = {
     LOGGER.info(s"Loading configuration in $environment")
-    ConfigSource.resources(s"application-$environment.conf").load[Config]
+    ConfigSource.resources(s"application-${environment.getOrElse("default")}.conf").load[Config]
   }
 }
