@@ -207,7 +207,7 @@ object Transformations {
         .join(indexes, col("index.relate_to") === col("file.fhir_id"), "left_outer")
         .select(
           col("file.*"),
-          col("fhir_document_reference")
+          col("fhir_document_reference"),
           when(
             col("index.relate_to").isNull, lit(null)
           )
