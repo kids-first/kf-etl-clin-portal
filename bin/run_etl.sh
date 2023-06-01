@@ -42,14 +42,15 @@ usage() {
   echo "--instance-profile    instance profile"
   echo "--service-role    aws service role"
   echo "--skip-steps    'Download and Run Fhavro-export,Import Task,Enrich,Prepare Index,Index File'"
+  echo "--fhir-url    'http://app.sd-kf-api-fhir-service-qa.kf-strides.org:8000'"
   echo "-h, --help    display usage"
   echo
   echo "Example(s):"
-  echo "run_etl -p include -r re_061 -s DS-COG-ALL,DS-PCGC,DS360-CHD,HTP,DSC -e qa --instance-type m5.8xlarge --instance-count 1 -b include-373997854230-datalake-qa --instance-profile include-ec2-qa-profile --service-role include-datalake-emr-qa-role"
+  echo "run_etl -p include -r re_061 -s DS-COG-ALL,DS-PCGC,DS360-CHD,HTP,DSC -e qa --instance-type m5.8xlarge --instance-count 1 -b include-373997854230-datalake-qa --instance-profile include-ec2-qa-profile --service-role include-datalake-emr-qa-role --fhir-url 'http://app.sd-kf-api-fhir-service-qa.kf-strides.org:8000'"
   exit 1
 }
 
-PARSED_ARGUMENTS=$(getopt -a -n run_etl -o p:r:s:b:e:h --long project:,release:,studies:,bucket:,environment:,instance-type:,instance-count:,instance-profile:,service-role:,help,skip-steps: -- "$@")
+PARSED_ARGUMENTS=$(getopt -a -n run_etl -o p:r:s:b:e:h --long project:,release:,studies:,bucket:,environment:,instance-type:,instance-count:,instance-profile:,service-role:,help,skip-steps:,fhir-url: -- "$@")
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then
   usage
@@ -66,6 +67,7 @@ STUDIES=$(unset)
 INSTANCE_PROFILE=$(unset)
 SERVICE_ROLE=$(unset)
 SKIP_STEPS=$(unset)
+FHIR_URL=$(unset)
 
 while :; do
   case "$1" in
@@ -109,6 +111,10 @@ while :; do
     SKIP_STEPS="$2"
     shift 2
     ;;
+  --fhir-url)
+    FHIR_URL="$2"
+    shift 2
+    ;;
   --)
     shift
     break
@@ -124,6 +130,11 @@ IS_PROJECT_NAME_OK=$(check_project "$PROJECT")
 if [ "$IS_PROJECT_NAME_OK" -eq 1 ]; then
   echo "Project name must be equal to 'kf-strides' or 'include' but got: '${PROJECT}'"
   exit 1
+fi
+
+if [ -z "${FHIR_URL}" ]; then
+    echo "You must give a fhir server url"
+    exit 1
 fi
 
 SUBNET=$(net_conf_extractor "subnet" "${PROJECT}" "${ENV}")
@@ -149,7 +160,7 @@ STEPS=$(
     "Jar":"command-runner.jar",
     "Args":[
       "bash","-c",
-      "aws s3 cp s3://${BUCKET}/jobs/fhavro-export.jar /home/hadoop; cd /home/hadoop;/usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar fhavro-export.jar ${RELEASE_ID} ${STUDIES}")"
+      "aws s3 cp s3://${BUCKET}/jobs/fhavro-export.jar /home/hadoop; export FHIR_URL=${FHIR_URL}; export BUCKET=${BUCKET}; cd /home/hadoop;/usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar fhavro-export.jar ${RELEASE_ID} ${STUDIES}")"
     ]
   },
  {

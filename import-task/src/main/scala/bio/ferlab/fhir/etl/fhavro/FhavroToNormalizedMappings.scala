@@ -19,6 +19,7 @@ object FhavroToNormalizedMappings {
     List(Custom(_
       .withColumn("fhir_id", generateFhirIdColumValueFromIdColum())
       .withColumn("release_id", lit(releaseId))
+      .withColumn("full_url", col("fullUrl"))
     ))
   }
 

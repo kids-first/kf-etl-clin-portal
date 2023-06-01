@@ -64,7 +64,6 @@ class FhavroToNormalizedMappingsSpec
     val sparkConfWithFlatSpecimenEntry = Map(
       "spark.databricks.delta.retentionDurationCheck.enabled" -> "false",
       "spark.delta.merge.repartitionBeforeWrite" -> "true",
-      "spark.fhir.server.url" -> "https://kf-api-fhir-service-qa.kidsfirstdrc.org",
       "spark.sql.catalog.spark_catalog" -> "org.apache.spark.sql.delta.catalog.DeltaCatalog",
       "spark.sql.extensions" -> "io.delta.sql.DeltaSparkSessionExtension",
       "spark.sql.legacy.parquet.datetimeRebaseModeInWrite" -> CORRECTED.toString,
@@ -86,7 +85,6 @@ class FhavroToNormalizedMappingsSpec
     val sparkConfWithoutFlatSpecimenEntry = Map(
       "spark.databricks.delta.retentionDurationCheck.enabled" -> "false",
       "spark.delta.merge.repartitionBeforeWrite" -> "true",
-      "spark.fhir.server.url" -> "https://kf-api-fhir-service-qa.kidsfirstdrc.org",
       "spark.sql.catalog.spark_catalog" -> "org.apache.spark.sql.delta.catalog.DeltaCatalog",
       "spark.sql.extensions" -> "io.delta.sql.DeltaSparkSessionExtension",
       "spark.sql.legacy.parquet.datetimeRebaseModeInWrite" -> CORRECTED.toString,

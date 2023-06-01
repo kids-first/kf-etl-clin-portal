@@ -17,7 +17,7 @@ object Transformations {
     Custom(_
       .select("fhir_id", "study_id", "release_id", "gender", "ethnicity", "identifier", "race")
       .withColumn("external_id_from_no_system", filter(col("identifier"), c => c("system").isNull)(0)("value"))
-      .withColumn("external_id_from_secondary_use", filter(col("identifier"), c => c("use") === "secondary" )(0)("value"))
+      .withColumn("external_id_from_secondary_use", filter(col("identifier"), c => c("use") === "secondary")(0)("value"))
       .withColumn("external_id", coalesce(col("external_id_from_secondary_use"), col("external_id_from_no_system")))
       .withColumn("participant_id", officialIdentifier)
       .withColumn("race_omb", ombCategory(col("race.ombCategory")))
@@ -153,7 +153,7 @@ object Transformations {
       .withColumn("study_code_fallback", col("keyword")(1)("coding")(0)("code"))
       .withColumn("study_code_from_system", extractFirstMatchingSystem(flatten(col("keyword.coding")), Seq(SYS_SHORT_CODE_KF))("display"))
       .withColumn("study_code", coalesce(col("study_code_from_system"), col("study_code_fallback")))
-      .withColumn("program",  extractFirstMatchingSystem(flatten(col("keyword.coding")), Seq(SYS_PROGRAMS_KF, SYS_PROGRAMS_INCLUDE))("display"))
+      .withColumn("program", extractFirstMatchingSystem(flatten(col("keyword.coding")), Seq(SYS_PROGRAMS_KF, SYS_PROGRAMS_INCLUDE))("display"))
       .withColumn("website", extractDocUrl(col("relatedArtifact"))("url"))
       .withColumn("domain", col("category")(0)("text"))
     ),
@@ -172,7 +172,7 @@ object Transformations {
   val documentreferenceMappings: List[Transformation] = List(
     Custom { input =>
       val df = input
-        .select("fhir_id", "study_id", "release_id", "category", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus", "relatesTo")
+        .select("fhir_id", "study_id", "release_id", "category", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus", "relatesTo", "full_url")
         .withColumn("access_urls", col("content")("attachment")("url")(0))
         .withColumn("acl", extractAclFromList(col("securityLabel")("text"), col("study_id")))
         .withColumn("controlled_access", firstSystemEquals(flatten(col("securityLabel.coding")), SYS_DATA_ACCESS_TYPES)("display"))
@@ -195,6 +195,10 @@ object Transformations {
         .withColumnRenamed("docStatus", "status")
         .withColumn("relate_to", extractReferencesId(col("relatesTo.target.reference"))(0))
         .withColumn("latest_did", extractLatestDid(col("content")(0)("attachment")("url")))
+        .withColumn("fhir_document_reference",{
+          val fhirBaseUrl = split(col("full_url"), "/DocumentReference")(0)
+          concat(lit(fhirBaseUrl), lit("/DocumentReference?identifier="), col("file_id"))
+        })
 
       val indexes = df.as("index").where(col("file_format").isin("crai", "tbi", "bai"))
       val files = df.as("file").where(not(col("file_format").isin("crai", "tbi", "bai")))
@@ -203,6 +207,7 @@ object Transformations {
         .join(indexes, col("index.relate_to") === col("file.fhir_id"), "left_outer")
         .select(
           col("file.*"),
+          col("fhir_document_reference")
           when(
             col("index.relate_to").isNull, lit(null)
           )
@@ -289,7 +294,7 @@ object Transformations {
         .withColumn("parent_id", extractReferenceId(col("parent.reference")))
         .withColumn("parent_0", struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(0) as "level"))
         .withColumn("external_collection_sample_id", if (isFlatSpecimenModel) extractSpecimenSecondaryIdentifier(col("identifier"), "external_sample_id") else nullLitStr())
-        .withColumn("external_sample_id", extractSpecimenSecondaryIdentifier(col("identifier"), if(isFlatSpecimenModel) "external_aliquot_id" else "/specimen"))
+        .withColumn("external_sample_id", extractSpecimenSecondaryIdentifier(col("identifier"), if (isFlatSpecimenModel) "external_aliquot_id" else "/specimen"))
         .withColumn("method_of_sample_procurement", col("collection.method.text"))
         .withColumn("ncit_anatomy_site_id", extractSpecimenNcitAnatomySiteId(col("collection.bodySite.coding")))
         .withColumn("anatomy_site", col("collection.bodySite.text"))
@@ -317,7 +322,7 @@ object Transformations {
     Custom(input =>
       input.select("subject", "valueCodeableConcept", "release_id", "study_id")
         .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
-        .withColumn("is_proband", firstSystemEquals(col("valueCodeableConcept")("coding"), SYS_YES_NO)("code") === "Y" )
+        .withColumn("is_proband", firstSystemEquals(col("valueCodeableConcept")("coding"), SYS_YES_NO)("code") === "Y")
     ),
     Drop("subject", "valueCodeableConcept")
   )

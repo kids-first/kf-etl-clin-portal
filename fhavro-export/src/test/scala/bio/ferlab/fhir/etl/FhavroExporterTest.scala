@@ -37,7 +37,7 @@ class FhavroExporterTest extends AnyFlatSpec with FhirServerSuite with MinioServ
     val firstRecord = records.head
     val fullUrl = firstRecord.get("fullUrl")
     assert(fullUrl.isInstanceOf[String], s"fullUrl should be an instance of string, not instance of ${fullUrl.getClass.toString}")
-    fullUrl.asInstanceOf[String] should startWith(s"http://$fhirBaseUrl/Patient/")
+    fullUrl.asInstanceOf[String] should startWith(s"$fhirBaseUrl/Patient/")
 
   }
 }

@@ -12,14 +12,14 @@ import software.amazon.awssdk.services.s3.S3Client
 object FhavroExport extends App {
   println(s"ARGS: " + args.mkString("[", ", ", "]"))
 
-  val Array(releaseId, studyIds) = args
+  val Array(releaseId, studyIds, env) = args
 
   val studyList = studyIds.split(",").toList
 
   studyList.foreach(studyId => {
     withSystemExit {
       withLog {
-        withConfiguration(sys.env.get("env")) { configuration =>
+        withConfiguration(env) { configuration =>
           implicit val s3Client: S3Client = buildS3Client()
           implicit val fhirClient: GenericClient = buildFhirClient(configuration)
 
