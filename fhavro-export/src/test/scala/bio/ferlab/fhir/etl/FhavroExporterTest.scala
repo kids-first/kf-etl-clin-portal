@@ -30,9 +30,9 @@ class FhavroExporterTest extends AnyFlatSpec with FhirServerSuite with MinioServ
   "convertFileContentToGenericRecord" should "return a list of Generic Record" in {
     val fhirRequest = FhirRequest("Patient", "kfdrc-patient", None, None, None, None, None)
     val fhavroExporter = new FhavroExporter("input", "re_001", "SD_001")
-    val resources = fhavroExporter.requestExportFor(fhirRequest)
+    val bEntries = fhavroExporter.requestExportFor(fhirRequest)
     val schema = Fhavro.loadSchemaFromResources("schema/patient.avsc")
-    val records: List[GenericRecord] = fhavroExporter.convertBundleEntriesToGenericRecords(schema, resources)
+    val records: List[GenericRecord] = fhavroExporter.convertBundleEntriesToGenericRecords(schema, bEntries)
     records.length shouldBe 2
     val firstRecord = records.head
     val fullUrl = firstRecord.get("fullUrl")

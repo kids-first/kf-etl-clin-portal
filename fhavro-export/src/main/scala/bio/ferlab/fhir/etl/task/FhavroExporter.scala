@@ -26,7 +26,7 @@ class FhavroExporter(bucketName: String, releaseId: String, studyId: String)(imp
 
   def requestExportFor(request: FhirRequest): List[BundleEntryComponent] = {
     LOGGER.info(s"Requesting Export for ${request.`type`}")
-    val resources: ListBuffer[BundleEntryComponent] = new ListBuffer[BundleEntryComponent]()
+    val bEntries: ListBuffer[BundleEntryComponent] = new ListBuffer[BundleEntryComponent]()
 
     val bundle = fhirClient.search()
       .forResource(request.`type`)
@@ -43,16 +43,16 @@ class FhavroExporter(bucketName: String, releaseId: String, studyId: String)(imp
     request.additionalQueryParam.foreach(a => bundleEnriched.whereMap(a.view.mapValues(_.asJava).toMap.asJava))
 
     var query = bundleEnriched.execute()
-    resources.addAll(getEntriesFromBundle(query))
+    bEntries.addAll(getEntriesFromBundle(query))
 
     while (query.getLink("next") != null) {
-      LoggerUtils.logProgress("export", resources.length)
+      LoggerUtils.logProgress("export", bEntries.length)
       //Update next link in case server base url changed, that happens if fhir client is configured to use ip address of fhir instance
       query.getLink("next").setUrl(FhirUtils.replaceBaseUrl(query.getLink("next").getUrl, fhirClient.getServerBase))
       query = fhirClient.loadPage().next(query).execute()
-      resources.addAll(getEntriesFromBundle(query))
+      bEntries.addAll(getEntriesFromBundle(query))
     }
-    resources.toList
+    bEntries.toList
   }
 
   def uploadFiles(fhirRequest: FhirRequest, bundleEntries: List[BundleEntryComponent]): Unit = {

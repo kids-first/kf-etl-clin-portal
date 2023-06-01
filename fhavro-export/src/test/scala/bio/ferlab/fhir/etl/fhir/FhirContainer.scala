@@ -28,7 +28,7 @@ case object FhirContainer extends IContainer {
   val port = 8080
   val container: GenericContainer = GenericContainer(
     "hapiproject/hapi:v5.4.1",
-    waitStrategy = Wait.forHttp("/").withStartupTimeout(Duration.ofSeconds(600)),
+    waitStrategy = Wait.forHttp("/").withStartupTimeout(Duration.ofSeconds(200)),
     exposedPorts = Seq(port),
     env = fhirEnv,
     labels = Map("name" -> name)
