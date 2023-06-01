@@ -21,7 +21,8 @@ case class DOCUMENTREFERENCE(
                               `study_id`: String = "SD_Z6MWD3H0",
                               `participant_fhir_id`: String = "39167",
                               `release_id`: String = "re_000001",
-                              `specimen_fhir_ids`: Seq[String] = Seq.empty
+                              `specimen_fhir_ids`: Seq[String] = Seq.empty,
+                              `fhir_document_reference`: String = "http://localhost:8080/DocumentReference?identifier=GF_067MR115"
                             )
 
 case class DOCUMENTREFERENCE_WITH_SEQEXP(
@@ -45,5 +46,6 @@ case class DOCUMENTREFERENCE_WITH_SEQEXP(
                               `participant_fhir_id`: String = "39167",
                               `release_id`: String = "re_000001",
                               `specimen_fhir_ids`: Seq[String] = Seq.empty,
-                              sequencing_experiment:Seq[SEQUENCING_EXPERIMENT] = Seq(SEQUENCING_EXPERIMENT())
+                              sequencing_experiment:Seq[SEQUENCING_EXPERIMENT] = Seq(SEQUENCING_EXPERIMENT()),
+                              `fhir_document_reference`: String = "http://localhost:8080/DocumentReference?identifier=GF_067MR115"
                             )

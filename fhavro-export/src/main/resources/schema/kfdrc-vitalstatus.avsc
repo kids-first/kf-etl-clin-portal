@@ -9,6 +9,14 @@
       "type":"string"
     },
     {
+      "name": "fullUrl",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
       "name":"id",
       "type":[
         "null",

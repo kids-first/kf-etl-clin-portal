@@ -35,6 +35,9 @@ object Config {
 
   private def loadConfiguration(environment: String): Result[Config] = {
     LOGGER.info(s"Loading configuration in $environment")
-    ConfigSource.resources(s"application-$environment.conf").load[Config]
+    ConfigSource
+      .resources(s"application-${environment}.conf")
+      .withFallback(ConfigSource.resources(s"application-default.conf"))
+      .load[Config]
   }
 }

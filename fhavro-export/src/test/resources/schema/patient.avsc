@@ -5,6 +5,14 @@
   "namespace": "bio.ferlab.fhir",
   "fields": [
     {
+      "name": "fullUrl",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
       "name": "extension",
       "type": {
         "type": "array",

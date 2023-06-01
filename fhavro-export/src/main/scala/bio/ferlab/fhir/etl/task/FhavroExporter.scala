@@ -8,6 +8,7 @@ import bio.ferlab.fhir.etl.s3.S3Utils.{buildKey, writeFile}
 import ca.uhn.fhir.rest.client.api.IGenericClient
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
+import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent
 import org.hl7.fhir.r4.model.{Bundle, DomainResource, ResearchStudy}
 import org.slf4j.{Logger, LoggerFactory}
 import software.amazon.awssdk.services.s3.S3Client
@@ -23,9 +24,9 @@ class FhavroExporter(bucketName: String, releaseId: String, studyId: String)(imp
 
   val LOGGER: Logger = LoggerFactory.getLogger(getClass)
 
-  def requestExportFor(request: FhirRequest): List[DomainResource] = {
+  def requestExportFor(request: FhirRequest): List[BundleEntryComponent] = {
     LOGGER.info(s"Requesting Export for ${request.`type`}")
-    val resources: ListBuffer[DomainResource] = new ListBuffer[DomainResource]()
+    val bEntries: ListBuffer[BundleEntryComponent] = new ListBuffer[BundleEntryComponent]()
 
     val bundle = fhirClient.search()
       .forResource(request.`type`)
@@ -42,35 +43,34 @@ class FhavroExporter(bucketName: String, releaseId: String, studyId: String)(imp
     request.additionalQueryParam.foreach(a => bundleEnriched.whereMap(a.view.mapValues(_.asJava).toMap.asJava))
 
     var query = bundleEnriched.execute()
-    resources.addAll(getResourcesFromBundle(query))
+    bEntries.addAll(getEntriesFromBundle(query))
 
     while (query.getLink("next") != null) {
-      LoggerUtils.logProgress("export", resources.length)
+      LoggerUtils.logProgress("export", bEntries.length)
       //Update next link in case server base url changed, that happens if fhir client is configured to use ip address of fhir instance
       query.getLink("next").setUrl(FhirUtils.replaceBaseUrl(query.getLink("next").getUrl, fhirClient.getServerBase))
       query = fhirClient.loadPage().next(query).execute()
-      resources.addAll(getResourcesFromBundle(query))
+      bEntries.addAll(getEntriesFromBundle(query))
     }
-    resources.toList
+    bEntries.toList
   }
 
-  def uploadFiles(fhirRequest: FhirRequest, resources: List[DomainResource]): Unit = {
+  def uploadFiles(fhirRequest: FhirRequest, bundleEntries: List[BundleEntryComponent]): Unit = {
     LOGGER.info(s"Converting resource(s): ${fhirRequest.`type`}")
     val key = buildKey(fhirRequest, releaseId, studyId)
-    val file = convertResources(fhirRequest, resources)
+    val file = convertBundleEntries(fhirRequest, bundleEntries)
     writeFile(bucketName, key, file)
     LOGGER.info(s"Uploaded ${fhirRequest.schema} successfully!")
   }
 
-  def convertResources(fhirRequest: FhirRequest, resources: List[DomainResource]): File = {
+  private def convertBundleEntries(fhirRequest: FhirRequest, bundleEntries: List[BundleEntryComponent]): File = {
     val resourceName = fhirRequest.`type`.toLowerCase
 
     LOGGER.info(s"--- Loading schema: ${fhirRequest.schema}")
     println(fhirRequest.schema)
     val schema = Fhavro.loadSchemaFromResources(s"schema/${fhirRequest.schema}.avsc")
-
     LOGGER.info(s"--- Converting $resourceName to GenericRecord(s)")
-    val genericRecords: List[GenericRecord] = convertResourcesToGenericRecords(schema, resources)
+    val genericRecords: List[GenericRecord] = convertBundleEntriesToGenericRecords(schema, bundleEntries)
 
     LOGGER.info(s"--- Serializing Generic Record(s) for $resourceName")
     Files.createDirectories(Paths.get("./tmp"))
@@ -81,18 +81,21 @@ class FhavroExporter(bucketName: String, releaseId: String, studyId: String)(imp
     file
   }
 
-  def convertResourcesToGenericRecords(schema: Schema, resources: List[DomainResource]): List[GenericRecord] = {
-    val total = resources.length
+  def convertBundleEntriesToGenericRecords(schema: Schema, bundleEntries: List[BundleEntryComponent]): List[GenericRecord] = {
+    val total = bundleEntries.length
     val progress = new AtomicInteger()
-    resources.map(resource => {
+    bundleEntries.map(be => {
       LoggerUtils.logProgressAtomic("convert", progress, total)
-      Fhavro.convertResourceToGenericRecord(resource, schema)
+      val record = Fhavro.convertResourceToGenericRecord(be.getResource.asInstanceOf[DomainResource], schema)
+      record.put("fullUrl", be.getFullUrl)
+      record
     })
   }
 
-  private def getResourcesFromBundle(bundle: Bundle): mutable.Buffer[DomainResource] = {
+  private def getEntriesFromBundle(bundle: Bundle): Seq[BundleEntryComponent] = {
     bundle.getEntry
       .asScala
-      .map(entry => entry.getResource.asInstanceOf[DomainResource])
+      .toSeq
+
   }
 }
