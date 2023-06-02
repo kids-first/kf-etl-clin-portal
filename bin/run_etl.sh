@@ -14,13 +14,6 @@ truncate_emr_name_if_needed() {
   fi
 }
 
-build_fhavro_file_arg_suffix() {
-  # needed to accommodate file conventions in fhavro-export resources.
-  # (kf-strides vs kfdrc)
-  local suffix=$1
-  echo "${suffix/"kf-strides"/"kfdrc"}"
-}
-
 filter_steps() {
   local allSteps=$1
   # Comma-separated list
@@ -160,7 +153,7 @@ STEPS=$(
     "Jar":"command-runner.jar",
     "Args":[
       "bash","-c",
-      "aws s3 cp s3://${BUCKET}/jobs/fhavro-export.jar /home/hadoop; export FHIR_URL='${FHIR_URL}'; export BUCKET='${BUCKET}'; cd /home/hadoop;/usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar fhavro-export.jar ${RELEASE_ID} ${STUDIES}"
+      "aws s3 cp s3://${BUCKET}/jobs/fhavro-export.jar /home/hadoop; export FHIR_URL='${FHIR_URL}'; export BUCKET='${BUCKET}'; cd /home/hadoop;/usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar fhavro-export.jar ${RELEASE_ID} ${STUDIES} ${PROJECT}"
     ]
   },
  {
