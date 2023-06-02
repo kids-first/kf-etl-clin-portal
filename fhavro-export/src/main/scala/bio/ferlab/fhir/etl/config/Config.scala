@@ -36,8 +36,8 @@ object Config {
   private def loadConfiguration(project: String): Result[Config] = {
     LOGGER.info(s"Loading configuration in $project")
     ConfigSource
+      // Usually application-default.conf or it could be application-usf.conf
       .resources(s"application-${project}.conf")
-      .withFallback(ConfigSource.resources(s"application-default.conf"))
       .load[Config]
   }
 }
