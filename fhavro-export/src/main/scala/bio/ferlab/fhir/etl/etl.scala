@@ -11,8 +11,8 @@ package object etl {
 
   type ValidationResult[A] = Validated[NonEmptyList[String], A]
 
-  def withConfiguration[T](env: String)(configuration: Config => ValidationResult[T]): ValidationResult[T] = {
-    Config.readConfiguration(env).andThen(configuration)
+  def withConfiguration[T](project: String)(configuration: Config => ValidationResult[T]): ValidationResult[T] = {
+    Config.readConfiguration(project).andThen(configuration)
   }
 
   def withLog[T](validationResult: ValidationResult[T]): ValidationResult[T] = {
