@@ -323,35 +323,13 @@ STEPS=$(
      "Properties": "",
      "Name": "Index Biospecimen"
    }
+   ]
 EOF
 )
 
-if [ "${PROJECT}" = 'kf-strides' ]; then
-STEPS=$(
-  cat <<EOF
-  $STEPS
-]
-EOF
-)
-else #include
-STEPS=$(
-  cat <<EOF
-   $STEPS,
-   {
-     "Type":"CUSTOM_JAR",
-     "Name":"Publish",
-     "ActionOnFailure":"TERMINATE_CLUSTER",
-     "Jar":"command-runner.jar",
-     "Args":[
-       "bash","-c",
-       "aws s3 cp s3://${BUCKET}/jobs/publish-task.jar /home/hadoop; cd /home/hadoop; /usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar publish-task.jar ${ES_ENDPOINT} 443 ${RELEASE_ID} ${STUDIES} all"
-     ]
-   }
-]
-EOF
-)
-STEPS_TO_AVOID_WHEN_INCLUDE="Export Dataservice"
-STEPS="$(filter_steps "$STEPS" "$STEPS_TO_AVOID_WHEN_INCLUDE")"
+if [ "${PROJECT}" = 'include' ]; then
+  STEPS_TO_AVOID_WHEN_INCLUDE="Export Dataservice"
+  STEPS="$(filter_steps "$STEPS" "$STEPS_TO_AVOID_WHEN_INCLUDE")"
 fi
 
 # Remove all steps before $SKIP_STEPS if it exists - Allows to skip tests if needed.
