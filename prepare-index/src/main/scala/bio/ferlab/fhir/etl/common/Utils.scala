@@ -360,8 +360,7 @@ object Utils {
         ) as "relations",
         first("family_members_id") as "family_members_id",
         first("family_fhir_id") as "family_fhir_id",
-        collect_list(col("family_type_from_system")) as "family_type_from_system_test",
-        first(col("family_type_from_system")) as "family_type_from_system"
+        first(col("family_type_from_system"), ignoreNulls = true) as "family_type_from_system"
       )
         .withColumn("all_relations", collect_set(col("relations.relation")).over(windowSpec))
         .withColumn("has_father", exists(col("all_relations"), relation => array_contains(relation, "father")))

@@ -235,10 +235,11 @@ object Transformations {
       .withColumn("exploded_member_inactive", col("exploded_member")("inactive"))
       .withColumn("family_members", struct("exploded_member_entity", "exploded_member_inactive"))
       .withColumn("family_type_from_system", firstSystemEquals(col("code")("coding"), SYS_FAMILY_TYPES)("display"))
-      .groupBy("fhir_id", "study_id", "family_id", "external_id", "type", "release_id")
+      .groupBy("fhir_id", "study_id", "family_id", "external_id", "type", "release_id", "family_type_from_system")
       .agg(
         collect_list("family_members") as "family_members",
         collect_list("exploded_member_entity") as "family_members_id"
+
       )
     ),
     Drop()
