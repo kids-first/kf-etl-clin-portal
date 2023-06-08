@@ -315,7 +315,11 @@ object Transformations {
       "collection",
       "subject",
       "parent",
-      "container", "collection_sample", "meta")
+      "container",
+      "collection_sample",
+      "meta",
+      "processing"
+    )
   )
 
   val probandObservationMappings: List[Transformation] = List(
