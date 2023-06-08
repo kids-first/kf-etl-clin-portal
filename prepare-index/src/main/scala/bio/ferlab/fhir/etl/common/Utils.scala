@@ -393,7 +393,7 @@ object Utils {
         .withColumn("family_type", coalesce(col("family_type"), lit("proband-only")))
         .drop("family_type_from_system", "family_type_computation")
         .join(reformatFamily, array_contains(col("family_members_id"), col("fhir_id")), "left_outer")
-        .drop("family_fhir_id", "family_members_id")
+        .drop("family_fhir_id", "family_members_id", "family_type_from_system")
         .withColumnRenamed("family_id", "families_id")
     }
   }
