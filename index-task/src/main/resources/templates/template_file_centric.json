@@ -270,10 +270,16 @@
                 "age_at_event_days": {
                   "type": "long"
                 },
+                "diagnosis_icd": {
+                  "type": "keyword"
+                },
                 "diagnosis_id": {
                   "type": "keyword"
                 },
                 "diagnosis_mondo": {
+                  "type": "keyword"
+                },
+                "diagnosis_ncit": {
                   "type": "keyword"
                 },
                 "fhir_id": {
@@ -376,6 +382,23 @@
                 }
               }
             },
+            "non_observed_phenotype": {
+              "type": "nested",
+              "properties": {
+                "is_leaf": {
+                  "type": "boolean"
+                },
+                "is_tagged": {
+                  "type": "boolean"
+                },
+                "name": {
+                  "type": "keyword"
+                },
+                "parents": {
+                  "type": "keyword"
+                }
+              }
+            },
             "observed_phenotype": {
               "type": "nested",
               "properties": {
@@ -392,6 +415,42 @@
                   "type": "keyword"
                 },
                 "parents": {
+                  "type": "keyword"
+                }
+              }
+            },
+            "outcomes": {
+              "type": "nested",
+              "properties": {
+                "age_at_event_days": {
+                  "properties": {
+                    "from": {
+                      "type": "keyword"
+                    },
+                    "units": {
+                      "type": "keyword"
+                    },
+                    "value": {
+                      "type": "long"
+                    }
+                  }
+                },
+                "fhir_id": {
+                  "type": "keyword"
+                },
+                "observation_id": {
+                  "type": "keyword"
+                },
+                "participant_fhir_id": {
+                  "type": "keyword"
+                },
+                "release_id": {
+                  "type": "keyword"
+                },
+                "study_id": {
+                  "type": "keyword"
+                },
+                "vital_status": {
                   "type": "keyword"
                 }
               }

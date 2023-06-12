@@ -87,13 +87,9 @@ object Transformations {
         col("_recordedDate")("recordedDate")("offset")("unit") as "units",
         extractFirstForSystem(col("_recordedDate")("recordedDate")("event")("coding"), Seq("http://snomed.info/sct"))("display") as "from"
       ))
-      .withColumn("diagnosis_mondo", filter(col("condition_coding"), x => x("category") === "MONDO"))
-      .withColumn("diagnosis_mondo", col("diagnosis_mondo.code")(0))
-      .withColumn("diagnosis_ncit", filter(col("condition_coding"), x => x("category") === "NCIT"))
-      .withColumn("diagnosis_ncit", col("diagnosis_ncit.code")(0))
-      .withColumn("diagnosis_icd", filter(col("condition_coding"), x => x("category") === "ICD"))
-      .withColumn("diagnosis_ncit", col("diagnosis_icd.code")(0))
-
+      .withColumn("diagnosis_mondo", filter(col("condition_coding"), x => x("category") === "MONDO")(0)("code"))
+      .withColumn("diagnosis_ncit", filter(col("condition_coding"), x => x("category") === "NCIT")(0)("code"))
+      .withColumn("diagnosis_icd", filter(col("condition_coding"), x => x("category") === "ICD")(0)("code"))
       // TODO external_id
       // TODO diagnosis_category
     ),
