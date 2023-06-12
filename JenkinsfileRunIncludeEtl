@@ -1,6 +1,6 @@
 @Library(value="kids-first/aws-infra-jenkins-shared-libraries", changelog=false) _
 simple_pipeline {
    stage_name_1 = "run_etl.sh"
-   script_1 = "cd bin && ./run_etl.sh -p include -r re_074_KF -s SD_65064P2Z,SD_Y6VRG6MD,SD_FYCR78W0,SD_T8VSYRSG -e qa --instance-type m5.8xlarge --instance-count 1 -b include-373997854230-datalake-qa --instance-profile include-ec2-qa-profile --service-role include-datalake-emr-qa-role --fhir-url 'https://kf-api-fhir-service.kidsfirstdrc.org' --skip-steps 'Download and Run Fhavro-export'"
+   script_1 = "cd bin && ./run_etl.sh -p include -r re_074_2_kf -s SD_65064P2Z,SD_Y6VRG6MD,SD_FYCR78W0,SD_T8VSYRSG -e qa --instance-type m5.8xlarge --instance-count 1 -b include-373997854230-datalake-qa --instance-profile include-ec2-qa-profile --service-role include-datalake-emr-qa-role --fhir-url 'https://kf-api-fhir-service.kidsfirstdrc.org' --skip-steps 'Download and Run Fhavro-export'"
    projectName = "include-etl-clin-portal"
 }

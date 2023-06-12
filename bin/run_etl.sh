@@ -338,7 +338,7 @@ SG_SLAVE=$(aws ec2 describe-security-groups --filters Name=group-name,Values=Ela
 #Once the emr cluster is successfully created, if one needs to access the cluster then:
 #  - grab the id instance (for example, in the aws console);
 #  - run this command: aws ssm start-session --target <INSTANCE ID>;
-EMR_NAME=$(truncate_emr_name_if_needed "Portal ETL - All Steps - ${ENV} - ${RELEASE_ID} - ${STUDIES}")
+EMR_NAME=$(truncate_emr_name_if_needed "Portal ETL - ${ENV} - ${RELEASE_ID} - ${STUDIES}")
 aws emr create-cluster \
   --applications Name=Hadoop Name=Spark \
   --ec2-attributes "{\"InstanceProfile\":\"${INSTANCE_PROFILE}\",\"SubnetId\":\"${SUBNET}\", \"ServiceAccessSecurityGroup\":\"${SG_SERVICE}\", \"EmrManagedMasterSecurityGroup\":\"${SG_MASTER}\", \"EmrManagedSlaveSecurityGroup\":\"${SG_SLAVE}\"}" \
