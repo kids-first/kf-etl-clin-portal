@@ -10,7 +10,7 @@ package bio.ferlab.etl.enrich.model
 case class SPECIMEN_ENRICHED(`participant_fhir_id`: String = "P3",
                              `sample_id`: String = "BS_F6NDMZCN",
                              `sample_fhir_id`: String = "S3",
-                             `consent_code`: Option[String] = None,
+                             consent_type: Option[String] = None,
                              `participant_id`: String = "PT_48DYT4PP",
                              `gender`: String = "male",
                              `is_proband`: Boolean = true,
