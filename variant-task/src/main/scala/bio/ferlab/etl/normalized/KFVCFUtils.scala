@@ -1,17 +1,24 @@
-package bio.ferlab.etl.normalize
+package bio.ferlab.etl.normalized
+
 import bio.ferlab.datalake.spark3.implicits.GenomicImplicits._
 import bio.ferlab.datalake.spark3.implicits.GenomicImplicits.columns._
 import bio.ferlab.datalake.spark3.implicits.SparkUtils.filename
+import bio.ferlab.etl.Constants.columns.GENES_SYMBOL
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession}
+
 object KFVCFUtils {
 
   private def getFilesUrl(files: DataFrame, studyId: String, endsWith: String)(implicit spark: SparkSession) = {
     import spark.implicits._
     val filesUrl = files.select("s3_url")
-      .where(col("study_id") === studyId)
+      .where(col("study_id") === studyId and col("s3_url").isNotNull)
+      .distinct()
       .as[String].collect()
-    filesUrl.distinct.filter(_.endsWith(endsWith)).toSeq
+    if (filesUrl == null) Nil else
+      filesUrl
+        .filter(s => s != null && s.endsWith(endsWith))
+        .toSeq
 
   }
 
@@ -36,6 +43,7 @@ object KFVCFUtils {
       .withColumn("annotation", firstAnn)
       .withColumn("hgvsg", hgvsg)
       .withColumn("variant_class", variant_class)
+      .withColumn(GENES_SYMBOL, array_distinct(annotations("symbol")))
       .drop("annotation", "INFO_ANN")
       .withColumn("INFO_DS", lit(null).cast("boolean"))
       .withColumn("INFO_HaplotypeScore", lit(null).cast("double"))
@@ -75,6 +83,7 @@ object KFVCFUtils {
       .withColumn("annotation", firstAnn)
       .withColumn("hgvsg", hgvsg)
       .withColumn("variant_class", variant_class)
+      .withColumn(GENES_SYMBOL, array_distinct(annotations("symbol")))
       .drop("annotation", "INFO_ANN")
       .withColumn("genotype", explode(col("genotypes")))
   }

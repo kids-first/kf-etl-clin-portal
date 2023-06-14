@@ -1,11 +1,12 @@
-package bio.ferlab.etl.normalize
+package bio.ferlab.etl.normalized
 
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.ETLSingleDestination
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits._
 import bio.ferlab.datalake.spark3.implicits.GenomicImplicits._
 import bio.ferlab.datalake.spark3.implicits.GenomicImplicits.columns._
-import bio.ferlab.etl.normalize.KFVCFUtils.loadVCFs
+import bio.ferlab.etl.Constants.columns.{GENES_SYMBOL, TRANSMISSION_MODE}
+import bio.ferlab.etl.normalized.KFVCFUtils.loadVCFs
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession, functions}
 
@@ -32,7 +33,7 @@ class SNV(studyId: String, releaseId: String, vcfV1Pattern: String, vcfV2pattern
     vcf.join(enrichedSpecimenDF, Seq("sample_id"))
       .withRelativesGenotype(Seq("gq", "dp", "info_qd", "filters", "ad_ref", "ad_alt", "ad_total", "ad_ratio", "calls", "affected_status", "zygosity"))
       .withParentalOrigin("parental_origin", col("calls"), col("father_calls"), col("mother_calls"))
-      .withGenotypeTransmission("transmission")
+      .withGenotypeTransmission(TRANSMISSION_MODE)
       .withCompoundHeterozygous()
   }
 
@@ -45,6 +46,7 @@ class SNV(studyId: String, releaseId: String, vcfV1Pattern: String, vcfV2pattern
         reference,
         alternate,
         name,
+        col(GENES_SYMBOL),
         col("hgvsg"),
         col("variant_class"),
         col("genotype.sampleId") as "sample_id",

@@ -84,11 +84,11 @@ if [ "$IS_PROJECT_NAME_OK" -eq 1 ]; then
   exit 1
 fi
 
-if [ "${ENV}" == "prd" ] && [ "${PROJECT}" == "kf-strides" ]
-then
-  echo "This script does not support project ${PROJECT} in ${ENV}. Exiting"
-  exit 1
-fi
+#if [ "${ENV}" == "prd" ] && [ "${PROJECT}" == "kf-strides" ]
+#then
+#  echo "This script does not support project ${PROJECT} in ${ENV}. Exiting"
+#  exit 1
+#fi
 
 SG_SERVICE=$(aws ec2 describe-security-groups --filters Name=group-name,Values=ElasticMapReduce-ServiceAccess-"${ENV}"-* --query "SecurityGroups[*].{Name:GroupName,ID:GroupId}" | jq -r '.[0].ID')
 SG_MASTER=$(aws ec2 describe-security-groups --filters Name=group-name,Values=ElasticMapReduce-Master-Private-"${ENV}"-* --query "SecurityGroups[*].{Name:GroupName,ID:GroupId}" | jq -r '.[0].ID')
@@ -112,18 +112,21 @@ STEPS=$(
 EOF
 )
 
-declare -A PROJECT_TO_KEYNAME
+declare -a PROJECT_TO_KEYNAME
 PROJECT_TO_KEYNAME["kf-strides"]="flintrock"
 PROJECT_TO_KEYNAME["include"]="flintrock_include"
+KEYNAME="flintrock_include"
 
-SUBNET=$(net_conf_extractor "subnet" "${PROJECT}" "${ENV}")
-
+#SUBNET=$(net_conf_extractor "subnet" "${PROJECT}" "${ENV}")
+#SUBNET="subnet-0f0c909ec60b377ce"
+#SUBNET="subnet-00aab84919d5a44e2"
+SUBNET=subnet-0f1161ac2ee2fba5b
 aws emr create-cluster \
   --applications Name=Hadoop Name=Spark Name=Zeppelin \
-  --ec2-attributes "{\"KeyName\":\"${PROJECT_TO_KEYNAME["${PROJECT}"]}\",\"InstanceProfile\":\"${INSTANCE_PROFILE}\",\"SubnetId\":\"${SUBNET}\", \"ServiceAccessSecurityGroup\":\"${SG_SERVICE}\", \"EmrManagedMasterSecurityGroup\":\"${SG_MASTER}\", \"EmrManagedSlaveSecurityGroup\":\"${SG_SLAVE}\"}" \
+  --ec2-attributes "{\"KeyName\":\"${KEYNAME}\",\"InstanceProfile\":\"${INSTANCE_PROFILE}\",\"SubnetId\":\"${SUBNET}\", \"ServiceAccessSecurityGroup\":\"${SG_SERVICE}\", \"EmrManagedMasterSecurityGroup\":\"${SG_MASTER}\", \"EmrManagedSlaveSecurityGroup\":\"${SG_SLAVE}\"}" \
   --service-role "${SERVICE_ROLE}" \
   --enable-debugging \
-  --release-label emr-6.5.0 \
+  --release-label emr-6.9.0 \
   --bootstrap-actions Path="s3://${BUCKET}/jobs/bootstrap-actions/enable-ssm.sh" Path="s3://${BUCKET}/jobs/bootstrap-actions/install-java11.sh" \
   --steps "${STEPS}" \
   --log-uri "s3n://${BUCKET}/jobs/elasticmapreduce/" \

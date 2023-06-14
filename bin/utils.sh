@@ -1,4 +1,4 @@
-declare -A PROJECT_TO_NET_CONF
+declare -a PROJECT_TO_NET_CONF
 PROJECT_TO_NET_CONF["subnet_kf-strides_qa"]="subnet-0f0c909ec60b377ce"
 PROJECT_TO_NET_CONF["es_kf-strides_qa"]="https://vpc-kf-arranger-blue-es-service-exwupkrf4dyupg24dnfmvzcwri.us-east-1.es.amazonaws.com"
 PROJECT_TO_NET_CONF["subnet_kf-strides_prd"]="subnet-00aab84919d5a44e2"
