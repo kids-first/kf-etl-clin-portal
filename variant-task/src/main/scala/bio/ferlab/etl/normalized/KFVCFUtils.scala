@@ -17,7 +17,7 @@ object KFVCFUtils {
       .as[String].collect()
     if (filesUrl == null) Nil else
       filesUrl
-        .filter(s => s != null && s.endsWith(endsWith))
+        .collect { case s if s != null && s.endsWith(endsWith) => s.replace("s3://", "s3a://") }
         .toSeq
 
   }

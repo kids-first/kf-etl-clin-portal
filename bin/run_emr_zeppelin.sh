@@ -112,18 +112,15 @@ STEPS=$(
 EOF
 )
 
-declare -a PROJECT_TO_KEYNAME
-PROJECT_TO_KEYNAME["kf-strides"]="flintrock"
-PROJECT_TO_KEYNAME["include"]="flintrock_include"
-KEYNAME="flintrock_include"
+declare -A PROJECT_TO_KEYNAME=( ["kf-strides"]="flintrock" ["include"]="flintrock_include")
 
-#SUBNET=$(net_conf_extractor "subnet" "${PROJECT}" "${ENV}")
-#SUBNET="subnet-0f0c909ec60b377ce"
-#SUBNET="subnet-00aab84919d5a44e2"
-SUBNET=subnet-0f1161ac2ee2fba5b
+echo ${PROJECT_TO_KEYNAME[$PROJECT]}
+
+SUBNET=$(net_conf_extractor "subnet" "${PROJECT}" "${ENV}")
+
 aws emr create-cluster \
   --applications Name=Hadoop Name=Spark Name=Zeppelin \
-  --ec2-attributes "{\"KeyName\":\"${KEYNAME}\",\"InstanceProfile\":\"${INSTANCE_PROFILE}\",\"SubnetId\":\"${SUBNET}\", \"ServiceAccessSecurityGroup\":\"${SG_SERVICE}\", \"EmrManagedMasterSecurityGroup\":\"${SG_MASTER}\", \"EmrManagedSlaveSecurityGroup\":\"${SG_SLAVE}\"}" \
+  --ec2-attributes "{\"KeyName\":\"${PROJECT_TO_KEYNAME["${PROJECT}"]}\",\"InstanceProfile\":\"${INSTANCE_PROFILE}\",\"SubnetId\":\"${SUBNET}\", \"ServiceAccessSecurityGroup\":\"${SG_SERVICE}\", \"EmrManagedMasterSecurityGroup\":\"${SG_MASTER}\", \"EmrManagedSlaveSecurityGroup\":\"${SG_SLAVE}\"}" \
   --service-role "${SERVICE_ROLE}" \
   --enable-debugging \
   --release-label emr-6.9.0 \
