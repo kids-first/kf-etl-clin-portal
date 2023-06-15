@@ -123,8 +123,8 @@ aws emr create-cluster \
   --ec2-attributes "{\"KeyName\":\"${PROJECT_TO_KEYNAME["${PROJECT}"]}\",\"InstanceProfile\":\"${INSTANCE_PROFILE}\",\"SubnetId\":\"${SUBNET}\", \"ServiceAccessSecurityGroup\":\"${SG_SERVICE}\", \"EmrManagedMasterSecurityGroup\":\"${SG_MASTER}\", \"EmrManagedSlaveSecurityGroup\":\"${SG_SLAVE}\"}" \
   --service-role "${SERVICE_ROLE}" \
   --enable-debugging \
-  --release-label emr-6.9.0 \
-  --bootstrap-actions Path="s3://${BUCKET}/jobs/bootstrap-actions/enable-ssm.sh" Path="s3://${BUCKET}/jobs/bootstrap-actions/install-java11.sh" \
+  --release-label emr-6.11.0 \
+  --bootstrap-actions Path="s3://${BUCKET}/jobs/bootstrap-actions/enable-ssm.sh" \
   --steps "${STEPS}" \
   --log-uri "s3n://${BUCKET}/jobs/elasticmapreduce/" \
   --name "Zeppelin - ${ENV}" \

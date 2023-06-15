@@ -202,7 +202,7 @@ STEPS=$(
          "--class",
          "bio.ferlab.etl.enrich.Enrich",
          "s3a://${BUCKET}/jobs/enrich.jar",
-          "config/${ENV}-${PROJECT}.conf",
+         "config/${ENV}-${PROJECT}.conf",
          "default",
          "histology",
          "${STUDIES}"
@@ -221,7 +221,7 @@ STEPS=$(
        "--class",
        "bio.ferlab.fhir.etl.PrepareIndex",
        "s3a://${BUCKET}/jobs/prepare-index.jar",
-        "config/${ENV}-${PROJECT}.conf",
+       "config/${ENV}-${PROJECT}.conf",
        "default",
        "all",
        "${STUDIES}"

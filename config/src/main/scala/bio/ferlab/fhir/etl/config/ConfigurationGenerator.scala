@@ -150,7 +150,7 @@ object ConfigurationGenerator extends App {
       partitionby = List("chromosome"),
       table = Some(TableConf("database", "normalized_consequences")),
       keys = List("chromosome", "start", "reference", "alternate", "ensembl_transcript_id"),
-      repartition = Some(RepartitionByColumns(Seq("chromosome"), Some(10)))
+      repartition = Some(RepartitionByColumns(Seq("chromosome"), Some(100)))
     ),
     DatasetConf(
       id = "enriched_specimen",
