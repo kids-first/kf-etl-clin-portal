@@ -36,6 +36,9 @@ class SpecimenEnricherSpec extends AnyFlatSpec with Matchers with WithSparkSessi
         BIOSPECIMEN_INPUT(fhir_id = "S1", participant_fhir_id = "P1", `sample_id` = "BS_1", consent_type = Some("c1")),
         BIOSPECIMEN_INPUT(fhir_id = "S2", participant_fhir_id = "P2", `sample_id` = "BS_2"),
         BIOSPECIMEN_INPUT(fhir_id = "S3", participant_fhir_id = "P3" )
+      ).toDF(),
+      "normalized_research_study" -> Seq(
+        RESEARCH_STUDY()
       ).toDF()
 
     )

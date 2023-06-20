@@ -1,9 +1,7 @@
 #!/bin/bash
 
-study_id=$1
-release_id=$2
-env=${3:-"qa"}
-job=${4:-"snv"}
+job=${1:-"variant_centric"}
+env=${2:-"prd"}
 instance_type="r5.4xlarge"
 instance_count="20"
 if [ "$env" = "prd" ]
@@ -21,23 +19,18 @@ steps=$(cat <<EOF
        "--deploy-mode",
        "client",
        "--class",
-       "bio.ferlab.etl.normalized.Normalize",
+       "bio.ferlab.etl.prepared.RunPrepared",
        "s3a://kf-strides-232196027141-datalake-${env}/jobs/variant-task.jar",
        "config/${env}-kf-strides.conf",
        "default",
-       "${job}",
-       "${study_id}",
-       "${release_id}",
-       ".CGP.filtered.deNovo.vep.vcf.gz",
-       "NO_FILES",
-       "/mnt/GRCh38_full_analysis_set_plus_decoy_hla.fa"
+       "${job}"
 
      ],
      "Type": "CUSTOM_JAR",
      "ActionOnFailure": "CONTINUE",
      "Jar": "command-runner.jar",
      "Properties": "",
-     "Name": "Normalize SNV"
+     "Name": "Prepare Index"
    }
 
 
@@ -55,7 +48,7 @@ aws emr create-cluster \
   --bootstrap-actions Path="s3://kf-strides-232196027141-datalake-${env}/jobs/bootstrap-actions/enable-ssm.sh" Path="s3://kf-strides-232196027141-datalake-${env}/jobs/bootstrap-actions/download_human_reference_genome.sh" \
   --steps "${steps}" \
   --log-uri "s3n://kf-strides-232196027141-datalake-${env}/jobs/elasticmapreduce/" \
-  --name "Portal ETL - Normalize ${job} - ${env} ${release_id} ${study_id}" \
+  --name "Portal ETL - PrepareIndex ${job} - ${env} ${release_id} ${study_id}" \
   --instance-groups "[{\"InstanceCount\":${instance_count},\"InstanceGroupType\":\"CORE\",\"EbsConfiguration\":{\"EbsBlockDeviceConfigs\":[{\"VolumeSpecification\":{\"SizeInGB\":150,\"VolumeType\":\"gp2\"},\"VolumesPerInstance\":8}]},\"InstanceType\":\"${instance_type}\",\"Name\":\"Core - 2\"},{\"InstanceCount\":1,\"EbsConfiguration\":{\"EbsBlockDeviceConfigs\":[{\"VolumeSpecification\":{\"SizeInGB\":128,\"VolumeType\":\"gp2\"},\"VolumesPerInstance\":2}]},\"InstanceGroupType\":\"MASTER\",\"InstanceType\":\"m5.4xlarge\",\"Name\":\"Master - 1\"}]" \
   --configurations file://./spark-config.json \
   --region us-east-1 \

@@ -10,6 +10,7 @@ import java.time.LocalDateTime
 
 /**
  * This step enrich specimen in order to join with occurrences and variant tables.
+ *
  * @param studyIds
  * @param configuration
  */
@@ -21,9 +22,10 @@ class SpecimenEnricher(studyIds: List[String])(implicit configuration: Configura
   private val proband_observation: DatasetConf = conf.getDataset("normalized_proband_observation")
   private val specimen: DatasetConf = conf.getDataset("normalized_specimen")
   private val disease: DatasetConf = conf.getDataset("normalized_disease")
+  private val researchStudy: DatasetConf = conf.getDataset("normalized_research_study")
 
   override def extract(lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime)(implicit spark: SparkSession): Map[String, DataFrame] = {
-    Seq(patient, family, family_relationship, specimen, disease, proband_observation)
+    Seq(patient, family, family_relationship, specimen, disease, proband_observation, researchStudy)
       .map(ds => ds.id -> ds.read
         .where(col("study_id").isin(studyIds: _*))
       ).toMap
@@ -50,8 +52,10 @@ class SpecimenEnricher(studyIds: List[String])(implicit configuration: Configura
       ))
       .drop("relations")
 
+    val studies = data(researchStudy.id).select("study_id", "study_code")
     data(specimen.id).select($"sample_id", $"fhir_id" as "sample_fhir_id", $"participant_fhir_id", $"consent_type", $"study_id")
       .join(participants, Seq("participant_fhir_id"))
+      .join(studies, Seq("study_id"))
       .join(familyDF, array_contains(col("family_members_id"), col("participant_fhir_id")))
       .drop("family_members_id")
       .join(relations, Seq("participant_fhir_id"), "left")
