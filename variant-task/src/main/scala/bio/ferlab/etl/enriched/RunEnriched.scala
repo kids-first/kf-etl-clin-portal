@@ -2,8 +2,7 @@ package bio.ferlab.etl.enriched
 
 import bio.ferlab.datalake.spark3.SparkApp
 import bio.ferlab.datalake.spark3.genomics.enriched.{Consequences, Variants}
-import bio.ferlab.datalake.spark3.genomics.{AtLeastNElements, FrequencySplit, SimpleAggregation}
-import bio.ferlab.etl.Constants.columns
+import bio.ferlab.datalake.spark3.genomics.{AtLeastNElements, FirstElement, FrequencySplit, SimpleAggregation}
 import bio.ferlab.etl.Constants.columns.{TRANSMISSIONS, TRANSMISSION_MODE}
 import org.apache.spark.sql.functions.col
 
@@ -15,18 +14,20 @@ object RunEnriched extends SparkApp {
 
   log.info(s"Job: $jobName")
   log.info(s"runType: ${steps.mkString(" -> ")}")
-  private val variants = new Variants("normalized_snv",
+  private val variants = new Variants(snvDatasetId = "normalized_snv", frequencies = Seq(
     FrequencySplit(
-      "frequency_by_study_id",
+      "studies",
       splitBy = Some(col("study_id")), byAffected = false,
       extraAggregations = Seq(
         AtLeastNElements(name = "participant_ids", c = col("participant_id"), n = 10),
-        SimpleAggregation(name = TRANSMISSIONS, c = col(TRANSMISSION_MODE))
+        SimpleAggregation(name = TRANSMISSIONS, c = col(TRANSMISSION_MODE)),
+        SimpleAggregation(name = "zygosity", c = col("zygosity")),
+        FirstElement(name = "study_code", c = col("study_code"))
       )
     ),
-    FrequencySplit("frequency_kf", byAffected = false))
+    FrequencySplit("internal_frequencies", byAffected = false)))
   jobName match {
-    case "variants" =>variants.run (steps)
+    case "variants" => variants.run(steps)
     case "consequences" => new Consequences().run(steps)
     case "all" =>
       variants.run(steps)

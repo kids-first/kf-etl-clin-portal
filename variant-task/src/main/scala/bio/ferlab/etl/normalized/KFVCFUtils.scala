@@ -17,7 +17,7 @@ object KFVCFUtils {
       .as[String].collect()
     if (filesUrl == null) Nil else
       filesUrl
-        .filter(s => s != null && s.endsWith(endsWith))
+        .collect { case s if s != null && s.endsWith(endsWith) => s.replace("s3://", "s3a://") }
         .toSeq
 
   }
@@ -40,10 +40,6 @@ object KFVCFUtils {
 
   private def asV1(inputDf: DataFrame): DataFrame = {
     inputDf
-      .withColumn("annotation", firstAnn)
-      .withColumn("hgvsg", hgvsg)
-      .withColumn("variant_class", variant_class)
-      .withColumn(GENES_SYMBOL, array_distinct(annotations("symbol")))
       .drop("annotation", "INFO_ANN")
       .withColumn("INFO_DS", lit(null).cast("boolean"))
       .withColumn("INFO_HaplotypeScore", lit(null).cast("double"))
@@ -80,11 +76,6 @@ object KFVCFUtils {
 
   private def asV2(inputDf: DataFrame): DataFrame = {
     inputDf
-      .withColumn("annotation", firstAnn)
-      .withColumn("hgvsg", hgvsg)
-      .withColumn("variant_class", variant_class)
-      .withColumn(GENES_SYMBOL, array_distinct(annotations("symbol")))
-      .drop("annotation", "INFO_ANN")
       .withColumn("genotype", explode(col("genotypes")))
   }
 

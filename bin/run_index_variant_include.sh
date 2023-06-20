@@ -4,7 +4,7 @@ set -x
 release_id=$1
 chromosome=${2:-"all"}
 job=${3:-"variant_centric"}
-input=${4:-"s3a://include-373997854230-datalake-qa/es_index/genomic"}
+input=${4:-"s3a://include-373997854230-datalake-qa/es_index"}
 env=${5:-"qa"}
 instance_type="m5.4xlarge"
 instance_count="1"
@@ -32,7 +32,7 @@ steps=$(cat <<EOF
        "${release_id}",
        "${job}",
        "config/${env}-include.conf",
-       "${input}/${job}_${release_id}",
+       "${input}/${job}",
        "${chromosome}"
      ],
      "Type": "CUSTOM_JAR",

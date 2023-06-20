@@ -1,6 +1,6 @@
 package bio.ferlab.etl.normalized
 
-import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
+import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf, RepartitionByColumns}
 import bio.ferlab.datalake.spark3.etl.ETLSingleDestination
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits._
 import bio.ferlab.datalake.spark3.implicits.GenomicImplicits._
@@ -30,15 +30,23 @@ class SNV(studyId: String, releaseId: String, vcfV1Pattern: String, vcfV2pattern
   override def transformSingle(data: Map[String, DataFrame], lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime)(implicit spark: SparkSession): DataFrame = {
     val vcf = selectOccurrences(data("vcf"))
     val enrichedSpecimenDF = data(enriched_specimen.id)
+      .withColumn("mother_id", col("family.mother_id"))
+      .withColumn("father_id", col("family.father_id"))
+      .drop("family")
     vcf.join(enrichedSpecimenDF, Seq("sample_id"))
       .withRelativesGenotype(Seq("gq", "dp", "info_qd", "filters", "ad_ref", "ad_alt", "ad_total", "ad_ratio", "calls", "affected_status", "zygosity"))
       .withParentalOrigin("parental_origin", col("calls"), col("father_calls"), col("mother_calls"))
       .withGenotypeTransmission(TRANSMISSION_MODE)
-      .withCompoundHeterozygous()
+      //.withCompoundHeterozygous(patientIdColumnName = "participant_id", geneSymbolsColumnName = "genes_symbol", additionalFilter = Some(array_contains(col("filters"), "PASS")))
   }
 
   private def selectOccurrences(inputDF: DataFrame): DataFrame = {
     val occurrences = inputDF
+      .withColumn("annotation", firstAnn)
+      .withColumn("hgvsg", hgvsg)
+      .withColumn("variant_class", variant_class)
+      .withColumn(GENES_SYMBOL, array_distinct(annotations("symbol")))
+      .drop("annotation", "INFO_ANN")
       .select(
         chromosome,
         start,
@@ -58,7 +66,7 @@ class SNV(studyId: String, releaseId: String, vcfV1Pattern: String, vcfV2pattern
         is_multi_allelic,
         old_multi_allelic,
         col("qual") as "quality",
-        col("INFO_filters")(0) as "filter",
+        col("INFO_filters") as "filters",
         ac as "info_ac",
         an as "info_an",
         af as "info_af",
@@ -87,13 +95,17 @@ class SNV(studyId: String, releaseId: String, vcfV1Pattern: String, vcfV2pattern
         col("INFO_ExcessHet") as "info_excess_het",
         optional_info(inputDF, "INFO_HaplotypeScore", "info_haplotype_score", "float"),
         col("file_name"),
-        lit(studyId) as "study_id",
         lit(releaseId) as "release_id",
         is_normalized
       )
+      .withColumn("ad_ref", col("ad")(0))
+      .withColumn("ad_alt", col("ad")(1))
+      .withColumn("ad_total", col("ad_ref") + col("ad_alt"))
+      .withColumn("ad_ratio", when(col("ad_total") === 0, 0).otherwise(col("ad_alt") / col("ad_total")))
+      .drop("ad")
       .withColumn(
         "is_lo_conf_denovo",
-        array_contains(functions.split(col("lo_conf_denovo"), ","), col("sample_d"))
+        array_contains(functions.split(col("lo_conf_denovo"), ","), col("sample_id"))
       )
       .withColumn(
         "is_hi_conf_denovo",
