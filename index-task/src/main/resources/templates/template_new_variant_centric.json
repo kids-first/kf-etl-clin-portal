@@ -13,6 +13,10 @@
           "type": "keyword",
           "index": false
         },
+        "assembly_version": {
+          "type": "keyword",
+          "index": false
+        },
         "chromosome": {
           "type": "keyword"
         },
@@ -20,10 +24,6 @@
             "type": "keyword",
             "index": false
         },
-        "assembly_version": {
-            "type": "keyword",
-            "index": false
-        },                
         "clinvar": {
           "properties": {
             "clin_sig": {
@@ -51,6 +51,9 @@
         },
         "variant_external_reference": {
           "type": "keyword"
+        },
+        "end": {
+          "type": "long"
         },
         "internal_frequencies": {
             "properties": {
@@ -160,7 +163,7 @@
                 }
               }
             },
-            "topmed": {
+            "topmed_bravo": {
               "properties": {
                 "ac": {
                   "type": "long",
@@ -217,7 +220,7 @@
               "index": false
             },
             "entrez_gene_id": {
-              "type": "long",
+              "type": "keyword",
               "index": false
             },
             "hgnc": {
@@ -269,7 +272,7 @@
               "type": "nested",
               "properties": {
                 "disorder_id": {
-                  "type": "long"
+                  "type": "keyword"
                 },
                 "inheritance": {
                   "type": "keyword"
@@ -281,6 +284,16 @@
             },
             "symbol": {
               "type": "keyword"
+            },
+            "gnomad": {
+              "properties": {
+                "pli": {
+                  "type": "float"
+                },
+                "loeuf": {
+                  "type": "keyword"
+                }
+              }
             },
             "spliceai": {
                 "type": "nested",
@@ -405,12 +418,12 @@
                   "mane_select": {
                     "type": "boolean"
                   },
-                  "picked": {
-                      "type": "boolean"
-                  },
                   "predictions": {
                     "properties": {
                       "cadd_score": {
+                        "type": "float"
+                      },
+                      "cadd_phred": {
                         "type": "float"
                       },
                       "dann_score": {
@@ -454,7 +467,7 @@
                     "index": false
                   },
                   "strand": {
-                    "type": "long"
+                    "type": "keyword"
                   },
                   "uniprot_id": {
                       "type": "keyword",
@@ -462,6 +475,9 @@
                   },            
                   "vep_impact": {
                     "type": "keyword"
+                  },
+                  "picked": {
+                    "type": "boolean"
                   }
                 }
               }                        
@@ -473,9 +489,6 @@
         "hgvsg": {
           "type": "keyword",
           "index": false
-        },
-        "vep_impacts": {
-          "type": "keyword"
         },
         "max_impact_score": {
           "type": "long"

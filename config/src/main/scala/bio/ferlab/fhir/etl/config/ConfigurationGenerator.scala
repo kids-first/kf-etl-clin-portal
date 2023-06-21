@@ -85,7 +85,7 @@ object ConfigurationGenerator extends App {
 
   val sources = (
     PublicDatasets(storage, tableDatabase = Some("database"), viewDatabase = None).sources ++
-    GenomicDatasets(storage, tableDatabase = Some("database"), viewDatabase = None).sources ++
+      GenomicDatasets(storage, tableDatabase = Some("database"), viewDatabase = None).sources ++
       rawsAndNormalized ++ dataserviceDatasets ++
       Seq(
         DatasetConf(
@@ -144,7 +144,7 @@ object ConfigurationGenerator extends App {
         format = DELTA,
         loadtype = OverWritePartition,
         table = Some(TableConf("database", "normalized_snv")),
-        partitionby = List("study_id", "chromosome"),
+        partitionby = List("study_id", "has_alt", "chromosome"),
         writeoptions = WriteOptions.DEFAULT_OPTIONS ++ Map("overwriteSchema" -> "true"),
         repartition = Some(RepartitionByColumns(Seq("chromosome"), Some(100)))
       ),

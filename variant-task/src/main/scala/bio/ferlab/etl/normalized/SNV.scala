@@ -37,7 +37,7 @@ class SNV(studyId: String, releaseId: String, vcfV1Pattern: String, vcfV2pattern
       .withRelativesGenotype(Seq("gq", "dp", "info_qd", "filters", "ad_ref", "ad_alt", "ad_total", "ad_ratio", "calls", "affected_status", "zygosity"))
       .withParentalOrigin("parental_origin", col("calls"), col("father_calls"), col("mother_calls"))
       .withGenotypeTransmission(TRANSMISSION_MODE)
-      //.withCompoundHeterozygous(patientIdColumnName = "participant_id", geneSymbolsColumnName = "genes_symbol", additionalFilter = Some(array_contains(col("filters"), "PASS")))
+    //.withCompoundHeterozygous(patientIdColumnName = "participant_id", geneSymbolsColumnName = "genes_symbol", additionalFilter = Some(array_contains(col("filters"), "PASS")))
   }
 
   private def selectOccurrences(inputDF: DataFrame): DataFrame = {
@@ -62,7 +62,7 @@ class SNV(studyId: String, releaseId: String, vcfV1Pattern: String, vcfV2pattern
         col("genotype.depth") as "dp",
         col("genotype.conditionalQuality") as "gq",
         col("genotype.calls") as "calls",
-        has_alt,
+        array_contains(col("genotype.calls"), 1) as "has_alt",
         is_multi_allelic,
         old_multi_allelic,
         col("qual") as "quality",
