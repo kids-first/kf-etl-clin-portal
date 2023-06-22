@@ -29,7 +29,6 @@ steps=$(cat <<EOF
        "${study_id}",
        "${release_id}",
        ".CGP.filtered.deNovo.vep.vcf.gz",
-       "NO_FILES",
        "/mnt/GRCh38_full_analysis_set_plus_decoy_hla.fa"
 
      ],

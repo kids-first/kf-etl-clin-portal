@@ -12,7 +12,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession, functions}
 
 import java.time.LocalDateTime
 
-class SNV(studyId: String, releaseId: String, vcfV1Pattern: String, vcfV2pattern: String, referenceGenomePath: Option[String])(implicit configuration: Configuration) extends ETLSingleDestination {
+class SNV(studyId: String, releaseId: String, vcfPattern: String, referenceGenomePath: Option[String])(implicit configuration: Configuration) extends ETLSingleDestination {
   private val enriched_specimen: DatasetConf = conf.getDataset("enriched_specimen")
   private val document_reference: DatasetConf = conf.getDataset("normalized_document_reference")
   override val mainDestination: DatasetConf = conf.getDataset("normalized_snv")
@@ -21,7 +21,7 @@ class SNV(studyId: String, releaseId: String, vcfV1Pattern: String, vcfV2pattern
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
 
     Map(
-      "vcf" -> loadVCFs(document_reference.read, studyId, vcfV1Pattern, vcfV2pattern, referenceGenomePath),
+      "vcf" -> loadVCFs(document_reference.read, studyId, vcfPattern, referenceGenomePath),
       enriched_specimen.id -> enriched_specimen.read.where(col("study_id") === studyId)
     )
 

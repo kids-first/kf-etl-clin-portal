@@ -296,7 +296,6 @@
               }
             },
             "spliceai": {
-                "type": "nested",
                 "properties": {
                   "ds": {
                     "type": "float"
