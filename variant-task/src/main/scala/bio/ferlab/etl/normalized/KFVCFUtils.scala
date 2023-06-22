@@ -11,21 +11,22 @@ import java.util.zip.GZIPInputStream
 
 object KFVCFUtils {
   /**
-   * Load content vcf files into a dataframe.
-   * @param files
-   * @param studyId
-   * @param vcfPattern
-   * @param referenceGenomePath
+   * Load the vcf files from the given dataframe. The dataframe must contains a column named "s3_url" which contains the S3 path to the vcf file.
+   * @param files The dataframe containing the S3 path to the vcf files.
+   * @param studyId the study id used to filter the files.
+   * @param vcfPattern the pattern used to filter the files.
+   * @param referenceGenomePath a path to reference genome file used to align variants.
    * @param spark
    * @return
    */
   def loadVCFs(files: DataFrame, studyId: String, vcfPattern: String, referenceGenomePath: Option[String] = None)(implicit spark: SparkSession): DataFrame = {
     val vcfFiles: Seq[VCFFiles] = getVCFFiles(files, studyId, vcfPattern)
 
-     vcfFiles.map(_.load(referenceGenomePath))
+    vcfFiles.map(_.load(referenceGenomePath))
       .reduce { (df1, df2) => df1.unionByName(df2) }
       .withColumn("file_name", filename)
   }
+
   def extractBucketNames(list: Seq[String]): Seq[(String, String)] = {
     val bucketRegex = "^(s3a://[^/]+)/.*$".r
 
@@ -39,6 +40,15 @@ object KFVCFUtils {
     buckets.map(b => b -> FileSystem.get(new java.net.URI(b), spark.sparkContext.hadoopConfiguration)).toMap
   }
 
+  /**
+   * Get the versions of the vcf files. The version is inferred from the first line of each vcf file.
+   *
+   * @param files    a dataframe containing the s3 urls of the vcf files.
+   * @param studyId  id of the study used to filter the files.
+   * @param endsWith the pattern to filter the files.
+   * @param spark
+   * @return a list of VCFFiles containing the version and the list of files.
+   */
   private def getVCFFiles(files: DataFrame, studyId: String, endsWith: String)(implicit spark: SparkSession): Seq[VCFFiles] = {
     import spark.implicits._
     val filesUrl = files.select("s3_url")
