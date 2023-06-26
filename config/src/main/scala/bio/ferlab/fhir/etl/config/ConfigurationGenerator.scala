@@ -146,7 +146,7 @@ object ConfigurationGenerator extends App {
         table = Some(TableConf("database", "normalized_snv")),
         partitionby = List("study_id", "has_alt", "chromosome"),
         writeoptions = WriteOptions.DEFAULT_OPTIONS ++ Map("overwriteSchema" -> "true"),
-        repartition = Some(RepartitionByColumns(Seq("chromosome"), Some(100)))
+        repartition = Some(RepartitionByRange(Seq("chromosome", "start"), Some(100)))
       ),
       DatasetConf(
         id = "enriched_specimen",

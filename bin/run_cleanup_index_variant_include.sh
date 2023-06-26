@@ -1,9 +1,9 @@
 #!/bin/bash
 set -x
 
-release_id=$1
-input=${2:-"s3a://include-373997854230-datalake-qa/es_index"}
-env=${3:-"qa"}
+chromosome=$1
+env=${2:-"qa"}
+index=${3:-"variant_centric"}
 instance_type="m5.4xlarge"
 instance_count="1"
 if [ "$env" = "prd" ]
@@ -23,7 +23,7 @@ steps=$(cat <<EOF
        "s3",
        "rm",
        "--recursive",
-       "s3://include-373997854230-datalake-${env}/es_index/new_variant_centric"
+       "s3://include-373997854230-datalake-${env}/es_index/$index/chromosome=$chromosome/"
      ],
      "Type": "CUSTOM_JAR",
      "ActionOnFailure": "CONTINUE",
@@ -47,7 +47,7 @@ aws emr create-cluster \
   --bootstrap-actions Path="s3://include-373997854230-datalake-${env}/jobs/bootstrap-actions/enable-ssm.sh" Path="s3://include-373997854230-datalake-${env}/jobs/bootstrap-actions/install-java11.sh" \
   --steps "${steps}" \
   --log-uri "s3n://include-373997854230-datalake-${env}/jobs/elasticmapreduce/" \
-  --name "Portal ETL - Cleanup Index Variant - ${env}  ${chromosome}" \
+  --name "Portal ETL - Cleanup Index Variant - ${env}" \
   --instance-groups "[{\"InstanceCount\":${instance_count},\"InstanceGroupType\":\"CORE\",\"InstanceType\":\"${instance_type}\",\"Name\":\"Core - 2\"},{\"InstanceCount\":1,\"EbsConfiguration\":{\"EbsBlockDeviceConfigs\":[{\"VolumeSpecification\":{\"SizeInGB\":32,\"VolumeType\":\"gp2\"},\"VolumesPerInstance\":2}]},\"InstanceGroupType\":\"MASTER\",\"InstanceType\":\"m5.xlarge\",\"Name\":\"Master - 1\"}]" \
   --scale-down-behavior TERMINATE_AT_TASK_COMPLETION \
   --configurations file://./spark-config.json \

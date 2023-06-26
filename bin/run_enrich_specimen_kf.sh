@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -x
 study_id=$1
 env=${2:-"qa"}
 instance_type="m5.4xlarge"

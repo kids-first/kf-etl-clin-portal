@@ -1,0 +1,38 @@
+{
+  "index_patterns": [
+    "gene _suggestions*"
+  ],
+  "priority": 1,
+  "template": {
+    "settings": {
+      "number_of_shards": 1
+    },
+    "mappings": {
+      "properties": {
+        "suggest": {
+          "type": "completion",
+          "analyzer": "standard",
+          "preserve_separators": true,
+          "preserve_position_increments": true,
+          "max_input_length": 50
+        },
+        "type": {
+          "type": "keyword",
+          "index": false
+        },
+        "ensembl_gene_id": {
+          "type": "keyword",
+          "index": false
+        },
+        "suggestion_id": {
+          "type": "keyword",
+          "index": false
+        },
+        "symbol": {
+          "type": "keyword",
+          "index": false
+        }
+      }
+    }
+  }
+}

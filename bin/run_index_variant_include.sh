@@ -3,9 +3,9 @@ set -x
 
 release_id=$1
 chromosome=${2:-"all"}
-job=${3:-"variant_centric"}
-input=${4:-"s3a://include-373997854230-datalake-qa/es_index"}
-env=${5:-"qa"}
+env=${3:-"qa"}
+job=${4:-"variant_centric"}
+input=${5:-"s3a://include-373997854230-datalake-$env/es_index"}
 instance_type="m5.4xlarge"
 instance_count="1"
 if [ "$env" = "prd" ]

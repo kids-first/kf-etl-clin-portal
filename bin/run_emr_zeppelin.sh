@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -x
 source "$(dirname "$0")/utils.sh"
 
 usage() {

@@ -1,5 +1,6 @@
 package bio.ferlab.etl.normalized
 
+import bio.ferlab.etl.normalized.KFVCFUtils.{V1, V2, V2_WITHOUT_PG, VCFVersion, calculateVersionFromHeaders}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -16,4 +17,50 @@ class KFVCFUtilsSpec extends AnyFlatSpec with Matchers{
 
     outputList shouldEqual expectedOutput
   }
+
+  "calculateVersionFromHeaders" should "return V2_WITHOUT_PG" in {
+    val input = Seq(
+      "##fileformat=VCFv4.2",
+      "##fileDate=2020-10-01",
+      "##source=Ensembl VEP 100.2",
+      "##reference=GRCh38",
+      "##INFO=<ID=DS,Number=1,Type=Float,Description=\"The estimated ALT dose (number of ALT alleles per haploid genome)\">",
+      "##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the variant described in this record\">",
+      "##INFO=<ID=DG,Number=1,Type=String,Description=\"Dosage genotype\">"
+    )
+
+    calculateVersionFromHeaders(input.iterator) shouldBe V2_WITHOUT_PG
+  }
+
+  it should "return V2" in {
+    val input = Seq(
+      "##fileformat=VCFv4.2",
+      "##fileDate=2020-10-01",
+      "##source=Ensembl VEP 100.2",
+      "##reference=GRCh38",
+      "##INFO=<ID=DS,Number=1,Type=Float,Description=\"The estimated ALT dose (number of ALT alleles per haploid genome)\">",
+      "##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the variant described in this record\">",
+      "##INFO=<ID=PG,Number=1,Type=String,Description=\"Phasing genotype\">",
+      "##INFO=<ID=DG,Number=1,Type=String,Description=\"Dosage genotype\">"
+
+    )
+
+    calculateVersionFromHeaders(input.iterator) shouldBe V2
+  }
+
+  it should "return V1" in {
+    val input = Seq(
+      "##fileformat=VCFv4.2",
+      "##fileDate=2020-10-01",
+      "##source=Ensembl VEP 100.2",
+      "##reference=GRCh38",
+      "##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the variant described in this record\">",
+      "##INFO=<ID=PG,Number=1,Type=String,Description=\"Phasing genotype\">",
+      "##INFO=<ID=DG,Number=1,Type=String,Description=\"Dosage genotype\">"
+
+    )
+    calculateVersionFromHeaders(input.iterator) shouldBe V1
+  }
+
+
 }

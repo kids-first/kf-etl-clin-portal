@@ -1,0 +1,52 @@
+{
+  "index_patterns": [
+    "variant_suggestions*"
+  ],
+  "priority": 1,
+  "template" : {
+    "settings" : {
+      "index" : {
+        "number_of_shards" : "6"
+      }
+    },
+    "mappings" : {
+      "properties" : {
+        "hgvsg" : {
+          "index" : false,
+          "type" : "keyword"
+        },
+        "rsnumber" : {
+          "index" : false,
+          "type" : "keyword"
+        },
+        "suggestion_id" : {
+          "index" : false,
+          "type" : "keyword"
+        },
+        "symbol_aa_change" : {
+          "index" : false,
+          "type" : "keyword"
+        },
+        "chromosome" : {
+          "index" : false,
+          "type" : "keyword"
+        },
+        "suggest" : {
+          "max_input_length" : 50,
+          "analyzer" : "standard",
+          "preserve_position_increments" : true,
+          "type" : "completion",
+          "preserve_separators" : true
+        },
+        "locus" : {
+          "index" : false,
+          "type" : "keyword"
+        },
+        "type" : {
+          "index" : false,
+          "type" : "keyword"
+        }
+      }
+    }
+  }
+}

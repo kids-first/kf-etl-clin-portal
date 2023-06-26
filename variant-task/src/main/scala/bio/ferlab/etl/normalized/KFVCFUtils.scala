@@ -4,6 +4,7 @@ import bio.ferlab.datalake.spark3.implicits.GenomicImplicits._
 import bio.ferlab.datalake.spark3.implicits.SparkUtils.filename
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.{ArrayType, IntegerType}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.io.{BufferedReader, InputStreamReader}
@@ -12,9 +13,10 @@ import java.util.zip.GZIPInputStream
 object KFVCFUtils {
   /**
    * Load the vcf files from the given dataframe. The dataframe must contains a column named "s3_url" which contains the S3 path to the vcf file.
-   * @param files The dataframe containing the S3 path to the vcf files.
-   * @param studyId the study id used to filter the files.
-   * @param vcfPattern the pattern used to filter the files.
+   *
+   * @param files               The dataframe containing the S3 path to the vcf files.
+   * @param studyId             the study id used to filter the files.
+   * @param vcfPattern          the pattern used to filter the files.
    * @param referenceGenomePath a path to reference genome file used to align variants.
    * @param spark
    * @return
@@ -78,15 +80,26 @@ object KFVCFUtils {
     val inputStream = fileSystemByBuckets(bucket).open(path)
     val gzipInputStream = new GZIPInputStream(inputStream)
     val reader = new BufferedReader(new InputStreamReader(gzipInputStream))
-
     try {
-      val lines = Iterator.continually(reader.readLine()).take(200)
-      val containsInfoDS = lines.exists(line => line.contains("##INFO=<ID=DS"))
 
-      (file, if (containsInfoDS) V2 else V1)
+      val lines = Iterator.continually(reader.readLine()).take(200)
+      val version = calculateVersionFromHeaders(lines)
+      (file, version)
     } finally {
       reader.close()
     }
+  }
+
+  def calculateVersionFromHeaders(it: Iterator[String]): VCFVersion = {
+    val lines = it.take(200).toSeq
+    val containsInfoPG = lines.exists(line => line.contains("##INFO=<ID=PG"))
+    val containsInfoDS = lines.exists(line => line.contains("##INFO=<ID=DS"))
+    val version = (containsInfoDS, containsInfoPG) match {
+      case (false, _) => V1
+      case (true, true) => V2
+      case (true, false) => V2_WITHOUT_PG
+    }
+    version
   }
 
 
@@ -97,11 +110,11 @@ object KFVCFUtils {
     }
   }
 
-  private trait VCFVersion {
+  trait VCFVersion {
     def loadVersion(df: DataFrame): DataFrame
   }
 
-  private case object V1 extends VCFVersion {
+  case object V1 extends VCFVersion {
     override def loadVersion(df: DataFrame): DataFrame = {
       df.drop("annotation", "INFO_ANN")
         .withColumn("INFO_DS", lit(null).cast("boolean"))
@@ -138,10 +151,18 @@ object KFVCFUtils {
     }
   }
 
-  private case object V2 extends VCFVersion {
+  case object V2 extends VCFVersion {
     override def loadVersion(df: DataFrame): DataFrame = {
       df
         .withColumn("genotype", explode(col("genotypes")))
+    }
+  }
+
+  case object V2_WITHOUT_PG extends VCFVersion {
+    override def loadVersion(df: DataFrame): DataFrame = {
+      df
+        .withColumn("genotype", explode(col("genotypes")))
+        .withColumn("INFO_PG", lit(null).cast(ArrayType(IntegerType)))
     }
   }
 }
