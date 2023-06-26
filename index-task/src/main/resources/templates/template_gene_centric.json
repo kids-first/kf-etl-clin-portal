@@ -5,7 +5,16 @@
   "priority": 1,
   "template": {
     "settings": {
-      "number_of_shards": 1
+      "number_of_shards": 1,
+      "analysis": {
+        "normalizer": {
+          "custom_normalizer": {
+            "type": "custom",
+            "char_filter": [],
+            "filter": "lowercase"
+          }
+        }
+      }
     },
     "mappings": {
       "properties": {
@@ -99,6 +108,10 @@
         },
         "symbol": {
           "type": "keyword"
+        },
+        "search_text": {
+          "type": "keyword",
+          "normalizer" : "custom_normalizer"
         }
       }
     }
