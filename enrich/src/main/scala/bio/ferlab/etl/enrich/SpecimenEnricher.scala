@@ -41,9 +41,13 @@ class SpecimenEnricher(studyIds: List[String])(implicit configuration: Configura
     val familyDF = data(family.id).select(col("family_members_id"), col("fhir_id") as "family_fhir_id", col("family_id"))
     val affectedStatus = data(disease.id).select("participant_fhir_id", "affected_status").where($"affected_status").groupBy("participant_fhir_id").agg(first("affected_status") as "affected_status")
 
+    val relationParticipants = data(patient.id).select($"fhir_id" as "related_participant_fhir_id", $"participant_id"  as "related_participant_id")
+
     val relations = data(family_relationship.id)
-      .select($"participant2_fhir_id" as "participant_fhir_id", $"participant1_fhir_id" as "related_participant_id", $"participant1_to_participant_2_relationship" as "relation")
+      .select($"participant2_fhir_id" as "participant_fhir_id", $"participant1_fhir_id" as "related_participant_fhir_id", $"participant1_to_participant_2_relationship" as "relation")
       .where($"relation" isin("father", "mother"))
+      .join(relationParticipants, Seq("related_participant_fhir_id"))
+      .drop("related_participant_fhir_id")
       .groupBy("participant_fhir_id")
       .agg(collect_list(struct($"related_participant_id", $"relation")) as "relations")
       .withColumn("family", struct(

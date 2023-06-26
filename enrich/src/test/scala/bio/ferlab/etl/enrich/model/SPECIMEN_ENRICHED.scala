@@ -20,5 +20,5 @@ case class SPECIMEN_ENRICHED(participant_fhir_id: String = "P3",
                              study_code: String = "KF-COG-ALL"
                             )
 
-case class FAMILY_ENRICHED(`father_id`: String = "P2",
-                           `mother_id`: String = "P1")
+case class FAMILY_ENRICHED(`father_id`: String = "PT_2",
+                           `mother_id`: String = "PT_1")
