@@ -10,6 +10,7 @@ package object etl {
   val SYS_PROGRAMS_KF = "https://kf-api-dataservice.kidsfirstdrc.org/studies?program="
   val SYS_DATA_ACCESS_TYPES = "https://includedcc.org/fhir/code-systems/data_access_types"
   val SYS_YES_NO = "http://terminology.hl7.org/CodeSystem/v2-0136"
-  val SYS_SHORT_CODE_KF = "https://kf-api-dataservice.kidsfirstdrc.org/studies?short_code="
+  val SYS_SHORT_CODE_KF = "https://includedcc.org/fhir/code-systems/study_codes"
+  val SYS_SAMPLE_TYPE = "https://includedcc.org/fhir/code-systems/sample_types"
   val SYS_FAMILY_TYPES = "https://includedcc.org/fhir/code-systems/family_types"
 }

@@ -267,7 +267,7 @@ object Transformations {
   private def extractSpSampleType(isFlatSpecimenModel: Boolean): Column = if (isFlatSpecimenModel) {
     col("type")("coding")(1)("display")
   } else {
-    filter(col("type")("coding"), c => c("system").endsWith("/specimen/sample_type"))(0)("display")
+    firstSystemEquals(col("type")("coding"), SYS_SAMPLE_TYPE)("display")
   }
 
   def specimenMappings(isFlatSpecimenModel: Boolean): List[Transformation] = List(
