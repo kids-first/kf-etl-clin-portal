@@ -18,7 +18,8 @@ object VariantIndexTask extends App {
   jobType, // variant_centric, variants_suggestions, gene_centric, genes_suggestions
   configFile, // config/qa-[project].conf or config/prod.conf or config/dev-[project].conf
   input,
-  chromosome
+  chromosome,
+  sample
   ) = args
 
   implicit val conf: Configuration = ConfigurationLoader.loadFromResources[SimpleConfiguration](configFile)
@@ -34,6 +35,7 @@ object VariantIndexTask extends App {
     "es.nodes.wan.only" -> "true",
     "es.wan.only" -> "true",
     "spark.es.nodes.wan.only" -> "true",
+    "es.batch.write.retry.count" -> "0",
     "es.port" -> esPort)
 
   private val esConfigs = esUsername.map(username =>
@@ -62,7 +64,6 @@ object VariantIndexTask extends App {
   }
 
 
-
   println(s"Run Index Task to fill index $indexName")
 
   val df: DataFrame = chromosome match {
@@ -75,9 +76,13 @@ object VariantIndexTask extends App {
         .where(col("chromosome") === chr)
   }
 
+  val sampleDF = sample match {
+    case "all" => df
+    case s => df.sample(s.toDouble)
+  }
 
   new Indexer("index", templatePath, indexName)
-    .run(df)
+    .run(sampleDF)
 
 
 }

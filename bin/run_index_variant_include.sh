@@ -5,7 +5,8 @@ release_id=$1
 chromosome=${2:-"all"}
 env=${3:-"qa"}
 job=${4:-"variant_centric"}
-input=${5:-"s3a://include-373997854230-datalake-$env/es_index"}
+sample=${5:-"all"}
+input=${6:-"s3a://include-373997854230-datalake-$env/es_index"}
 instance_type="m5.4xlarge"
 instance_count="1"
 if [ "$env" = "prd" ]
@@ -33,7 +34,8 @@ steps=$(cat <<EOF
        "${job}",
        "config/${env}-include.conf",
        "${input}/${job}",
-       "${chromosome}"
+       "${chromosome}",
+       "${sample}"
      ],
      "Type": "CUSTOM_JAR",
      "ActionOnFailure": "CONTINUE",
