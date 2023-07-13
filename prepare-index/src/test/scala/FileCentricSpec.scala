@@ -1,4 +1,5 @@
 import bio.ferlab.datalake.commons.config.{Configuration, ConfigurationLoader}
+import bio.ferlab.datalake.testutils.WithSparkSession
 import bio.ferlab.fhir.etl.centricTypes.FileCentric
 import model._
 import org.apache.spark.sql.DataFrame

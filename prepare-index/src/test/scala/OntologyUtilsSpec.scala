@@ -1,3 +1,4 @@
+import bio.ferlab.datalake.testutils.WithSparkSession
 import bio.ferlab.fhir.etl.common.OntologyUtils.{addDiseases, firstCategory}
 import model.AGE_AT_EVENT
 import org.apache.spark.sql.Row

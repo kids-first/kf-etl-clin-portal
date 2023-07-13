@@ -1,5 +1,6 @@
 package bio.ferlab.fhir.etl
 
+import bio.ferlab.datalake.testutils.WithSparkSession
 import bio.ferlab.fhir.etl.Utils.{age_on_set, extractFirstForSystem, retrieveRepository, sanitizeFilename}
 import org.apache.spark.sql.functions.col
 import org.scalatest.flatspec.AnyFlatSpec

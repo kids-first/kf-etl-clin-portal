@@ -14,7 +14,7 @@ object RunEnriched extends SparkApp {
 
   log.info(s"Job: $jobName")
   log.info(s"runType: ${steps.mkString(" -> ")}")
-  private val variants = new Variants(snvDatasetId = "normalized_snv", frequencies = Seq(
+  private val variants = new Variants(snvDatasetId = "normalized_snv",frequencies = Seq(
     FrequencySplit(
       "studies",
       splitBy = Some(col("study_id")), byAffected = false,

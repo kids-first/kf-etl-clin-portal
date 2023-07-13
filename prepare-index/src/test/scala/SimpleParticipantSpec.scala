@@ -1,4 +1,5 @@
 import bio.ferlab.datalake.spark3.loader.GenericLoader.read
+import bio.ferlab.datalake.testutils.WithSparkSession
 import bio.ferlab.fhir.etl.centricTypes.SimpleParticipant
 import model._
 import org.apache.spark.sql.DataFrame
