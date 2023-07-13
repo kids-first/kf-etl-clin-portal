@@ -34,8 +34,10 @@ object VariantIndexTask extends App {
     "es.nodes" -> esNodes,
     "es.nodes.wan.only" -> "true",
     "es.wan.only" -> "true",
+    "es.http.timeout" -> "2m",
     "spark.es.nodes.wan.only" -> "true",
     "es.batch.write.retry.count" -> "0",
+    "es.batch.size.entries" -> "500",
     "es.port" -> esPort)
 
   private val esConfigs = esUsername.map(username =>
@@ -48,6 +50,11 @@ object VariantIndexTask extends App {
 
   implicit val spark: SparkSession = SparkSession.builder
     .config(sparkConfigs)
+    //DO NOT RETRY FAILED TASKS : Avoid document duplication in elastic search
+    .config("spark.task.maxFailures", 1)
+    .config("spark.excludeOnFailure.enable", false)
+    .config("spark.yarn.maxAppAttempts" ,1)
+    .config("spark.yarn.excludeDecommissioningNodes.enabled", false)
     .enableHiveSupport()
     .appName(s"IndexTask")
     .getOrCreate()

@@ -1,11 +1,13 @@
 #!/bin/bash
 set -x
 
-chromosome=$1
-env=${2:-"qa"}
-index=${3:-"variant_centric"}
+
+env=${1:-"qa"}
+index=${2:-"variant_centric"}
 instance_type="m5.4xlarge"
 instance_count="1"
+
+
 if [ "$env" = "prd" ]
 then
   subnet="subnet-0cdbe9ba6231146b5"
@@ -23,7 +25,7 @@ steps=$(cat <<EOF
        "s3",
        "rm",
        "--recursive",
-       "s3://include-373997854230-datalake-${env}/es_index/$index/chromosome=$chromosome/"
+       "s3://include-373997854230-datalake-${env}/es_index/$index/"
      ],
      "Type": "CUSTOM_JAR",
      "ActionOnFailure": "CONTINUE",

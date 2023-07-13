@@ -3,7 +3,9 @@ import sbtassembly.AssemblyPlugin.autoImport.assembly
 lazy val fhavro_export = project in file("fhavro-export")
 
 val sparkDepsSetting = Seq(
-  libraryDependencies ++= Seq("bio.ferlab" %% "datalake-spark3" % "8.5.3",
+  libraryDependencies ++= Seq(
+    "bio.ferlab" %% "datalake-spark3" % "8.9.0",
+    "bio.ferlab" %% "datalake-test-utils" % "8.9.0" % Test,
     "org.apache.spark" %% "spark-sql" % "3.3.2" % Provided, //emr-6.11.0
     "org.apache.spark" %% "spark-hive" % "3.3.2" % Provided, //emr-6.11.0
     "org.apache.hadoop" % "hadoop-client" % "3.3.3" % Provided, //emr-6.11.0

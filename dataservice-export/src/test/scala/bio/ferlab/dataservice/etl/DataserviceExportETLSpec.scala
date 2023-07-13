@@ -3,6 +3,7 @@ package bio.ferlab.dataservice.etl
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import bio.ferlab.datalake.commons.config.SimpleConfiguration
+import bio.ferlab.datalake.testutils.WithSparkSession
 import bio.ferlab.dataservice.etl.model.ESequencingExperiment
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpec

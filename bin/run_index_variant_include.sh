@@ -7,7 +7,7 @@ env=${3:-"qa"}
 job=${4:-"variant_centric"}
 sample=${5:-"all"}
 input=${6:-"s3a://include-373997854230-datalake-$env/es_index"}
-instance_type="m5.4xlarge"
+instance_type="m5.xlarge"
 instance_count="1"
 if [ "$env" = "prd" ]
 then

@@ -4,6 +4,7 @@ import bio.ferlab.datalake.commons.config.Format.{AVRO, DELTA}
 import bio.ferlab.datalake.commons.config.LoadType.{OverWrite, OverWritePartition}
 import bio.ferlab.datalake.commons.config.{Configuration, DatalakeConf, DatasetConf, SimpleConfiguration, StorageConf, TableConf}
 import bio.ferlab.datalake.commons.file.FileSystemType.S3
+import bio.ferlab.datalake.testutils.WithSparkSession
 import bio.ferlab.fhir.etl.config.ETLConfiguration
 import bio.ferlab.fhir.etl.fhavro.FhavroToNormalizedMappings.{generateFhirIdColumValueFromIdColum, mappings}
 import org.apache.spark.sql.functions.col
