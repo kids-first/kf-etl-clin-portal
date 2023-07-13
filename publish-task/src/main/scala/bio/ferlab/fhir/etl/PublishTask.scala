@@ -30,7 +30,7 @@ object PublishTask extends App {
       val newIndexName = s"${job}_${studyId}_$release_id".toLowerCase
       println(s"Add $newIndexName to alias $job")
 
-      val oldIndexName = Publisher.retrievePreviousIndex(job, studyId, esNodes.split(',').head)
+      val oldIndexName = Publisher.retrievePreviousIndex(job, studyId)
       oldIndexName.foreach(old => println(s"Remove $old from alias $job"))
 
       Publisher.publish(job, newIndexName, oldIndexName)
