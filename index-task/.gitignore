@@ -1,8 +1,0 @@
-.idea
-*.iml
-project/target
-target
-derby.log
-spark-warehouse
-.bsp
-.DS_Store

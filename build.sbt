@@ -11,6 +11,7 @@ val sparkDepsSetting = Seq(
     "org.apache.hadoop" % "hadoop-client" % "3.3.3" % Provided, //emr-6.11.0
     "org.apache.hadoop" % "hadoop-aws" % "3.3.3" % Provided, //emr-6.11.0
     "io.delta" %% "delta-core" % "2.2.0" % Provided, //emr-6.11.0
+    "com.typesafe.play" %% "play-ahc-ws-standalone" % "2.0.3" % Provided, //Used by dataservice normalize
     "org.scalatest" %% "scalatest" % "3.2.9" % Test
   )
 )
@@ -41,16 +42,11 @@ val commonSettings = Seq(
 
 )
 lazy val config = (project in file("config")).settings(sparkDepsSetting)
-lazy val dataservice_export = (project in file("dataservice-export")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
-
-lazy val import_task = (project in file("import-task")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
 
 lazy val prepare_index = (project in file("prepare-index")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
 
 lazy val variant_task = (project in file("variant-task")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
 
-lazy val index_task = (project in file("index-task")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
-
-lazy val publish_task = (project in file("publish-task")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
-
 lazy val enrich_task = (project in file("enrich")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
+
+lazy val etl = (project in file("etl")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
