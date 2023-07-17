@@ -14,11 +14,11 @@ case class SPECIMEN_ENRICHED(participant_fhir_id: String = "P3",
                              is_proband: Boolean = true,
                              family_fhir_id: String = "G1",
                              family_id: String = "FM_NV901ZZN",
-                             family: Option[FAMILY_ENRICHED] = Some(FAMILY_ENRICHED()),
+                             family: Option[SPECIMEN_FAMILY_ENRICHED] = Some(SPECIMEN_FAMILY_ENRICHED()),
                              affected_status: Boolean = false,
                              study_id: String = "SD_Z6MWD3H0",
                              study_code: String = "KF-COG-ALL"
                             )
 
-case class FAMILY_ENRICHED(`father_id`: String = "PT_2",
-                           `mother_id`: String = "PT_1")
+case class SPECIMEN_FAMILY_ENRICHED(`father_id`: String = "P2",
+                                    `mother_id`: String = "P1")

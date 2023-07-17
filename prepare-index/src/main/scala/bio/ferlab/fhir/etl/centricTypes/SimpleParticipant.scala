@@ -23,6 +23,7 @@ class SimpleParticipant(studyIds: List[String])(implicit configuration: Configur
   val normalized_group: DatasetConf = conf.getDataset("normalized_group")
   val hpo_terms: DatasetConf = conf.getDataset("hpo_terms")
   val mondo_terms: DatasetConf = conf.getDataset("mondo_terms")
+  val enriched_family: DatasetConf = conf.getDataset("enriched_family")
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
@@ -52,7 +53,7 @@ class SimpleParticipant(studyIds: List[String])(implicit configuration: Configur
         .addDownSyndromeDiagnosis(disease,data(mondo_terms.id))
         .addOutcomes(data(normalized_vital_status.id))
         .addProband(data(normalized_proband_observation.id))
-        .addFamily(data(normalized_group.id), data(normalized_family_relationship.id))
+        .addFamily(data(normalized_group.id), data(normalized_family_relationship.id), data(enriched_family.id))
         .withColumnRenamed("gender", "sex")
         .withColumn("age_at_data_collection", lit(111)) // TODO
         .withColumn("study_external_id", col("study")("external_id"))
