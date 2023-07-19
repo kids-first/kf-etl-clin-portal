@@ -40,11 +40,18 @@ class FamilyEnricherSpec extends AnyFlatSpec with Matchers with WithSparkSession
 
     val familyEnriched = resultDF.as[FAMILY_ENRICHED].collect()
     familyEnriched
-      .find(_.`participant_fhir_id` == "px") shouldBe Some(FAMILY_ENRICHED(
-      family_fhir_id = "gyxz", participant_fhir_id = "px", relations = Seq(RELATION(`fhir_id` = "pz", `role` = "father"), RELATION(`fhir_id` = "py", `role` = "mother"), RELATION(`fhir_id` = "px", `role` = "proband"))
+      .find(_.proband_participant_id == "px") shouldBe Some(
+      FAMILY_ENRICHED(
+        family_fhir_id = "gyxz",
+        proband_participant_id = "px",
+        relations = Seq(
+          RELATION(`fhir_id` = "pz", `role` = "father"),
+          RELATION(`fhir_id` = "py", `role` = "mother"),
+          RELATION(`fhir_id` = "px", `role` = "proband")
+        )
     ))
     familyEnriched
-      .find(_.`participant_fhir_id` == "ps") shouldBe None
+      .find(_.proband_participant_id == "ps") shouldBe None
   }
 
 }

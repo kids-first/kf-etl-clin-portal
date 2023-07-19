@@ -2,7 +2,7 @@ package bio.ferlab.etl.enrich.model
 
 case class FAMILY_ENRICHED(
                             family_fhir_id: String = "f",
-                            participant_fhir_id: String = "p",
+                            proband_participant_id: String = "p",
                             relations: Seq[RELATION] = Seq.empty,
                           )
 

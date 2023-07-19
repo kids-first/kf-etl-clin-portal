@@ -335,11 +335,9 @@ object Utils {
       df.join(reformatParticipant, "participant_fhir_id")
     }
 
-  
-    def addFamily(groupDf: DataFrame, familyRelationshipDf: DataFrame, enrichedFamilyDf: DataFrame): DataFrame = {
-      //TODO not fully implemented!
-      val participantIdMapping = df.select(col("fhir_id") as "participant_fhir_id", col("participant_id"))
 
+    def addFamily(groupDf: DataFrame, enrichedFamilyDf: DataFrame): DataFrame = {
+      // NOTE: expects a df with proband information!
       val reformattedFamily = groupDf
         .select(
           col("family_members_id"),
@@ -348,52 +346,63 @@ object Utils {
           col("family_type_from_system")
         )
 
+      val NB_TRIO = 3
+      val NB_DUO = 2
+
       val enrichedReformattedFamily = reformattedFamily
         .join(
           enrichedFamilyDf,
           array_contains(col("family_members_id"), enrichedFamilyDf("participant_fhir_id")),
           "left_outer"
         )
-
-      enrichedReformattedFamily
-        //todo complete + drop
         .withColumn("nb_members", size(col("family_members_id")))
-        .withColumn("has_mother_and_father", null)
-        .withColumn("has_mother_or_father_but_not_both", null)
-        .withColumn("is_trio+", null)
-        .withColumn("is_trio", null)
-        .withColumn("is_duo+", null)
-        .withColumn("is_duo", null)
-        .withColumn("is_proband_only", null)
-        .withColumn("other", null)
+        .withColumn("parents", array_distinct(filter(col("relations.role"), r => r === "mother" || r === "father")))
+        .withColumn("has_mother_and_father",
+          size(col("parents")) === 2
+        )
+        .withColumn("has_mother_or_father_but_not_both",
+          size(col("parents")) === 1
+        )
+        .withColumn("trio+", when(col("nb_members") > NB_TRIO && col("has_mother_and_father"), "trio+"))
+        .withColumn("trio", when(col("nb_members") === NB_TRIO && col("has_mother_and_father"), "trio"))
+        .withColumn("duo+", when(col("nb_members") > NB_DUO && col("has_mother_or_father_but_not_both"), "duo+"))
+        .withColumn("duo", when(col("nb_members") === NB_DUO && col("has_mother_or_father_but_not_both"), "duo"))
         .withColumn(
-          "family_type_computation",
+          "family_type_families_with_proband_computation",
           coalesce(
-            col("is_trio+"),
-            col("is_trio"),
-            col("is_duo+"),
-            col("is_duo"),
-            col("is_proband_only"),
-            col("other"),
+            col("trio+"),
+            col("trio"),
+            col("duo+"),
+            col("duo"),
+            lit("other"),
           ))
-        .withColumn("family_type_computation",
-          when(col("has_both_parent") && col("nb_members") >= 3,
-            when(col("nb_members") === 3, "trio").otherwise("trio+")
-          ).when((col("has_father") || col("has_mother")) && col("nb_members") >= 2,
-            when(col("nb_members") === 2, "duo").otherwise("duo+")
-          ).when(col("nb_members") === 0, "proband-only")
-            .otherwise("other")
+
+        //adapt for INCLUDE and KF projects
+        .withColumn("family_type_families_with_proband",
+          coalesce(
+            // lower to make sure that we match values from col("family_type_families_with_proband_computation") (all lower case)
+            lower(col("family_type_from_system")),
+            col("family_type_families_with_proband_computation")
+          )
         )
-        .withColumn("family_type",
-          // lower to make sure that we match values from col("family_type_computation") (all lower case)
-          coalesce(lower(col("family_type_from_system")), col("family_type_computation"))
-        )
-        .withColumn("family_type", coalesce(col("family_type"), lit("proband-only")))
-        .withColumn("family", struct(
+        .withColumn("family_roles_to_proband", struct(
           col("relations") as "relations_to_proband",
           col("family_id") as "family_id"
         ))
-        .drop("family_fhir_id", "family_members_id", "family_type_from_system", "family_type_computation")
+        .drop(
+          "family_type_families_with_proband_computation",
+          "family_fhir_id",
+          "family_members_id",
+          "family_type_from_system",
+          "nb_members",
+          "parents",
+          "has_mother_and_father",
+          "has_mother_or_father_but_not_both",
+          "trio+",
+          "trio",
+          "duo+",
+          "duo",
+        )
 
       df
         .join(
@@ -402,6 +411,19 @@ object Utils {
           "left_outer"
         )
         .withColumnRenamed("family_id", "families_id")
+        .withColumnRenamed("relations", "relations_to_proband")
+
+        .withColumn(
+          "family_type",
+          when(
+            col("families_id").isNull && col("is_proband"), "proband-only"
+          )
+            .otherwise(col("family_type_families_with_proband"))
+        )
+        .drop(col("family_type_families_with_proband"))
+        // Dropping for "col enrichedReformattedFamily("participant_fhir_id")" is the fhir id of the proband
+        .drop(enrichedReformattedFamily("participant_fhir_id"))
+
     }
   }
 }
