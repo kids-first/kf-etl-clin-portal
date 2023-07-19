@@ -3,7 +3,7 @@ package bio.ferlab.etl.enrich
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
 import bio.ferlab.datalake.spark3.etl.ETLSingleDestination
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
-import org.apache.spark.sql.functions.{array, array_contains, array_union, coalesce, col, collect_list, explode, first, lit, struct}
+import org.apache.spark.sql.functions.{array, array_contains, array_union, coalesce, col, collect_list, collect_set, explode, first, lit, struct}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import java.time.LocalDateTime
@@ -25,36 +25,18 @@ class FamilyEnricher(studyIds: List[String])(implicit configuration: Configurati
   }
 
   override def transformSingle(data: Map[String, DataFrame], lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime)(implicit spark: SparkSession): DataFrame = {
-    /**
-     * We find all families where one of its members is a proband.
-     * A relation mapping for every one of these particular families is built.
-     *  More precisely, we have the role of every member from the point of view of the proband.
-     *  Given the family, {p, pf, pm} with get:
-     *    [{p, role: proband}, {pf, role: father}, {pm, role: mother}]
-     * Therefore, the output may look like (pls make sure that this comment is up-to-date!)
-     *
-     * +--------------+------------+-----------------------------------+------------+
-     * |participant_id|families_id|family                              |family_type |
-     * +--------------+-----------+------------------------------------+------------+
-     * |p            |f           |{[{p, proband}, {pm, mother}], f}   |duo         |
-     * |pm           |f           |{[{p, proband}, {pm, mother}], f}   |duo         |
-     * +--------------+------------+-----------------------------------+------------+
-     * */
     val patients = data(normalized_patient.id)
     val probandObservations = data(normalized_proband_observation.id)
     val groups = data(normalized_group.id)
     val familyRelationships = data(normalized_family_relationship.id)
+
 
     val probands = patients
       .select(
         col("fhir_id") as "participant_fhir_id",
         col("participant_id")
       )
-      .join(
-        // Possible code repeat across different modules.
-        probandObservations.select("participant_fhir_id", "is_proband"),
-        Seq("participant_fhir_id"),
-        "left_outer")
+      .join(probandObservations.select("participant_fhir_id", "is_proband"), Seq("participant_fhir_id"), "left_outer")
       .withColumn("is_proband", coalesce(col("is_proband"), lit(false)))
       .where(col("is_proband"))
       .select(
@@ -62,17 +44,13 @@ class FamilyEnricher(studyIds: List[String])(implicit configuration: Configurati
         "participant_id"
       )
 
+
     val familiesWithProband = groups
       .join(probands, array_contains(groups("family_members_id"), probands("participant_fhir_id")), "inner")
       .select(
-        probands("participant_fhir_id") as "proband_fhir_id",
+        probands("participant_fhir_id") as "participant_fhir_id",
+        probands("participant_id") as "participant_id",
         groups("fhir_id") as "family_fhir_id"
-      )
-
-    val patientsFhirIdToParticipantId = patients
-      .select(
-        col("fhir_id") as "fhir_id_from_pt",
-        col("participant_id")
       )
 
     val fr = familyRelationships
@@ -82,45 +60,24 @@ class FamilyEnricher(studyIds: List[String])(implicit configuration: Configurati
         col("participant1_to_participant_2_relationship") as "role_of_subject_from_focus_view"
       )
 
-    val frWithProbandId = fr
-      .join(
-        familiesWithProband,
-        fr("pt_fhir_id_with_focus") === familiesWithProband("proband_fhir_id")
-      )
-      .drop("proband_fhir_id")
+    val probandJoinedFamilyJoinedRelation = fr
+      .join(familiesWithProband, fr("pt_fhir_id_with_focus") === familiesWithProband("participant_fhir_id"))
+      .drop("participant_fhir_id")
 
-    val frWithProbandIdWithFocusId = frWithProbandId
-      .join(
-        patientsFhirIdToParticipantId,
-        frWithProbandId("pt_fhir_id_with_focus") === patientsFhirIdToParticipantId("fhir_id_from_pt"),
-        "left"
-      )
-      .withColumnRenamed("participant_id", "participant_focus_id")
-      .drop(patientsFhirIdToParticipantId("fhir_id_from_pt"))
-
-    val frWithProbandIdWithFocusIdWithSubjectId = frWithProbandIdWithFocusId
-      .join(
-        patientsFhirIdToParticipantId,
-        frWithProbandId("pt_fhir_id_of_subject") === patientsFhirIdToParticipantId("fhir_id_from_pt"),
-        "left"
-      )
-      .withColumnRenamed("participant_id", "participant_subject_id")
-      .drop(patientsFhirIdToParticipantId("fhir_id_from_pt"))
-
-
-    val relationsFromProbandViewByFamily = frWithProbandIdWithFocusIdWithSubjectId
+    val relationsFromProbandViewByFamily = probandJoinedFamilyJoinedRelation
       .groupBy("family_fhir_id")
       .agg(
+        collect_set(col("participant_id"))(0) as "proband_participant_id",
         array_union(
           collect_list(
             struct(
-              col("participant_subject_id") as "participant_id",
+              col("pt_fhir_id_of_subject") as "fhir_id",
               col("role_of_subject_from_focus_view") as "role"
             )
           ),
           array(
             struct(
-              first(col("participant_focus_id")) as "participant_id",
+              first(col("pt_fhir_id_with_focus")) as "fhir_id",
               lit("proband") as "role"
             )
           )
