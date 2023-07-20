@@ -376,13 +376,13 @@
                 "family_id": {
                   "type": "keyword"
                 },
-                "family_roles_to_proband": {
+                "relations_to_proband": {
                   "type": "nested",
                   "properties": {
                     "role": {
                       "type": "keyword"
                     },
-                    "fhir_id": {
+                    "participant_id": {
                       "type": "keyword"
                     }
                   }
