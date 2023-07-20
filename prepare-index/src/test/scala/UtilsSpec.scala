@@ -172,19 +172,17 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
       FAMILY_ENRICHED(
         family_fhir_id = "ff21",
         participant_fhir_id = "f21",
-        proband_participant_id = "p21",
         relations = Seq(
-          RELATION(`fhir_id` = "f21", `role` = "proband"),
-          RELATION(`fhir_id` = "f22", `role` = "mother")
+          RELATION(`participant_id` = "p21", `role` = "proband"),
+          RELATION(`participant_id` = "p22", `role` = "mother")
         )
       ),
       FAMILY_ENRICHED(
         family_fhir_id = "ff21",
         participant_fhir_id = "f22",
-        proband_participant_id = "p21",
         relations = Seq(
-          RELATION(`fhir_id` = "f21", `role` = "proband"),
-          RELATION(`fhir_id` = "f22", `role` = "mother")
+          RELATION(`participant_id` = "p21", `role` = "proband"),
+          RELATION(`participant_id` = "p22", `role` = "mother")
         )
       )
     )
@@ -206,31 +204,28 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
       FAMILY_ENRICHED(
         family_fhir_id = "ff21+",
         participant_fhir_id = "f21+",
-        proband_participant_id = "p21+",
         relations = Seq(
-          RELATION(`fhir_id` = "f21+", `role` = "proband"),
-          RELATION(`fhir_id` = "f22+", `role` = "father"),
-          RELATION(`fhir_id` = "f23+", `role` = "sibling"),
+          RELATION(`participant_id` = "p21+", `role` = "proband"),
+          RELATION(`participant_id` = "p22+", `role` = "father"),
+          RELATION(`participant_id` = "p23+", `role` = "sibling"),
         )
       ),
       FAMILY_ENRICHED(
         family_fhir_id = "ff21+",
         participant_fhir_id = "f22+",
-        proband_participant_id = "p21+",
         relations = Seq(
-          RELATION(`fhir_id` = "f21+", `role` = "proband"),
-          RELATION(`fhir_id` = "f22+", `role` = "father"),
-          RELATION(`fhir_id` = "f23+", `role` = "sibling"),
+          RELATION(`participant_id` = "p21+", `role` = "proband"),
+          RELATION(`participant_id` = "p22+", `role` = "father"),
+          RELATION(`participant_id` = "p23+", `role` = "sibling"),
         )
       ),
       FAMILY_ENRICHED(
         family_fhir_id = "ff21+",
         participant_fhir_id = "f23+",
-        proband_participant_id = "p21+",
         relations = Seq(
-          RELATION(`fhir_id` = "f21+", `role` = "proband"),
-          RELATION(`fhir_id` = "f22+", `role` = "father"),
-          RELATION(`fhir_id` = "f23+", `role` = "sibling"),
+          RELATION(`participant_id` = "p21+", `role` = "proband"),
+          RELATION(`participant_id` = "p22+", `role` = "father"),
+          RELATION(`participant_id` = "p23+", `role` = "sibling"),
         )
       )
     )
@@ -252,31 +247,28 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
       FAMILY_ENRICHED(
         family_fhir_id = "ff31",
         participant_fhir_id = "f31",
-        proband_participant_id = "p31",
         relations = Seq(
-          RELATION(`fhir_id` = "f31", `role` = "proband"),
-          RELATION(`fhir_id` = "f32", `role` = "mother"),
-          RELATION(`fhir_id` = "f33", `role` = "father")
+          RELATION(`participant_id` = "p31", `role` = "proband"),
+          RELATION(`participant_id` = "p32", `role` = "mother"),
+          RELATION(`participant_id` = "p33", `role` = "father")
         )
       ),
       FAMILY_ENRICHED(
         family_fhir_id = "ff31",
         participant_fhir_id = "f32",
-        proband_participant_id = "p31",
         relations = Seq(
-          RELATION(`fhir_id` = "f31", `role` = "proband"),
-          RELATION(`fhir_id` = "f32", `role` = "mother"),
-          RELATION(`fhir_id` = "f33", `role` = "father")
+          RELATION(`participant_id` = "p31", `role` = "proband"),
+          RELATION(`participant_id` = "p32", `role` = "mother"),
+          RELATION(`participant_id` = "p33", `role` = "father")
         )
       ),
       FAMILY_ENRICHED(
         family_fhir_id = "ff31",
         participant_fhir_id = "f33",
-        proband_participant_id = "p31",
         relations = Seq(
-          RELATION(`fhir_id` = "f31", `role` = "proband"),
-          RELATION(`fhir_id` = "f32", `role` = "mother"),
-          RELATION(`fhir_id` = "f33", `role` = "father")
+          RELATION(`participant_id` = "p31", `role` = "proband"),
+          RELATION(`participant_id` = "p32", `role` = "mother"),
+          RELATION(`participant_id` = "p33", `role` = "father")
         )
       )
     )
@@ -300,45 +292,41 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
       FAMILY_ENRICHED(
         family_fhir_id = "ff31+",
         participant_fhir_id = "f31+",
-        proband_participant_id = "p31+",
         relations = Seq(
-          RELATION(`fhir_id` = "f31+", `role` = "proband"),
-          RELATION(`fhir_id` = "f32+", `role` = "mother"),
-          RELATION(`fhir_id` = "f33+", `role` = "father"),
-          RELATION(`fhir_id` = "f34+", `role` = "sibling")
+          RELATION(`participant_id` = "p31+", `role` = "proband"),
+          RELATION(`participant_id` = "p32+", `role` = "mother"),
+          RELATION(`participant_id` = "p33+", `role` = "father"),
+          RELATION(`participant_id` = "p34+", `role` = "sibling")
         )
       ),
       FAMILY_ENRICHED(
         family_fhir_id = "ff31+",
         participant_fhir_id = "f32+",
-        proband_participant_id = "p31+",
         relations = Seq(
-          RELATION(`fhir_id` = "f31+", `role` = "proband"),
-          RELATION(`fhir_id` = "f32+", `role` = "mother"),
-          RELATION(`fhir_id` = "f33+", `role` = "father"),
-          RELATION(`fhir_id` = "f34+", `role` = "sibling")
+          RELATION(`participant_id` = "p31+", `role` = "proband"),
+          RELATION(`participant_id` = "p32+", `role` = "mother"),
+          RELATION(`participant_id` = "p33+", `role` = "father"),
+          RELATION(`participant_id` = "p34+", `role` = "sibling")
         )
       ),
       FAMILY_ENRICHED(
         family_fhir_id = "ff31+",
         participant_fhir_id = "f33+",
-        proband_participant_id = "p31+",
         relations = Seq(
-          RELATION(`fhir_id` = "f31+", `role` = "proband"),
-          RELATION(`fhir_id` = "f32+", `role` = "mother"),
-          RELATION(`fhir_id` = "f33+", `role` = "father"),
-          RELATION(`fhir_id` = "f34+", `role` = "sibling")
+          RELATION(`participant_id` = "p31+", `role` = "proband"),
+          RELATION(`participant_id` = "p32+", `role` = "mother"),
+          RELATION(`participant_id` = "p33+", `role` = "father"),
+          RELATION(`participant_id` = "p34+", `role` = "sibling")
         )
       ),
       FAMILY_ENRICHED(
         family_fhir_id = "ff31+",
         participant_fhir_id = "f34+",
-        proband_participant_id = "p31+",
         relations = Seq(
-          RELATION(`fhir_id` = "f31+", `role` = "proband"),
-          RELATION(`fhir_id` = "f32+", `role` = "mother"),
-          RELATION(`fhir_id` = "f33+", `role` = "father"),
-          RELATION(`fhir_id` = "f34+", `role` = "sibling")
+          RELATION(`participant_id` = "p31+", `role` = "proband"),
+          RELATION(`participant_id` = "p32+", `role` = "mother"),
+          RELATION(`participant_id` = "p33+", `role` = "father"),
+          RELATION(`participant_id` = "p34+", `role` = "sibling")
         )
       )
     )
@@ -371,19 +359,17 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
       FAMILY_ENRICHED(
         family_fhir_id = "ff01s",
         participant_fhir_id = "f01s",
-        proband_participant_id = "p01s",
         relations = Seq(
-          RELATION(`fhir_id` = "f01s", `role` = "proband"),
-          RELATION(`fhir_id` = "f02s", `role` = "sibling")
+          RELATION(`participant_id` = "p01s", `role` = "proband"),
+          RELATION(`participant_id` = "p02s", `role` = "sibling")
         )
       ),
       FAMILY_ENRICHED(
         family_fhir_id = "ff01s",
         participant_fhir_id = "f02s",
-        proband_participant_id = "p01s",
         relations = Seq(
-          RELATION(`fhir_id` = "f01s", `role` = "proband"),
-          RELATION(`fhir_id` = "f02s", `role` = "sibling")
+          RELATION(`participant_id` = "p01s", `role` = "proband"),
+          RELATION(`participant_id` = "p02s", `role` = "sibling")
         )
       )
     )
@@ -415,7 +401,11 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
 
     val results = inputPatients
       .addFamily(inputGroups, inputEnrichedFamilies)
-      .select(col("fhir_id"), col("family_roles_to_proband"), col("family_type"))
+      .select(
+        col("fhir_id"),
+        col("family"),
+        col("family_type")
+      )
       .as[(String, FAMILY_ROLES_TO_PROBAND, String)]
       .collect()
 

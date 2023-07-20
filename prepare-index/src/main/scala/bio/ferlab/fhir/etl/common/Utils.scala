@@ -2,8 +2,7 @@ package bio.ferlab.fhir.etl.common
 
 import bio.ferlab.fhir.etl.common.OntologyUtils._
 import org.apache.spark.sql.{Column, DataFrame}
-import org.apache.spark.sql.expressions.{UserDefinedFunction, Window}
-import org.apache.spark.sql.functions.{when, _}
+import org.apache.spark.sql.functions.{col, when, _}
 
 object Utils {
   val DOWN_SYNDROM_MONDO_TERM = "MONDO:0008608"
@@ -385,7 +384,8 @@ object Utils {
             col("family_type_families_with_proband_computation")
           )
         )
-        .withColumn("family_roles_to_proband", struct(
+        //roles_to_proband_by_family
+        .withColumn("family", struct(
           col("relations") as "relations_to_proband",
           col("family_id") as "family_id"
         ))
@@ -423,7 +423,7 @@ object Utils {
         .drop(col("family_type_families_with_proband"))
         // Dropping for "col enrichedReformattedFamily("participant_fhir_id")" is the fhir id of the proband
         .drop(enrichedReformattedFamily("participant_fhir_id"))
-
+        .drop( col("relations_to_proband"))
     }
   }
 }
