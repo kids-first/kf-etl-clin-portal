@@ -1,6 +1,6 @@
 package model
 
-
+case class TEST()
 case class SIMPLE_PARTICIPANT(
                                fhir_id: String = "38734",
                                participant_facet_ids: PARTICIPANT_FACET_IDS = PARTICIPANT_FACET_IDS(),

@@ -35,7 +35,7 @@ class SpecimenEnricherSpec extends AnyFlatSpec with Matchers with WithSparkSessi
       "normalized_specimen" -> Seq(
         BIOSPECIMEN_INPUT(fhir_id = "S1", participant_fhir_id = "P1", `sample_id` = "BS_1", consent_type = Some("c1")),
         BIOSPECIMEN_INPUT(fhir_id = "S2", participant_fhir_id = "P2", `sample_id` = "BS_2"),
-        BIOSPECIMEN_INPUT(fhir_id = "S3", participant_fhir_id = "P3" )
+        BIOSPECIMEN_INPUT(fhir_id = "S3", participant_fhir_id = "P3")
       ).toDF(),
       "normalized_research_study" -> Seq(
         RESEARCH_STUDY()
@@ -50,7 +50,11 @@ class SpecimenEnricherSpec extends AnyFlatSpec with Matchers with WithSparkSessi
     val specimensEnriched = resultDF.as[SPECIMEN_ENRICHED].collect()
     specimensEnriched.find(_.`sample_fhir_id` == "S1") shouldBe Some(SPECIMEN_ENRICHED(`participant_fhir_id` = "P1", `participant_id` = "PT_1", `sample_fhir_id` = "S1", `sample_id` = "BS_1", consent_type = Some("c1"), `affected_status` = true, `is_proband` = false, `family` = None))
     specimensEnriched.find(_.`sample_fhir_id` == "S2") shouldBe Some(SPECIMEN_ENRICHED(`participant_fhir_id` = "P2", `participant_id` = "PT_2", `sample_fhir_id` = "S2", `sample_id` = "BS_2", `is_proband` = false, `family` = None, `gender` = "female"))
-    specimensEnriched.find(_.`sample_fhir_id` == "S3") shouldBe Some(SPECIMEN_ENRICHED())
+    specimensEnriched.find(_.`sample_fhir_id` == "S3") shouldBe Some(
+      SPECIMEN_ENRICHED(
+        family = Some(SPECIMEN_FAMILY_ENRICHED(`mother_id` = "PT_1", `father_id` = "PT_2"))
+      )
+    )
 
     //    ClassGenerator
     //      .writeCLassFile(

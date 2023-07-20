@@ -36,7 +36,7 @@ class SimpleParticipantSpec extends AnyFlatSpec with Matchers with WithSparkSess
         CONDITION_DISEASE(fhir_id = "CD3", participant_fhir_id = "P1", condition_coding = Seq(CONDITION_CODING(category = "MONDO", code = "MONDO_0002028"))),
       ).toDF(),
       "normalized_group" -> Seq(
-        GROUP(fhir_id = "G1", family_members = Seq(("P1", false), ("P2", false), ("P3", false)), family_members_id = Seq("P1", "P2", "P3")),
+        GROUP(fhir_id = "G1",family_id = "G1" , family_members = Seq(("P1", false), ("P2", false), ("P3", false)), family_members_id = Seq("P1", "P2", "P3")),
       ).toDF(),
       "es_index_study_centric" -> Seq(STUDY_CENTRIC()).toDF(),
       "hpo_terms" -> read(getClass.getResource("/hpo_terms.json").toString, "Json", Map(), None, None),
@@ -44,7 +44,36 @@ class SimpleParticipantSpec extends AnyFlatSpec with Matchers with WithSparkSess
       "normalized_proband_observation" -> Seq(
         OBSERVATION_PROBAND(participant_fhir_id = "P1", is_proband = true),
         OBSERVATION_PROBAND(participant_fhir_id = "P2")
-      ).toDF()
+      ).toDF(),
+      "enriched_family" -> Seq(
+        FAMILY_ENRICHED(
+          family_fhir_id = "G1",
+          participant_fhir_id = "P1",
+          relations = Seq(
+            RELATION(`participant_id` = "P1", `role` = "proband"),
+            RELATION(`participant_id` = "P2", `role` = "mother"),
+            RELATION(`participant_id` = "P3", `role` = "father")
+          )
+        ),
+        FAMILY_ENRICHED(
+          family_fhir_id = "G1",
+          participant_fhir_id = "P2",
+          relations = Seq(
+            RELATION(`participant_id` = "P1", `role` = "proband"),
+            RELATION(`participant_id` = "P2", `role` = "mother"),
+            RELATION(`participant_id` = "P3", `role` = "father")
+          )
+        ),
+        FAMILY_ENRICHED(
+          family_fhir_id = "G1",
+          participant_fhir_id = "P3",
+          relations = Seq(
+            RELATION(`participant_id` = "P1", `role` = "proband"),
+            RELATION(`participant_id` = "P2", `role` = "mother"),
+            RELATION(`participant_id` = "P3", `role` = "father")
+          )
+        )
+      ).toDF(),
     )
     val expectedMondoTree = List(
       PHENOTYPE_ENRICHED("psychiatric disorder (MONDO:0002025)", List("disease or disorder (MONDO:0000001)"), false, false, List(0)),
@@ -64,7 +93,6 @@ class SimpleParticipantSpec extends AnyFlatSpec with Matchers with WithSparkSess
       PHENOTYPE_ENRICHED(name = "Atrial septal defect (HP:0001631)", parents = List("Abnormal cardiac atrium morphology (HP:0005120)", "Abnormal atrial septum morphology (HP:0011994)"), is_tagged = true, age_at_event_days = List(0)))
 
     val output = new SimpleParticipant(List("SD_Z6MWD3H0"))(conf).transform(data)
-
     output.keys should contain("simple_participant")
 
     val simple_participant = output("simple_participant").as[SIMPLE_PARTICIPANT].collect()
@@ -80,7 +108,14 @@ class SimpleParticipantSpec extends AnyFlatSpec with Matchers with WithSparkSess
       mondo = expectedMondoTree,
       diagnosis = Set(DIAGNOSIS(fhir_id = "CD1", icd_id_diagnosis = "Q90.9"), DIAGNOSIS(fhir_id = "CD3", mondo_id_diagnosis = "personality disorder (MONDO:0002028)")),
       outcomes = Seq(OUTCOME(fhir_id = "O1", participant_fhir_id = "P1")),
-      family = FAMILY(fhir_id = "G1", family_relations = Seq(FAMILY_RELATIONS(related_participant_fhir_id = "P3", relation = "son"))),
+      family = FAMILY(
+        family_id = "G1",
+        relations_to_proband = Seq(
+          RELATION(`participant_id` = "P1", `role` = "proband"),
+          RELATION(`participant_id` = "P2", `role` = "mother"),
+          RELATION(`participant_id` = "P3", `role` = "father")
+        )
+      ),
       family_type = "trio",
       down_syndrome_status = "D21",
       is_proband = true
@@ -96,7 +131,14 @@ class SimpleParticipantSpec extends AnyFlatSpec with Matchers with WithSparkSess
         mondo = null,
         diagnosis = Set(DIAGNOSIS(fhir_id = "CD2", icd_id_diagnosis = "Q90.9")),
         outcomes = Seq(OUTCOME(fhir_id = "O2", participant_fhir_id = "P2")),
-        family = FAMILY(fhir_id = "G1", family_relations = Seq(FAMILY_RELATIONS(related_participant_fhir_id = "P3", relation = "son"))),
+        family = FAMILY(
+          family_id = "G1",
+          relations_to_proband = Seq(
+            RELATION(`participant_id` = "P1", `role` = "proband"),
+            RELATION(`participant_id` = "P2", `role` = "mother"),
+            RELATION(`participant_id` = "P3", `role` = "father")
+          )
+        ),
         family_type = "trio"
       )
     )
@@ -111,7 +153,14 @@ class SimpleParticipantSpec extends AnyFlatSpec with Matchers with WithSparkSess
         mondo = null,
         diagnosis = null,
         outcomes = Nil,
-        family = FAMILY(fhir_id = "G1", father_id = Some("PT_48DYT4PP"), mother_id = Some("PT_48DYT4PP"), family_relations = Seq(FAMILY_RELATIONS(related_participant_fhir_id = "P1", relation = "mother"), FAMILY_RELATIONS(related_participant_fhir_id = "P2", relation = "father"))),
+        family = FAMILY(
+          family_id = "G1",
+          relations_to_proband = Seq(
+            RELATION(`participant_id` = "P1", `role` = "proband"),
+            RELATION(`participant_id` = "P2", `role` = "mother"),
+            RELATION(`participant_id` = "P3", `role` = "father")
+          )
+        ),
         family_type = "trio"
       )
 

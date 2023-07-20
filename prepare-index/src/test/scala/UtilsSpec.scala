@@ -405,7 +405,7 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
         col("family"),
         col("family_type")
       )
-      .as[(String, FAMILY_ROLES_TO_PROBAND, String)]
+      .as[(String, FAMILY, String)]
       .collect()
 
     results.length should be > 0
