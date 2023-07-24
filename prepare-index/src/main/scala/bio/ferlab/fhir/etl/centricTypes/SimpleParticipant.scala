@@ -17,17 +17,17 @@ class SimpleParticipant(studyIds: List[String])(implicit configuration: Configur
   val normalized_patient: DatasetConf = conf.getDataset("normalized_patient")
   val normalized_proband_observation: DatasetConf = conf.getDataset("normalized_proband_observation")
   val normalized_vital_status: DatasetConf = conf.getDataset("normalized_vital_status")
-  val normalized_family_relationship: DatasetConf = conf.getDataset("normalized_family_relationship")
   val normalized_phenotype: DatasetConf = conf.getDataset("normalized_phenotype")
   val normalized_disease: DatasetConf = conf.getDataset("normalized_disease")
   val normalized_group: DatasetConf = conf.getDataset("normalized_group")
   val hpo_terms: DatasetConf = conf.getDataset("hpo_terms")
   val mondo_terms: DatasetConf = conf.getDataset("mondo_terms")
+  val enriched_family: DatasetConf = conf.getDataset("enriched_family")
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
     (Seq(
-      es_index_study_centric, normalized_patient, normalized_family_relationship, normalized_phenotype, normalized_disease, normalized_group, normalized_vital_status, normalized_proband_observation)
+      es_index_study_centric, normalized_patient, normalized_phenotype, normalized_disease, normalized_group, normalized_vital_status, normalized_proband_observation)
       .map(ds => ds.id -> ds.read
         .where(col("study_id").isin(studyIds: _*))
       ) ++ Seq(
@@ -52,7 +52,7 @@ class SimpleParticipant(studyIds: List[String])(implicit configuration: Configur
         .addDownSyndromeDiagnosis(disease,data(mondo_terms.id))
         .addOutcomes(data(normalized_vital_status.id))
         .addProband(data(normalized_proband_observation.id))
-        .addFamily(data(normalized_group.id), data(normalized_family_relationship.id))
+        .addFamily(data(normalized_group.id), data(enriched_family.id))
         .withColumnRenamed("gender", "sex")
         .withColumn("age_at_data_collection", lit(111)) // TODO
         .withColumn("study_external_id", col("study")("external_id"))

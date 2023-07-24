@@ -328,28 +328,16 @@
                 "family_id": {
                   "type": "keyword"
                 },
-                "family_relations": {
+                "relations_to_proband": {
                   "type": "nested",
                   "properties": {
-                    "related_participant_fhir_id": {
+                    "role": {
                       "type": "keyword"
                     },
-                    "related_participant_id": {
-                      "type": "keyword"
-                    },
-                    "relation": {
+                    "participant_id": {
                       "type": "keyword"
                     }
                   }
-                },
-                "father_id": {
-                  "type": "keyword"
-                },
-                "fhir_id": {
-                  "type": "keyword"
-                },
-                "mother_id": {
-                  "type": "keyword"
                 }
               }
             },

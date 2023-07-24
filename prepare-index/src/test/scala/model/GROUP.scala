@@ -9,16 +9,3 @@ case class GROUP(
                    family_members_id: Seq[String] = Seq("38734"),
                    family_type_from_system: Option[String] = None
                  )
-case class FAMILY(
-                   fhir_id: String = "42367",
-                   family_id: String = "FM_NV901ZZN",
-                   father_id: Option[String] = None,
-                   mother_id: Option[String] = None,
-                   family_relations: Seq[FAMILY_RELATIONS] = Seq(FAMILY_RELATIONS())
-                 )
-
-case class FAMILY_RELATIONS(
-                   related_participant_id: String = "PT_48DYT4PP",
-                   related_participant_fhir_id: String = "123",
-                   relation: String = "mother"
-                 )

@@ -1,2 +1,2 @@
 # Enrich
-Step to use if one wants to create complex tables from the raw tables.
+Step to use if one wants to create complex tables from the normalized tables.

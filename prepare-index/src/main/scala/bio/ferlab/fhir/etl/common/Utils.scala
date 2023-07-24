@@ -2,8 +2,7 @@ package bio.ferlab.fhir.etl.common
 
 import bio.ferlab.fhir.etl.common.OntologyUtils._
 import org.apache.spark.sql.{Column, DataFrame}
-import org.apache.spark.sql.expressions.{UserDefinedFunction, Window}
-import org.apache.spark.sql.functions.{when, _}
+import org.apache.spark.sql.functions.{col, when, _}
 
 object Utils {
   val DOWN_SYNDROM_MONDO_TERM = "MONDO:0008608"
@@ -226,7 +225,7 @@ object Utils {
         .select(col("file.*"), col("participants"), col("nb_participants"), col("nb_biospecimens"))
     }
 
-    def addSequencingExperiment(sequencingExperiment:DataFrame, sequencingExperimentGenomicFile:DataFrame): DataFrame = {
+    def addSequencingExperiment(sequencingExperiment: DataFrame, sequencingExperimentGenomicFile: DataFrame): DataFrame = {
       val seqExpGenomicFileDF = sequencingExperimentGenomicFile
         .select(col("genomic_file") as "file_id", col("sequencing_experiment") as "sequencing_experiment_id")
 
@@ -280,13 +279,14 @@ object Utils {
           lit(null).cast("string") as "external_id",
           lit(null).cast("string") as "sequencing_center_id"
 
-      ))
+        ))
       fileWithSeqExp
         .withColumn("sequencing_experiment_fallback", when(col("experiment_strategy").isNotNull, sequencingExperimentFallback).otherwise(null))
         .withColumn("sequencing_experiment", coalesce(col("sequencing_experiment"), col("sequencing_experiment_fallback")))
         .drop("sequencing_experiment_fallback", "experiment_strategy")
 
     }
+
     def addBiospecimenFiles(filesDf: DataFrame): DataFrame = {
       val filesWithFacetIds = reformatFileFacetIds(filesDf)
 
@@ -334,67 +334,96 @@ object Utils {
       df.join(reformatParticipant, "participant_fhir_id")
     }
 
-    def addFamily(familyDf: DataFrame, familyRelationshipDf: DataFrame): DataFrame = {
 
-      val participantIdMapping = df.select(col("fhir_id") as "participant_fhir_id", col("participant_id"))
+    def addFamily(groupDf: DataFrame, enrichedFamilyDf: DataFrame): DataFrame = {
+      // NOTE: expects a df with proband information!
+      val reformattedFamily = groupDf
+        .select(
+          col("family_members_id"),
+          col("fhir_id") as "family_fhir_id",
+          col("family_id"),
+          col("family_type_from_system")
+        )
 
-      val reformatFamilyRelationship = familyRelationshipDf
-        .join(participantIdMapping, col("participant1_fhir_id") === col("participant_fhir_id"))
-        .withColumnRenamed("participant_id", "participant1_id")
-        .select("participant1_fhir_id", "participant1_id", "participant2_fhir_id", "participant1_to_participant_2_relationship")
+      val NB_TRIO = 3
+      val NB_DUO = 2
 
-      val reformatFamily = familyDf
-        .select(col("family_members_id"), col("fhir_id") as "family_fhir_id", col("family_id"), col("family_type_from_system"))
-
-      val joinFamily = reformatFamily.join(reformatFamilyRelationship, array_contains(col("family_members_id"), col("participant1_fhir_id")), "left_outer")
-
-      val windowSpec = Window.partitionBy("family_id")
-
-      val family = joinFamily.groupBy("participant2_fhir_id", "family_id").agg(
-        collect_list(
-          struct(
-            col("participant1_fhir_id") as "related_participant_fhir_id",
-            col("participant1_id") as "related_participant_id",
-            col("participant1_to_participant_2_relationship") as "relation"
-          )
-        ) as "relations",
-        first("family_members_id") as "family_members_id",
-        first("family_fhir_id") as "family_fhir_id",
-        first(col("family_type_from_system"), ignoreNulls = true) as "family_type_from_system"
-      )
-        .withColumn("all_relations", collect_set(col("relations.relation")).over(windowSpec))
-        .withColumn("has_father", exists(col("all_relations"), relation => array_contains(relation, "father")))
-        .withColumn("has_mother", exists(col("all_relations"), relation => array_contains(relation, "mother")))
-        .withColumn("has_both_parent", exists(col("all_relations"), relation => array_contains(relation, "father") && array_contains(relation, "mother")))
+      val enrichedReformattedFamily = reformattedFamily
+        .join(
+          enrichedFamilyDf,
+          array_contains(col("family_members_id"), enrichedFamilyDf("participant_fhir_id")),
+          "left_outer"
+        )
         .withColumn("nb_members", size(col("family_members_id")))
-        .withColumn("family_type_computation",
-          when(col("has_both_parent") && col("nb_members") >= 3,
-            when(col("nb_members") === 3, "trio").otherwise("trio+")
-          ).when((col("has_father") || col("has_mother")) && col("nb_members") >= 2,
-            when(col("nb_members") === 2, "duo").otherwise("duo+")
-          ).when(col("nb_members") === 0, "proband-only")
-            .otherwise("other")
+        .withColumn("parents", array_distinct(filter(col("relations.role"), r => r === "mother" || r === "father")))
+        .withColumn("has_mother_and_father",
+          size(col("parents")) === 2
         )
-        .withColumn("family_type",
-          // lower to make sure that we match values from col("family_type_computation") (all lower case)
-          coalesce(lower(col("family_type_from_system")), col("family_type_computation"))
+        .withColumn("has_mother_or_father_but_not_both",
+          size(col("parents")) === 1
         )
+        .withColumn("trio+", when(col("nb_members") > NB_TRIO && col("has_mother_and_father"), "trio+"))
+        .withColumn("trio", when(col("nb_members") === NB_TRIO && col("has_mother_and_father"), "trio"))
+        .withColumn("duo+", when(col("nb_members") > NB_DUO && col("has_mother_or_father_but_not_both"), "duo+"))
+        .withColumn("duo", when(col("nb_members") === NB_DUO && col("has_mother_or_father_but_not_both"), "duo"))
+        .withColumn(
+          "family_type_families_with_proband_computation",
+          coalesce(
+            col("trio+"),
+            col("trio"),
+            col("duo+"),
+            col("duo"),
+            lit("other"),
+          ))
+
+        //adapt for INCLUDE and KF projects
+        .withColumn("family_type_families_with_proband",
+          coalesce(
+            // lower to make sure that we match values from col("family_type_families_with_proband_computation") (all lower case)
+            lower(col("family_type_from_system")),
+            col("family_type_families_with_proband_computation")
+          )
+        )
+        //roles_to_proband_by_family
         .withColumn("family", struct(
-          filter(col("relations"), c => c("relation") === "father")(0)("related_participant_id") as "father_id",
-          filter(col("relations"), c => c("relation") === "mother")(0)("related_participant_id") as "mother_id",
-          col("relations") as "family_relations",
-          col("family_fhir_id") as "fhir_id",
+          col("relations") as "relations_to_proband",
           col("family_id") as "family_id"
         ))
-        .select("family_type", "family", "participant2_fhir_id")
+        .drop(
+          "family_type_families_with_proband_computation",
+          "family_fhir_id",
+          "family_members_id",
+          "family_type_from_system",
+          "nb_members",
+          "parents",
+          "has_mother_and_father",
+          "has_mother_or_father_but_not_both",
+          "trio+",
+          "trio",
+          "duo+",
+          "duo",
+        )
 
-      df.join(family, col("fhir_id") === col("participant2_fhir_id"), "left_outer")
-        .drop("participant2_fhir_id")
-        .withColumn("family_type", coalesce(col("family_type"), lit("proband-only")))
-        .drop("family_type_from_system", "family_type_computation")
-        .join(reformatFamily, array_contains(col("family_members_id"), col("fhir_id")), "left_outer")
-        .drop("family_fhir_id", "family_members_id", "family_type_from_system")
+      df
+        .join(
+          enrichedReformattedFamily,
+          col("fhir_id") === enrichedReformattedFamily("participant_fhir_id"),
+          "left_outer"
+        )
         .withColumnRenamed("family_id", "families_id")
+        .withColumnRenamed("relations", "relations_to_proband")
+
+        .withColumn(
+          "family_type",
+          when(
+            col("families_id").isNull && col("is_proband"), "proband-only"
+          )
+            .otherwise(col("family_type_families_with_proband"))
+        )
+        .drop(col("family_type_families_with_proband"))
+        // Dropping for "col enrichedReformattedFamily("participant_fhir_id")" is the fhir id of the proband
+        .drop(enrichedReformattedFamily("participant_fhir_id"))
+        .drop( col("relations_to_proband"))
     }
   }
 }

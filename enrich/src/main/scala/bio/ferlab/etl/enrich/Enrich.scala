@@ -15,9 +15,11 @@ object Enrich extends SparkApp {
   jobName match {
     case "histology" => new HistologyEnricher(studies).run()
     case "specimen" => new SpecimenEnricher(studies).run()
+    case "family" => new FamilyEnricher(studies).run()
     case "all" =>
       new HistologyEnricher(studies).run()
       new SpecimenEnricher(studies).run()
+      new FamilyEnricher(studies).run()
 
   }
 }
