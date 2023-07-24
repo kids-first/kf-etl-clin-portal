@@ -5,7 +5,8 @@ import akka.stream.ActorMaterializer
 import bio.ferlab.datalake.commons.config.SimpleConfiguration
 import bio.ferlab.datalake.testutils.WithSparkSession
 import bio.ferlab.etl.normalized.dataservice.model.ESequencingExperiment
-import bio.ferlab.etl.testutils.WithTestConfig
+import bio.ferlab.etl.testutils.{KFTestETLContext, WithTestConfig}
+import bio.ferlab.fhir.etl.config.ETLConfiguration
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -28,7 +29,7 @@ class DataserviceExportETLSpec extends AnyFlatSpec with Matchers with WithSparkS
 
   val study1SeqExp: Seq[ESequencingExperiment] = Seq(ESequencingExperiment(kf_id = Some("seq_exp_1")), ESequencingExperiment(kf_id = Some("seq_exp_2")))
   val study2SeqExp: Seq[ESequencingExperiment] = Seq(ESequencingExperiment(kf_id = Some("seq_exp_3")), ESequencingExperiment(kf_id = Some("seq_exp_4")))
-  implicit val c: SimpleConfiguration = conf
+  implicit val c: ETLConfiguration = conf
 
   object fakeEntityRetriever extends DataRetriever {
     override def retrieve[T](endpoint: String, data: Seq[T], retries: Int)(implicit extractor: EntityDataExtractor[T]): Future[Seq[T]] = {
@@ -54,7 +55,7 @@ class DataserviceExportETLSpec extends AnyFlatSpec with Matchers with WithSparkS
    // You can run this test locally, but it fails in github actions.
    ignore should "return dataframes for all studies when extracting" in {
     import spark.implicits._
-    val etl = new DataserviceExportETL("re_0001", List("sd_1", "sd_2"), fakeEntityRetriever)
+    val etl = new DataserviceExportETL(KFTestETLContext(), "re_0001", List("sd_1", "sd_2"), fakeEntityRetriever)
     val results = etl.extract()
     val normalized_sequencing_experiment = results.get("normalized_sequencing_experiment")
     normalized_sequencing_experiment shouldBe defined

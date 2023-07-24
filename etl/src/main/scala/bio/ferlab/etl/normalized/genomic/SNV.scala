@@ -1,7 +1,8 @@
 package bio.ferlab.etl.normalized.genomic
 
-import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
+import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf, RuntimeETLContext}
 import bio.ferlab.datalake.spark3.etl.ETLSingleDestination
+import bio.ferlab.datalake.spark3.etl.v3.SimpleSingleETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits._
 import bio.ferlab.datalake.spark3.implicits.GenomicImplicits._
 import bio.ferlab.datalake.spark3.implicits.GenomicImplicits.columns._
@@ -12,13 +13,13 @@ import org.apache.spark.sql.{DataFrame, SparkSession, functions}
 
 import java.time.LocalDateTime
 
-class SNV(studyId: String, releaseId: String, vcfPattern: String, referenceGenomePath: Option[String])(implicit configuration: Configuration) extends ETLSingleDestination {
+case class SNV(rc:RuntimeETLContext, studyId: String, releaseId: String, vcfPattern: String, referenceGenomePath: Option[String]) extends SimpleSingleETL(rc) {
   private val enriched_specimen: DatasetConf = conf.getDataset("enriched_specimen")
   private val document_reference: DatasetConf = conf.getDataset("normalized_document_reference")
   override val mainDestination: DatasetConf = conf.getDataset("normalized_snv")
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
-                       currentRunDateTime: LocalDateTime = LocalDateTime.now())(implicit spark: SparkSession): Map[String, DataFrame] = {
+                       currentRunDateTime: LocalDateTime = LocalDateTime.now()): Map[String, DataFrame] = {
 
     Map(
       "vcf" -> loadVCFs(document_reference.read, studyId, vcfPattern, referenceGenomePath),
@@ -27,7 +28,7 @@ class SNV(studyId: String, releaseId: String, vcfPattern: String, referenceGenom
 
   }
 
-  override def transformSingle(data: Map[String, DataFrame], lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime)(implicit spark: SparkSession): DataFrame = {
+  override def transformSingle(data: Map[String, DataFrame], lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime): DataFrame = {
     val vcf = selectOccurrences(data("vcf"))
     val enrichedSpecimenDF = data(enriched_specimen.id)
       .withColumn("mother_id", col("family.mother_id"))

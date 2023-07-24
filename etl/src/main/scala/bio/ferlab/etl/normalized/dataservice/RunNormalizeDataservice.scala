@@ -1,26 +1,21 @@
 package bio.ferlab.etl.normalized.dataservice
 
-import bio.ferlab.datalake.spark3.SparkAppWithConfig
-import bio.ferlab.fhir.etl.config.ETLConfiguration
-import org.slf4j.{Logger, LoggerFactory}
-import pureconfig.generic.auto._
+import bio.ferlab.fhir.etl.config.KFRuntimeETLContext
+import mainargs.{ParserForMethods, arg}
 
 
-object RunNormalizeDataservice extends SparkAppWithConfig[ETLConfiguration] {
-  val LOGGER: Logger = LoggerFactory.getLogger(getClass)
+object RunNormalizeDataservice {
 
-  LOGGER.info(s"ARGS: " + args.mkString("[", ", ", "]"))
-
-  val Array(_, _, releaseId, studyIds) = args
-
-  val studyList = studyIds.split(",").toList
-
-  implicit val (conf, _, spark) = init()
-  DefaultContext.withContext { c =>
+  def run(rc: KFRuntimeETLContext,
+          @arg(name = "study-id", short = 's', doc = "Study Id") studyIds: List[String],
+          @arg(name = "release-id", short = 'r', doc = "Release Id") releaseId: String): Unit = DefaultContext.withContext { c =>
     import c.implicits._
+
     import scala.concurrent.ExecutionContext.Implicits._
-    val retriever = EntityDataRetriever(conf.dataservice_url, Seq("visible=true"))
-    new DataserviceExportETL(releaseId, studyList, retriever).run()
+    val retriever = EntityDataRetriever(rc.config.dataservice_url, Seq("visible=true"))
+    new DataserviceExportETL(rc, releaseId, studyIds, retriever).run()
   }
+
+  def main(args: Array[String]): Unit = ParserForMethods(this).runOrThrow(args, allowPositional = true)
 
 }

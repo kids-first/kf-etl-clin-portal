@@ -1,5 +1,6 @@
 package bio.ferlab.etl.enrich
 
+import bio.ferlab.datalake.testutils.WithSparkSession
 import bio.ferlab.etl.enrich.model._
 import org.apache.spark.sql.DataFrame
 import org.scalatest.flatspec.AnyFlatSpec

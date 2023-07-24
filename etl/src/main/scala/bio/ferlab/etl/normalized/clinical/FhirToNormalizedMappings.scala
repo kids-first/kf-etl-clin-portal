@@ -23,7 +23,7 @@ object FhirToNormalizedMappings {
     ))
   }
 
-  def mappings(releaseId: String)(implicit c: ETLConfiguration): List[(DatasetConf, DatasetConf, List[Transformation])] = {
+  def mappings(releaseId: String, c: ETLConfiguration): List[(DatasetConf, DatasetConf, List[Transformation])] = {
     c.sources.filter(s => s.format == Format.AVRO).map(s => {
       val pattern(table) = s.id
       val mappings = extractionMappingsFor(c.isFlatSpecimenModel)

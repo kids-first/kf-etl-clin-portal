@@ -1,22 +1,23 @@
 package bio.ferlab.etl.prepared.genomic
 
-import bio.ferlab.datalake.spark3.SparkApp
+import bio.ferlab.datalake.commons.config.RuntimeETLContext
 import bio.ferlab.datalake.spark3.genomics.prepared.{GeneCentric, GenesSuggestions, VariantCentric, VariantsSuggestions}
+import mainargs.{ParserForMethods, main}
 
-object RunPrepareGenomic extends SparkApp {
+object RunPrepareGenomic {
 
-  val Array(_, _, jobName) = args
+  @main
+  def variant_centric(rc: RuntimeETLContext): Unit = VariantCentric(rc).run()
 
-  implicit val (conf, steps, spark) = init(appName = s"Prepare $jobName")
+  @main
+  def gene_centric(rc: RuntimeETLContext): Unit = GeneCentric(rc).run()
 
-  log.info(s"Job: $jobName")
-  log.info(s"runType: ${steps.mkString(" -> ")}")
-  jobName match {
-    case "variant_centric" => new VariantCentric().run(steps)
-    case "gene_centric" => new GeneCentric().run(steps)
-    case "variant_suggestions" => new VariantsSuggestions().run(steps)
-    case "gene_suggestions" => new GenesSuggestions().run(steps)
-    case s: String => throw new IllegalArgumentException(s"jobName [$s] unknown.")
-  }
+  @main
+  def variant_suggestions(rc: RuntimeETLContext): Unit = VariantsSuggestions(rc).run()
 
+  @main
+  def gene_suggestions(rc: RuntimeETLContext): Unit = GenesSuggestions(rc).run()
+
+
+  def main(args: Array[String]): Unit = ParserForMethods(this).runOrThrow(args, allowPositional = true)
 }

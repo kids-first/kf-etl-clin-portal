@@ -1,9 +1,9 @@
 package bio.ferlab.etl.normalized.dataservice
 
-import akka.actor.ActorSystem
-import bio.ferlab.datalake.commons.config.{Coalesce, Configuration, DatasetConf}
-import bio.ferlab.datalake.spark3.etl.v2.ETL
+import bio.ferlab.datalake.commons.config.{Coalesce, DatasetConf}
+import bio.ferlab.datalake.spark3.etl.v3.ETL
 import bio.ferlab.etl.normalized.dataservice.model.{ESequencingCenter, ESequencingExperiment, ESequencingExperimentGenomicFile}
+import bio.ferlab.fhir.etl.config.KFRuntimeETLContext
 import org.apache.spark.sql.functions.lit
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -12,11 +12,11 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.reflect.runtime.universe.TypeTag
 
-class DataserviceExportETL(val releaseId: String,
+class DataserviceExportETL(rc: KFRuntimeETLContext,
+                           val releaseId: String,
                            val studyIds: List[String],
                            val retriever: DataRetriever)
-                          (implicit override val conf: Configuration,
-                           ec: ExecutionContext) extends ETL {
+                          (implicit ec: ExecutionContext) extends ETL(rc) {
   val normalized_sequencing_experiment: DatasetConf = conf.getDataset("normalized_sequencing_experiment")
   override val mainDestination: DatasetConf = normalized_sequencing_experiment
   val normalized_sequencing_experiment_genomic_file: DatasetConf = conf.getDataset("normalized_sequencing_experiment_genomic_file")
@@ -25,7 +25,7 @@ class DataserviceExportETL(val releaseId: String,
   def makeEndpointSeq(studyId: String, path: String): String =
     s"$path?study_id=$studyId"
 
-  override def extract(lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime)(implicit spark: SparkSession): Map[String, DataFrame] = {
+  override def extract(lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime): Map[String, DataFrame] = {
     val futureDataframes = for {
       sequencingExperiments <- retrieveForStudies[ESequencingExperiment]("/sequencing-experiments")
       sequencingExperimentGenomicFiles <- retrieveForStudies[ESequencingExperimentGenomicFile]("/sequencing-experiment-genomic-files")
@@ -49,11 +49,12 @@ class DataserviceExportETL(val releaseId: String,
       spark.createDataFrame(studyEntities)
         .withColumn("study_id", lit(studyId))
     )
-  }.map { dataframes => dataframes.reduce((d1, d2) => d1.unionByName(d2, allowMissingColumns = true))
-    .withColumn("release_id", lit(releaseId))
+  }.map { dataframes =>
+    dataframes.reduce((d1, d2) => d1.unionByName(d2, allowMissingColumns = true))
+      .withColumn("release_id", lit(releaseId))
   }
 
-  override def transform(data: Map[String, DataFrame], lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime)(implicit spark: SparkSession): Map[String, DataFrame] = data
+  override def transform(data: Map[String, DataFrame], lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime): Map[String, DataFrame] = data
 
   override val defaultRepartition: DataFrame => DataFrame = Coalesce(5)
 }

@@ -1,20 +1,27 @@
 package bio.ferlab.etl.enriched.genomic
 
-import bio.ferlab.datalake.spark3.SparkApp
+import bio.ferlab.datalake.commons.config.RuntimeETLContext
 import bio.ferlab.datalake.spark3.genomics.enriched.{Consequences, Variants}
 import bio.ferlab.datalake.spark3.genomics.{AtLeastNElements, FirstElement, FrequencySplit, SimpleAggregation}
 import bio.ferlab.etl.Constants.columns.{TRANSMISSIONS, TRANSMISSION_MODE}
+import mainargs.{ParserForMethods, main}
 import org.apache.spark.sql.functions.col
 
-object RunEnrichGenomic extends SparkApp {
+object RunEnrichGenomic {
 
-  val Array(_, _, jobName) = args
+  @main
+  def snv(rc: RuntimeETLContext): Unit = variants(rc).run()
 
-  implicit val (conf, steps, spark) = init(appName = s"Enrich $jobName")
+  @main
+  def consequences(rc: RuntimeETLContext): Unit = Consequences(rc).run()
 
-  log.info(s"Job: $jobName")
-  log.info(s"runType: ${steps.mkString(" -> ")}")
-  private val variants = new Variants(snvDatasetId = "normalized_snv",frequencies = Seq(
+  @main
+  def all(rc: RuntimeETLContext): Unit = {
+    snv(rc)
+    consequences(rc)
+  }
+
+  private def variants(rc: RuntimeETLContext) = Variants(rc, snvDatasetId = "normalized_snv", frequencies = Seq(
     FrequencySplit(
       "studies",
       splitBy = Some(col("study_id")), byAffected = false,
@@ -26,13 +33,8 @@ object RunEnrichGenomic extends SparkApp {
       )
     ),
     FrequencySplit("internal_frequencies", byAffected = false)))
-  jobName match {
-    case "variants" => variants.run(steps)
-    case "consequences" => new Consequences().run(steps)
-    case "all" =>
-      variants.run(steps)
-      new Consequences().run(steps)
-    case s: String => throw new IllegalArgumentException(s"jobName [$s] unknown.")
-  }
+
+  def main(args: Array[String]): Unit = ParserForMethods(this).runOrThrow(args, allowPositional = true)
+
 
 }

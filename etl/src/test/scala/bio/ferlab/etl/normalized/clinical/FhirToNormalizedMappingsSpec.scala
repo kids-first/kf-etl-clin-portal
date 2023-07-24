@@ -81,7 +81,7 @@ class FhirToNormalizedMappingsSpec
         sparkConfWithFlatSpecimenEntry
       )
     )
-    noException should be thrownBy mappings("re")(c1)
+    noException should be thrownBy mappings("re", c1)
 
     val sparkConfWithoutFlatSpecimenEntry = Map(
       "spark.databricks.delta.retentionDurationCheck.enabled" -> "false",
@@ -95,11 +95,11 @@ class FhirToNormalizedMappingsSpec
     val c2 = ETLConfiguration(isFlatSpecimenModel = false,
       dataservice_url = "",
       datalake = DatalakeConf(
-      storages,
-      sources,
-      List.empty,
-      sparkConfWithoutFlatSpecimenEntry
-    ))
-    noException should be thrownBy mappings("re")(c2)
+        storages,
+        sources,
+        List.empty,
+        sparkConfWithoutFlatSpecimenEntry
+      ))
+    noException should be thrownBy mappings("re", c2)
   }
 }
