@@ -243,19 +243,17 @@ object Transformations {
 
 
   private def addParentsToSpecimen(specimen: DataFrame, isFlatSpecimenModel: Boolean): DataFrame = {
-    def noopWhenFlatModel(c: Column) = if (isFlatSpecimenModel) nullLitStr() else c
-
     val parentRange = 1 to 10
     val samplesWithParent = parentRange.foldLeft(specimen) { case (s, i) =>
       val joined = specimen.select(struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(i) as "level") as s"parent_$i")
       s.join(joined, s(s"parent_${i - 1}.parent_id") === joined(s"parent_$i.fhir_id"), "left")
     }
       .withColumn("parent_sample_type", if (isFlatSpecimenModel) col("type")("coding")(0)("display") else col("parent_1.sample_type"))
-      .withColumn("parent_sample_id", noopWhenFlatModel(col("parent_1.sample_id")))
-      .withColumn("parent_fhir_id", noopWhenFlatModel(col("parent_1.fhir_id")))
+      .withColumn("parent_sample_id", col("parent_1.sample_id"))
+      .withColumn("parent_fhir_id", col("parent_1.fhir_id"))
       .withColumn("collection_sample", coalesce(parentRange.reverse.map(p => col(s"parent_$p")): _*))
-      .withColumn("collection_sample_id", noopWhenFlatModel(col("collection_sample.sample_id")))
-      .withColumn("collection_sample_type", noopWhenFlatModel(col("collection_sample.sample_type")))
+      .withColumn("collection_sample_id", col("collection_sample.sample_id"))
+      .withColumn("collection_sample_type", col("collection_sample.sample_type"))
       .withColumn("collection_fhir_id", col("collection_sample.fhir_id"))
     val sampleWithParentFiltered =
       if (isFlatSpecimenModel) samplesWithParent else samplesWithParent.where(col("collection_fhir_id") =!= col("fhir_id"))
