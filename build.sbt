@@ -46,8 +46,4 @@ lazy val config = (project in file("config")).settings(sparkDepsSetting)
 
 lazy val prepare_index = (project in file("prepare-index")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
 
-lazy val variant_task = (project in file("variant-task")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
-
-lazy val enrich_task = (project in file("enrich")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
-
 lazy val etl = (project in file("etl")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)

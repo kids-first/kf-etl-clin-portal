@@ -1,4 +1,4 @@
-package bio.ferlab.etl.enrich.model
+package bio.ferlab.etl.testmodels
 
 case class CONDITION_DISEASE(
                               `fhir_id`: String = "676049",

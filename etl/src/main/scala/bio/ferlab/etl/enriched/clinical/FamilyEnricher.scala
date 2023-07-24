@@ -1,22 +1,22 @@
-package bio.ferlab.etl.enrich
+package bio.ferlab.etl.enriched.clinical
 
-import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
-import bio.ferlab.datalake.spark3.etl.ETLSingleDestination
+import bio.ferlab.datalake.commons.config.{DatasetConf, RuntimeETLContext}
+import bio.ferlab.datalake.spark3.etl.v3.SimpleSingleETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
-import org.apache.spark.sql.functions.{array, array_contains, array_union, coalesce, col, collect_list, explode, first, lit, struct}
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.functions._
 
 import java.time.LocalDateTime
 import scala.collection.immutable.Seq
 
-class FamilyEnricher(studyIds: List[String])(implicit configuration: Configuration) extends ETLSingleDestination {
+case class FamilyEnricher(rc: RuntimeETLContext, studyIds: List[String]) extends SimpleSingleETL(rc) {
   override val mainDestination: DatasetConf = conf.getDataset("enriched_family")
   private val normalized_proband_observation: DatasetConf = conf.getDataset("normalized_proband_observation")
   private val normalized_patient: DatasetConf = conf.getDataset("normalized_patient")
   private val normalized_group: DatasetConf = conf.getDataset("normalized_group")
   private val normalized_family_relationship: DatasetConf = conf.getDataset("normalized_family_relationship")
 
-  override def extract(lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime)(implicit spark: SparkSession): Map[String, DataFrame] = {
+  override def extract(lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime): Map[String, DataFrame] = {
     //FIXME duplicate accross project
     Seq(normalized_proband_observation, normalized_patient, normalized_group, normalized_family_relationship)
       .map(ds => ds.id -> ds.read
@@ -24,13 +24,13 @@ class FamilyEnricher(studyIds: List[String])(implicit configuration: Configurati
       ).toMap
   }
 
-  override def transformSingle(data: Map[String, DataFrame], lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime)(implicit spark: SparkSession): DataFrame = {
+  override def transformSingle(data: Map[String, DataFrame], lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime): DataFrame = {
     /**
      * We find all families where one of its members is a proband.
      * A relation mapping for every one of these particular families is built.
-     *  More precisely, we have the role of every member from the point of view of the proband.
-     *  Given the family, {p, pf, pm} with get:
-     *    [{p, role: proband}, {pf, role: father}, {pm, role: mother}]
+     * More precisely, we have the role of every member from the point of view of the proband.
+     * Given the family, {p, pf, pm} with get:
+     * [{p, role: proband}, {pf, role: father}, {pm, role: mother}]
      * Therefore, the output may look like (pls make sure that this comment is up-to-date!)
      *
      * +--------------+------------+-----------------------------------+------------+

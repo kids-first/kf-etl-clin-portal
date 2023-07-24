@@ -1,12 +1,12 @@
-package bio.ferlab.etl.enrich
+package bio.ferlab.etl.enriched.clinical
 
-import bio.ferlab.datalake.testutils.WithSparkSession
-import bio.ferlab.etl.enrich.model._
+import bio.ferlab.etl.testmodels._
+import bio.ferlab.etl.testutils.WithTestSimpleConfiguration
 import org.apache.spark.sql.DataFrame
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-class SpecimenEnricherSpec extends AnyFlatSpec with Matchers with WithSparkSession with WithTestConfig {
+class SpecimenEnricherSpec extends AnyFlatSpec with Matchers with WithTestSimpleConfiguration {
 
   import spark.implicits._
 
@@ -44,7 +44,7 @@ class SpecimenEnricherSpec extends AnyFlatSpec with Matchers with WithSparkSessi
 
     )
 
-    val output = new SpecimenEnricher(List("SD_Z6MWD3H0"))(conf).transform(data)
+    val output = new SpecimenEnricher(defaultRuntime, List("SD_Z6MWD3H0")).transform(data)
 
     val resultDF = output("enriched_specimen")
 

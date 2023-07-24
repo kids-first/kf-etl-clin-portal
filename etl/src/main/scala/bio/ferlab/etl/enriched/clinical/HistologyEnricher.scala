@@ -1,19 +1,19 @@
-package bio.ferlab.etl.enrich
+package bio.ferlab.etl.enriched.clinical
 
-import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf}
-import bio.ferlab.datalake.spark3.etl.ETLSingleDestination
+import bio.ferlab.datalake.commons.config.{DatasetConf, RuntimeETLContext}
+import bio.ferlab.datalake.spark3.etl.v3.SimpleSingleETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
-import org.apache.spark.sql.functions.{col, collect_list, struct}
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.functions.col
 
 import java.time.LocalDateTime
 
-class HistologyEnricher(studyIds: List[String])(implicit configuration: Configuration) extends ETLSingleDestination {
+case class HistologyEnricher(rc: RuntimeETLContext, studyIds: List[String]) extends SimpleSingleETL(rc) {
   override val mainDestination: DatasetConf = conf.getDataset("enriched_histology_disease")
   val normalized_disease: DatasetConf = conf.getDataset("normalized_disease")
   val normalized_histology_observation: DatasetConf = conf.getDataset("normalized_histology_observation")
 
-  override def extract(lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime)(implicit spark: SparkSession): Map[String, DataFrame] = {
+  override def extract(lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime): Map[String, DataFrame] = {
     //FIXME duplicate accross project
     Seq(normalized_histology_observation, normalized_disease)
       .map(ds => ds.id -> ds.read
@@ -21,7 +21,7 @@ class HistologyEnricher(studyIds: List[String])(implicit configuration: Configur
       ).toMap
   }
 
-  override def transformSingle(data: Map[String, DataFrame], lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime)(implicit spark: SparkSession): DataFrame = {
+  override def transformSingle(data: Map[String, DataFrame], lastRunDateTime: LocalDateTime, currentRunDateTime: LocalDateTime): DataFrame = {
     val diseases = data(normalized_disease.id)
     val histologyObservation = data(normalized_histology_observation.id)
     histologyObservation

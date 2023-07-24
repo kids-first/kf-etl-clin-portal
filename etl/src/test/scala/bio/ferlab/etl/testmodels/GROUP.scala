@@ -1,4 +1,4 @@
-package bio.ferlab.etl.enrich.model
+package bio.ferlab.etl.testmodels
 
 case class GROUP(
                    fhir_id: String = "42367",

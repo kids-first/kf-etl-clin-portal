@@ -1,4 +1,4 @@
-package bio.ferlab.etl.enrich.model
+package bio.ferlab.etl.testmodels
 
 case class FAMILY_ENRICHED(
                             family_fhir_id: String = "f",

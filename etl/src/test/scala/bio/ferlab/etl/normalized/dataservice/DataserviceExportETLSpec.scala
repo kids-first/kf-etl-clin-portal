@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import bio.ferlab.datalake.commons.config.SimpleConfiguration
 import bio.ferlab.datalake.testutils.WithSparkSession
 import bio.ferlab.etl.normalized.dataservice.model.ESequencingExperiment
-import bio.ferlab.etl.testutils.{KFTestETLContext, WithTestConfig}
+import bio.ferlab.etl.testutils.{KFTestETLContext, WithTestETLConfiguration}
 import bio.ferlab.fhir.etl.config.ETLConfiguration
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.flatspec.AnyFlatSpec
@@ -15,7 +15,7 @@ import play.api.libs.ws.ahc.StandaloneAhcWSClient
 
 import scala.concurrent.Future
 
-class DataserviceExportETLSpec extends AnyFlatSpec with Matchers with WithSparkSession with WithTestConfig with BeforeAndAfterAll {
+class DataserviceExportETLSpec extends AnyFlatSpec with Matchers with WithSparkSession with WithTestETLConfiguration with BeforeAndAfterAll {
   implicit val system: ActorSystem = ActorSystem()
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val wsClient: StandaloneWSClient = StandaloneAhcWSClient()

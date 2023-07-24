@@ -1,4 +1,4 @@
-package bio.ferlab.etl.enrich
+package bio.ferlab.etl.enriched.clinical
 
 import bio.ferlab.datalake.testutils.WithSparkSession
 import org.scalatest.flatspec.AnyFlatSpec

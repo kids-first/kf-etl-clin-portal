@@ -1,4 +1,4 @@
-package bio.ferlab.etl.enrich.model
+package bio.ferlab.etl.testmodels
 
 case class OBSERVATION_PROBAND(
                                    `participant_fhir_id`: String = "38729",

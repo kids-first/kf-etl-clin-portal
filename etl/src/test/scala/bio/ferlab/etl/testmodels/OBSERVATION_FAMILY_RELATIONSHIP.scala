@@ -1,4 +1,4 @@
-package bio.ferlab.etl.enrich.model
+package bio.ferlab.etl.testmodels
 
 case class OBSERVATION_FAMILY_RELATIONSHIP(
                                    `fhir_id`: String = "679676",
