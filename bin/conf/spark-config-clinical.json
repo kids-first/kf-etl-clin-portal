@@ -1,0 +1,46 @@
+[
+  {
+    "Classification": "spark",
+    "Properties": {
+      "maximizeResourceAllocation": "true"
+    }
+  },
+  {
+    "Classification": "spark-defaults",
+    "Properties": {
+      "spark.jars.packages":  "org.apache.spark:spark-avro_2.12:3.3.2",
+      "spark.memory.storageFraction" : "0",
+      "spark.sql.shuffle.partitions": "500",
+      "spark.dynamicAllocation.enabled": "false",
+      "spark.network.timeout": "1000000",
+      "spark.hadoop.parquet.block.size": "1073741824",
+      "spark.hadoop.dfs.block.size": "1073741824",
+      "spark.hadoop.fs.s3a.multiobjectdelete.enable": "false",
+      "spark.sql.adaptive.enabled": "false",
+      "parquet.block.size": "1073741824",
+      "spark.hadoop.fs.s3a.connection.maximum": "5000",
+      "spark.sql.extensions": "io.delta.sql.DeltaSparkSessionExtension",
+      "spark.sql.catalog.spark_catalog": "org.apache.spark.sql.delta.catalog.DeltaCatalog",
+      "spark.hadoop.fs.s3n": "com.amazonaws.auth.InstanceProfileCredentialsProvider"
+    }
+  },
+  {
+    "Classification": "delta-defaults",
+    "Properties": {
+      "delta.enabled": "true"
+    }
+  },
+  {
+    "Classification": "spark-hive-site",
+    "Properties": {
+      "hive.metastore.client.factory.class": "com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory"
+    }
+  },
+  {
+    "Classification": "emrfs-site",
+    "Properties": {
+      "fs.s3.maxConnections": "5000"
+    }
+  }
+]
+
