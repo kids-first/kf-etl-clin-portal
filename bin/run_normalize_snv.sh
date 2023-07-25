@@ -3,17 +3,16 @@
 study_id=$1
 release_id=$2
 env=${3:-"qa"}
-job=${4:-"snv"}
 instance_type="r5.4xlarge"
 instance_count="20"
-if [ "$env" = "prd" ]
-then
+if [ "$env" = "prd" ]; then
   subnet="subnet-00aab84919d5a44e2"
 else
   subnet="subnet-0f0c909ec60b377ce"
 fi
 
-steps=$(cat <<EOF
+steps=$(
+  cat <<EOF
 [
    {
      "Args": [
@@ -23,14 +22,13 @@ steps=$(cat <<EOF
        "--class",
        "bio.ferlab.etl.normalized.genomic.RunNormalizeGenomic",
        "s3a://kf-strides-232196027141-datalake-${env}/jobs/etl.jar",
-       "config/${env}-kf-strides.conf",
-       "default",
-       "${job}",
-       "${study_id}",
-       "${release_id}",
-       ".CGP.filtered.deNovo.vep.vcf.gz",
-       "/mnt/GRCh38_full_analysis_set_plus_decoy_hla.fa"
-
+       "snv",
+       "--config", "config/${env}-kf-strides.conf",
+       "--steps", "default",
+       "--study-id", "${study_id}",
+       "--release-id", "${release_id}",
+       "--vcf-pattern", ".CGP.filtered.deNovo.vep.vcf.gz",
+       "--reference-genome-path", "/mnt/GRCh38_full_analysis_set_plus_decoy_hla.fa"
      ],
      "Type": "CUSTOM_JAR",
      "ActionOnFailure": "CONTINUE",
@@ -43,7 +41,6 @@ steps=$(cat <<EOF
 ]
 EOF
 )
-
 
 aws emr create-cluster \
   --applications Name=Hadoop Name=Spark \

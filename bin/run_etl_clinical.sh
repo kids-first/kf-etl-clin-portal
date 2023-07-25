@@ -166,10 +166,10 @@ STEPS=$(
       "--class",
       "bio.ferlab.etl.normalized.dataservice.RunNormalizeDataservice",
       "s3a://${BUCKET}/jobs/etl.jar",
-      "config/${ENV}-${PROJECT}.conf",
-      "default",
-      "${RELEASE_ID}",
-      "${STUDIES}"
+      "--config", "config/${ENV}-${PROJECT}.conf",
+      "--steps", "default",
+      "--release-id", "${RELEASE_ID}",
+      "--study-id", "${STUDIES}"
     ],
     "Type": "CUSTOM_JAR",
     "ActionOnFailure": "TERMINATE_CLUSTER",
@@ -185,10 +185,10 @@ STEPS=$(
       "--class",
       "bio.ferlab.etl.normalized.clinical.RunNormalizeClinical",
       "s3a://${BUCKET}/jobs/etl.jar",
-      "config/${ENV}-${PROJECT}.conf",
-      "default",
-      "${RELEASE_ID}",
-      "${STUDIES}"
+      "--config", "config/${ENV}-${PROJECT}.conf",
+      "--steps", "default",
+      "--release-id", "${RELEASE_ID}",
+      "--study-id" ,"${STUDIES}"
     ],
     "Type": "CUSTOM_JAR",
     "ActionOnFailure": "TERMINATE_CLUSTER",
@@ -202,18 +202,18 @@ STEPS=$(
          "--deploy-mode",
          "client",
          "--class",
-         "bio.ferlab.etl.enrich.Enrich",
-         "s3a://${BUCKET}/jobs/enrich.jar",
-         "config/${ENV}-${PROJECT}.conf",
-         "default",
-         "histology",
-         "${STUDIES}"
+         "bio.ferlab.etl.enriched.clinical.RunEnrichClinical",
+         "s3a://${BUCKET}/jobs/etl.jar",
+         "all",
+         "--config", "config/${ENV}-${PROJECT}.conf",
+         "--steps", "default",
+         "--study-id" ,"${STUDIES}"
        ],
        "Type": "CUSTOM_JAR",
        "ActionOnFailure": "TERMINATE_CLUSTER",
        "Jar": "command-runner.jar",
        "Properties": "",
-       "Name": "Enrich Histology"
+       "Name": "Enrich All"
  },
  {
      "Args": [
@@ -221,12 +221,12 @@ STEPS=$(
        "--deploy-mode",
        "client",
        "--class",
-       "bio.ferlab.fhir.etl.PrepareIndex",
-       "s3a://${BUCKET}/jobs/prepare-index.jar",
-       "config/${ENV}-${PROJECT}.conf",
-       "default",
+       "bio.ferlab.etl.prepared.clinical.RunPrepareClinical",
+       "s3a://${BUCKET}/jobs/etl.jar",
        "all",
-       "${STUDIES}"
+       "--config", "config/${ENV}-${PROJECT}.conf",
+       "--steps", "default",
+       "--study-id" ,"${STUDIES}"
      ],
      "Type": "CUSTOM_JAR",
      "ActionOnFailure": "TERMINATE_CLUSTER",

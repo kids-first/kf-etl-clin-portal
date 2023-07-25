@@ -1,26 +1,28 @@
 package bio.ferlab.etl.enriched.clinical
 
 import bio.ferlab.datalake.commons.config.RuntimeETLContext
-import mainargs.{ParserForMethods, arg, main}
+import bio.ferlab.etl.mainutils.Studies
+import mainargs.{ParserForMethods, main}
 
 object RunEnrichClinical {
 
   @main
-  def histology(rc: RuntimeETLContext, @arg(name = "study-id", short = 's', doc = "Study Id") studies: List[String]): Unit = HistologyEnricher(rc, studies).run()
+  def histology(rc: RuntimeETLContext, studies: Studies): Unit = HistologyEnricher(rc, studies.ids).run()
 
   @main
-  def specimen(rc: RuntimeETLContext, @arg(name = "study-id", short = 's', doc = "Study Id") studies: List[String]): Unit = SpecimenEnricher(rc, studies).run()
+  def specimen(rc: RuntimeETLContext, studies: Studies): Unit = SpecimenEnricher(rc, studies.ids).run()
 
   @main
-  def family(rc: RuntimeETLContext, @arg(name = "study-id", short = 's', doc = "Study Id") studies: List[String]): Unit = FamilyEnricher(rc, studies).run()
+  def family(rc: RuntimeETLContext, studies: Studies): Unit = FamilyEnricher(rc, studies.ids).run()
 
   @main
-  def all(rc: RuntimeETLContext, @arg(name = "study-id", short = 's', doc = "Study Id") studies: List[String]): Unit = {
-    HistologyEnricher(rc, studies).run()
-    SpecimenEnricher(rc, studies).run()
-    FamilyEnricher(rc, studies).run()
+  def all(rc: RuntimeETLContext, studies: Studies): Unit = {
+    HistologyEnricher(rc, studies.ids).run()
+    SpecimenEnricher(rc, studies.ids).run()
+    FamilyEnricher(rc, studies.ids).run()
   }
 
   def main(args: Array[String]): Unit = ParserForMethods(this).runOrThrow(args, allowPositional = true)
 
 }
+

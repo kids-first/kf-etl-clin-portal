@@ -34,7 +34,7 @@ docker run -it --rm \
 -v /root/kf-etl-clin-portal/bin/work-dir:/opt/spark/work-dir \
 -e AWS_REGION=${REGION} \
 -p 4040:4040 apache/spark:3.3.1 \
-/opt/spark/bin/spark-submit --deploy-mode client --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --class bio.ferlab.etl.normalized.clinical.RunNormalizeClinical etl.jar config/ucsf.conf default ${RELEASE_ID} ${STUDY_ID}
+/opt/spark/bin/spark-submit --deploy-mode client --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --class bio.ferlab.etl.normalized.clinical.RunNormalizeClinical etl.jar -c config/ucsf.conf -s default -r ${RELEASE_ID} -i ${STUDY_ID}
 
 # Execute enrich-task
 docker run -it --rm \
@@ -43,7 +43,7 @@ docker run -it --rm \
 -v /root/kf-etl-clin-portal/bin/work-dir:/opt/spark/work-dir \
 -e AWS_REGION=${REGION} \
 -p 4040:4040 apache/spark:3.3.1 \
-/opt/spark/bin/spark-submit --deploy-mode client --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --class bio.ferlab.enrich.etl.Enrich enrich.jar config/ucsf.conf default ${STUDY_ID}
+/opt/spark/bin/spark-submit --deploy-mode client --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --class bio.ferlab.etl.enriched.clinical.RunEnrichClinical enrich.jar all -c config/ucsf.conf -s default -i ${STUDY_ID}
 
 # Execute prepare-index
 docker run -it --rm \
@@ -52,7 +52,7 @@ docker run -it --rm \
 -v /root/kf-etl-clin-portal/bin/work-dir:/opt/spark/work-dir \
 -e AWS_REGION=${REGION} \
 -p 4040:4040 apache/spark:3.3.1 \
-/opt/spark/bin/spark-submit --deploy-mode client --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --class bio.ferlab.fhir.etl.PrepareIndex prepare-index.jar config/ucsf.conf default all ${STUDY_ID}
+/opt/spark/bin/spark-submit --deploy-mode client --conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp" --class bio.ferlab.etl.prepared.clinical.RunPrepareClinical prepare-index.jar all -c config/ucsf.conf -s default -i ${STUDY_ID}
 
 # Execute index-task for study_centric
 docker run -it --rm \

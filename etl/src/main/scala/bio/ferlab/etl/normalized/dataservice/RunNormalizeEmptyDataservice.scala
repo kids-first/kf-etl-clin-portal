@@ -1,22 +1,17 @@
 package bio.ferlab.etl.normalized.dataservice
 
-import bio.ferlab.datalake.spark3.SparkAppWithConfig
-import bio.ferlab.fhir.etl.config.ETLConfiguration
-import org.slf4j.{Logger, LoggerFactory}
-import pureconfig.generic.auto._
+import bio.ferlab.datalake.commons.config.RuntimeETLContext
+import mainargs.{ParserForMethods, main}
+
 /**
  * Use for initializing empty delta table, for project that does not use dataservice
  */
-object RunNormalizeEmptyDataservice extends SparkAppWithConfig[ETLConfiguration] {
-  val LOGGER: Logger = LoggerFactory.getLogger(getClass)
+object RunNormalizeEmptyDataservice {
 
-  LOGGER.info(s"ARGS: " + args.mkString("[", ", ", "]"))
+  @main
+  def run(rc: RuntimeETLContext): Unit = EmptyDataserviceExportETL(rc).run()
 
-  val Array(_, _) = args
 
-  implicit val (conf, _, spark) = init()
-
-  new EmptyDataserviceExportETL().run()
-
+  def main(args: Array[String]): Unit = ParserForMethods(this).runOrThrow(args, allowPositional = true)
 
 }

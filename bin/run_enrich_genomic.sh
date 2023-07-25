@@ -21,9 +21,9 @@ steps=$(cat <<EOF
        "--class",
        "bio.ferlab.etl.enriched.genomic.RunEnrichGenomic",
        "s3a://kf-strides-232196027141-datalake-${env}/jobs/etl.jar",
-       "config/${env}-kf-strides.conf",
-       "default",
-       "${job}"
+       "${job}",
+       "--config", "config/${env}-kf-strides.conf",
+       "--steps", "default"
 
      ],
      "Type": "CUSTOM_JAR",

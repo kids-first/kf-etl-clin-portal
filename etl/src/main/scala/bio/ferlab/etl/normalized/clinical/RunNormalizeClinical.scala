@@ -1,16 +1,17 @@
 package bio.ferlab.etl.normalized.clinical
 
+import bio.ferlab.etl.mainutils.Studies
 import bio.ferlab.fhir.etl.config.KFRuntimeETLContext
 import mainargs.{ParserForMethods, arg}
 
 object RunNormalizeClinical {
 
   def run(rc: KFRuntimeETLContext,
-          @arg(name = "study-id", short = 's', doc = "Study Id") studyIds: List[String],
+          studies: Studies,
           @arg(name = "release-id", short = 'r', doc = "Release Id") releaseId: String): Unit = {
     val jobs = FhirToNormalizedMappings
       .mappings(releaseId, rc.config)
-      .map { case (src, dst, transformations) => new NormalizeClinicalETL(rc, src, dst, transformations, releaseId, studyIds) }
+      .map { case (src, dst, transformations) => new NormalizeClinicalETL(rc, src, dst, transformations, releaseId, studies.ids) }
     jobs.foreach(_.run())
   }
 
