@@ -20,7 +20,7 @@ echo "Copy fhavro-export.jar ..."
 aws s3 cp fhavro-export/target/scala-2.13/fhavro-export.jar $job_dest
 
 echo "Copy etl.jar ..."
-aws s3 cp import-task/target/scala-2.12/etl.jar $job_dest
+aws s3 cp etl/target/scala-2.12/etl.jar $job_dest
 
 echo "Copy templates ..."
 aws s3 cp --recursive index-task/target/scala-2.12/classes/templates/ $template_dest
