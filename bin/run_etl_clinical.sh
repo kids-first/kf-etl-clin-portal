@@ -159,7 +159,7 @@ STEPS=$(
  {
     "Args": [
       "spark-submit",
-      "--package",
+      "--packages",
       "com.typesafe.play:play-ahc-ws-standalone_2.12:2.0.3",
       "--deploy-mode",
       "client",
