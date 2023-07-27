@@ -2,10 +2,11 @@ package bio.ferlab.etl.normalized.clinical
 
 import bio.ferlab.etl.mainutils.Studies
 import bio.ferlab.fhir.etl.config.KFRuntimeETLContext
-import mainargs.{ParserForMethods, arg}
+import mainargs.{ParserForMethods, arg, main}
 
 object RunNormalizeClinical {
 
+  @main
   def run(rc: KFRuntimeETLContext,
           studies: Studies,
           @arg(name = "release-id", short = 'r', doc = "Release Id") releaseId: String): Unit = {
