@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+#set -x
 source "$(dirname "$0")/utils.sh"
 
 truncate_emr_name_if_needed() {
@@ -18,6 +18,7 @@ filter_steps() {
   local allSteps=$1
   # Comma-separated list
   local stepsToExclude="${2:-''}"
+   #debug tip: to run jq with docker do "docker run --rm -i imega/jq
   echo "$allSteps" | jq --arg blacklist "$stepsToExclude" '[.[] | select(.Name as $name | $blacklist | index($name) | not)]'
 }
 
@@ -133,6 +134,8 @@ fi
 SUBNET=$(net_conf_extractor "subnet" "${PROJECT}" "${ENV}")
 ES_ENDPOINT=$(net_conf_extractor "es" "${PROJECT}" "${ENV}")
 
+STEP_NAME_NORMALISE_DATASERVICE="Normalize Dataservice"
+
 STEPS=$(
   cat <<EOF
 [
@@ -175,7 +178,7 @@ STEPS=$(
     "ActionOnFailure": "TERMINATE_CLUSTER",
     "Jar": "command-runner.jar",
     "Properties": "",
-    "Name": "Normalize Dataservice"
+    "Name": "${STEP_NAME_NORMALISE_DATASERVICE}"
   },
   {
     "Args": [
@@ -323,8 +326,8 @@ EOF
 )
 
 if [ "${PROJECT}" = 'include' ]; then
-  STEPS_TO_AVOID_WHEN_INCLUDE="Export Dataservice"
-  STEPS="$(filter_steps "$STEPS" "$STEPS_TO_AVOID_WHEN_INCLUDE")"
+  #remove step
+  STEPS="$(filter_steps "$STEPS" "$STEP_NAME_NORMALISE_DATASERVICE")"
 fi
 
 # Remove all steps before $SKIP_STEPS if it exists - Allows to skip tests if needed.
