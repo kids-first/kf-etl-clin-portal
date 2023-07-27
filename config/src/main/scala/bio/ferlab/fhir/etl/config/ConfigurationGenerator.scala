@@ -202,11 +202,10 @@ object ConfigurationGenerator extends App {
     "spark.sql.legacy.timeParserPolicy" -> "CORRECTED",
     "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN",
     "spark.hadoop.fs.s3a.multiobjectdelete.enable" -> "false", //https://hadoop.apache.org/docs/stable/hadoop-aws/tools/hadoop-aws/troubleshooting_s3a.html#MultiObjectDeleteException_during_delete_or_rename_of_files,
-    "spark.databricks.delta.replaceWhere.constraintCheck.enabled" -> "false",
-    "spark.hadoop.io.compression.codecs" -> "io.projectglow.sql.util.BGZFCodec"
+    "spark.databricks.delta.replaceWhere.constraintCheck.enabled" -> "false"
   )
   conf.foreach { case (project, _) =>
-    ConfigurationWriter.writeTo(s"config/output/config/dev-${project}.conf", ETLConfiguration(isFlatSpecimenModel(project), DatalakeConf(
+    ConfigurationWriter.writeTo(s"config/output/config/dev-$project.conf", ETLConfiguration(isFlatSpecimenModel(project), DatalakeConf(
       storages = List(
         StorageConf(storage, "s3a://storage", S3),
         gnomadStorage
@@ -235,7 +234,7 @@ object ConfigurationGenerator extends App {
     ))
 
 
-    ConfigurationWriter.writeTo(s"config/output/config/qa-${project}.conf", ETLConfiguration(isFlatSpecimenModel(project), DatalakeConf(
+    ConfigurationWriter.writeTo(s"config/output/config/qa-$project.conf", ETLConfiguration(isFlatSpecimenModel(project), DatalakeConf(
       storages = List(
         StorageConf(storage, s"s3a://${conf(project)("bucketNamePrefix")}-qa", S3),
         gnomadStorage
@@ -247,7 +246,7 @@ object ConfigurationGenerator extends App {
       dataservice_url = "https://kf-api-dataservice-qa.kidsfirstdrc.org"
     ))
 
-    ConfigurationWriter.writeTo(s"config/output/config/prd-${project}.conf", ETLConfiguration(isFlatSpecimenModel(project), DatalakeConf(
+    ConfigurationWriter.writeTo(s"config/output/config/prd-$project.conf", ETLConfiguration(isFlatSpecimenModel(project), DatalakeConf(
       storages = List(
         StorageConf(storage, s"s3a://${conf(project)("bucketNamePrefix")}-prd", S3),
         gnomadStorage

@@ -22,6 +22,7 @@
       "spark.hadoop.fs.s3a.connection.maximum": "5000",
       "spark.sql.extensions": "io.delta.sql.DeltaSparkSessionExtension",
       "spark.sql.catalog.spark_catalog": "org.apache.spark.sql.delta.catalog.DeltaCatalog",
+      "spark.hadoop.io.compression.codecs": "io.projectglow.sql.util.BGZFCodec",
       "spark.hadoop.fs.s3n": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
       "spark.hadoop.fs.s3a.aws.credentials.provider": "org.apache.hadoop.fs.s3a.auth.AssumedRoleCredentialProvider",
       "spark.hadoop.fs.s3a.assumed.role.arn": "arn:aws:iam::538745987955:role/kf-etl-server-prd-role",
