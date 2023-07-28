@@ -27,7 +27,7 @@ case class SimpleParticipant(rc: RuntimeETLContext, studyIds: List[String]) exte
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now()): Map[String, DataFrame] = {
     (Seq(
-      es_index_study_centric, normalized_patient, normalized_phenotype, normalized_disease, normalized_group, normalized_vital_status, normalized_proband_observation)
+      es_index_study_centric, normalized_patient, normalized_phenotype, normalized_disease, normalized_group, normalized_vital_status, normalized_proband_observation, enriched_family)
       .map(ds => ds.id -> ds.read
         .where(col("study_id").isin(studyIds: _*))
       ) ++ Seq(
