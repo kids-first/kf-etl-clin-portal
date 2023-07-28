@@ -2,7 +2,7 @@ package bio.ferlab.etl.prepared.clinical
 
 import bio.ferlab.datalake.commons.config.RuntimeETLContext
 import bio.ferlab.etl.mainutils.Studies
-import mainargs.main
+import mainargs.{ParserForMethods, main}
 
 object RunPrepareClinical {
   @main(name = "study_centric", doc = "Prepare Index Study Centric")
@@ -30,5 +30,6 @@ object RunPrepareClinical {
     fileCentric(rc, studies)
   }
 
+  def main(args: Array[String]): Unit = ParserForMethods(this).runOrThrow(args, allowPositional = true)
 
 }

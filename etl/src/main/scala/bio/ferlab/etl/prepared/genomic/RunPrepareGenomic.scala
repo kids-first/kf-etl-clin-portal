@@ -18,6 +18,5 @@ object RunPrepareGenomic {
   @main
   def gene_suggestions(rc: RuntimeETLContext): Unit = GenesSuggestions(rc).run()
 
-
   def main(args: Array[String]): Unit = ParserForMethods(this).runOrThrow(args, allowPositional = true)
 }
