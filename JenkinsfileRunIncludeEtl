@@ -1,7 +1,7 @@
 @Library(value="kids-first/aws-infra-jenkins-shared-libraries", changelog=false) _
 simple_pipeline {
    stage_name_1 = "run_etl.sh"
-   script_1 = "cd bin && ./run_etl_clinical.sh -p include -r re_077 -s ABC-DS,BRI-DSR,DSC,DS-Sleep,X01-deSmith,X01-Hakonarson,HTP -e qa --instance-type m5.8xlarge --instance-count 1 -b include-373997854230-datalake-qa --instance-profile include-ec2-qa-profile --service-role include-datalake-emr-qa-role --fhir-url 'http://app.include-api-fhir-service-qa.373997854230.d3b.io:8000' --skip-steps 'Download and Run Fhavro-export'"
+   script_1 = "cd bin && ./run_etl_clinical.sh -p include -r re_077 -s ABC-DS,BRI-DSR,DSC,DS-Sleep,X01-deSmith,X01-Hakonarson,HTP -e qa --instance-type m5.8xlarge --instance-count 1 -b include-373997854230-datalake-qa --instance-profile include-ec2-qa-profile --service-role include-datalake-emr-qa-role --fhir-url 'http://app.include-api-fhir-service-qa.373997854230.d3b.io:8000' --skip-steps 'Download and Run Fhavro-export,Normalize Clinical,Enrich All'"
    projectName = "include-etl-clin-portal"
 }
 
