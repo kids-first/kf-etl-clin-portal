@@ -350,7 +350,7 @@ object Utils {
 
       val enrichedReformattedFamily = reformattedFamily
         .join(
-          enrichedFamilyDf,
+          enrichedFamilyDf.drop("study_id"),
           array_contains(col("family_members_id"), enrichedFamilyDf("participant_fhir_id")),
           "left_outer"
         )
