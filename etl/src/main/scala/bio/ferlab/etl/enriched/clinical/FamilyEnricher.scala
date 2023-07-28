@@ -40,99 +40,44 @@ case class FamilyEnricher(rc: RuntimeETLContext, studyIds: List[String]) extends
      * |pm           |f           |{[{p, proband}, {pm, mother}], f}   |duo         |
      * +--------------+------------+-----------------------------------+------------+
      * */
-    val patients = data(normalized_patient.id)
+    val patients = data(normalized_patient.id).select(col("fhir_id") as "participant_fhir_id", col("participant_id"))
     val probandObservations = data(normalized_proband_observation.id)
     val groups = data(normalized_group.id)
     val familyRelationships = data(normalized_family_relationship.id)
-
-    val probands = patients
       .select(
-        col("fhir_id") as "participant_fhir_id",
-        col("participant_id")
+        col("participant2_fhir_id") as "focus",
+        col("participant1_fhir_id") as "target",
+        col("participant1_to_participant_2_relationship") as "role"
       )
-      .join(
-        // Possible code repeat across different modules.
-        probandObservations.select("participant_fhir_id", "is_proband"),
-        Seq("participant_fhir_id"),
-        "left_outer")
-      .withColumn("is_proband", coalesce(col("is_proband"), lit(false)))
+
+
+    val probands = probandObservations
       .where(col("is_proband"))
-      .select(
-        "participant_fhir_id",
-        "participant_id"
-      )
+      .join(patients, Seq("participant_fhir_id"))
+      .select("participant_id", "participant_fhir_id", "study_id")
 
-    val familiesWithProband = groups
+    val probandMember = array(struct(col("proband_id") as "participant_id", lit("proband") as "role"))
+
+    val probandFamilyRelationShips = familyRelationships.join(probands, probands("participant_fhir_id") === familyRelationships("focus"))
+      .select(col("participant_id") as "proband_id", col("study_id"), col("target"), col("role"))
+      .join(patients.as("p"), col("target") === patients("participant_fhir_id"))
+      .select(col("proband_id"), col("p.participant_id") as "participant_id_target", col("study_id"), col("role"))
+      .groupBy(col("proband_id"), col("study_id"))
+      .agg(collect_list(struct(col("participant_id_target") as  "participant_id", col("role"))) as "relations")
+      .withColumn("relations", array_union(col("relations"), probandMember))//add proband to the list of relations
+
+    val families = groups
       .join(probands, array_contains(groups("family_members_id"), probands("participant_fhir_id")), "inner")
       .select(
-        probands("participant_fhir_id") as "proband_fhir_id",
-        groups("fhir_id") as "family_fhir_id"
+        probands("participant_id") as "proband_id",
+        groups("fhir_id") as "family_fhir_id",
+        explode(groups("family_members_id")) as "participant_fhir_id"
       )
-
-    val patientsFhirIdToParticipantId = patients
-      .select(
-        col("fhir_id") as "fhir_id_from_pt",
-        col("participant_id")
-      )
-
-    val fr = familyRelationships
-      .select(
-        col("participant2_fhir_id") as "pt_fhir_id_with_focus",
-        col("participant1_fhir_id") as "pt_fhir_id_of_subject",
-        col("participant1_to_participant_2_relationship") as "role_of_subject_from_focus_view"
-      )
-
-    val frWithProbandId = fr
-      .join(
-        familiesWithProband,
-        fr("pt_fhir_id_with_focus") === familiesWithProband("proband_fhir_id")
-      )
-      .drop("proband_fhir_id")
-
-    val frWithProbandIdWithFocusId = frWithProbandId
-      .join(
-        patientsFhirIdToParticipantId,
-        frWithProbandId("pt_fhir_id_with_focus") === patientsFhirIdToParticipantId("fhir_id_from_pt"),
-        "left"
-      )
-      .withColumnRenamed("participant_id", "participant_focus_id")
-      .drop(patientsFhirIdToParticipantId("fhir_id_from_pt"))
-
-    val frWithProbandIdWithFocusIdWithSubjectId = frWithProbandIdWithFocusId
-      .join(
-        patientsFhirIdToParticipantId,
-        frWithProbandId("pt_fhir_id_of_subject") === patientsFhirIdToParticipantId("fhir_id_from_pt"),
-        "left"
-      )
-      .withColumnRenamed("participant_id", "participant_subject_id")
-      .drop(patientsFhirIdToParticipantId("fhir_id_from_pt"))
+      .join(patients, Seq("participant_fhir_id"))
 
 
-    val relationsFromProbandViewByFamily = frWithProbandIdWithFocusIdWithSubjectId
-      .groupBy("family_fhir_id")
-      .agg(
-        array_union(
-          collect_list(
-            struct(
-              col("participant_subject_id") as "participant_id",
-              col("role_of_subject_from_focus_view") as "role"
-            )
-          ),
-          array(
-            struct(
-              first(col("participant_focus_id")) as "participant_id",
-              lit("proband") as "role"
-            )
-          )
-        ) as "relations",
-      )
+    probandFamilyRelationShips.join(families, Seq("proband_id"))
+      .drop("proband_id")
 
-
-    groups
-      .select(
-        explode(col("family_members_id")) as "participant_fhir_id",
-        col("fhir_id") as "family_fhir_id",
-      )
-      .join(relationsFromProbandViewByFamily, Seq("family_fhir_id"))
   }
 }
