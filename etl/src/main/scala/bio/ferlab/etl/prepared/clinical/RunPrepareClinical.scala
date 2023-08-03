@@ -23,8 +23,8 @@ object RunPrepareClinical {
 
   @main(name = "all", doc = "Run all prepare index")
   def all(rc: RuntimeETLContext, studies: Studies): Unit = {
-    simpleParticipant(rc, studies)
     studyCentric(rc, studies)
+    simpleParticipant(rc, studies)
     participantCentric(rc, studies)
     biospecimenCentric(rc, studies)
     fileCentric(rc, studies)

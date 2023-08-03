@@ -129,5 +129,5 @@ aws emr create-cluster \
   --log-uri "s3n://${BUCKET}/jobs/elasticmapreduce/" \
   --name "Zeppelin - ${ENV}" \
   --instance-groups "[{\"InstanceCount\":${INSTANCE_COUNT},\"InstanceGroupType\":\"CORE\",\"InstanceType\":\"${INSTANCE_TYPE}\",\"Name\":\"Core - 2\"},{\"InstanceCount\":1,\"EbsConfiguration\":{\"EbsBlockDeviceConfigs\":[{\"VolumeSpecification\":{\"SizeInGB\":32,\"VolumeType\":\"gp2\"},\"VolumesPerInstance\":2}]},\"InstanceGroupType\":\"MASTER\",\"InstanceType\":\"m5.xlarge\",\"Name\":\"Master - 1\"}]" \
-  --configurations file://./spark-config.json \
+  --configurations file://./conf/spark-config-clinical.json \
   --region us-east-1
