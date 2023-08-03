@@ -18,8 +18,6 @@ object FhavroExport extends App {
 
   val Array(releaseId, studyIds, project, verbose) = args
 
-  println(s"arg verbose=${verbose}")//TODO TEMP DEBUG
-  println("args: " + args.mkString("Array(", ", ", ")"))//TODO TEMP DEBUG
   val studyList = studyIds.split(",").toList
 
   studyList.foreach(studyId => {
