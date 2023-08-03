@@ -8,12 +8,13 @@ import cats.implicits.catsSyntaxValidatedId
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent
 import software.amazon.awssdk.services.s3.S3Client
 
-def isVerbose(raw: String): Boolean = {
-  raw != null && List("yes", "true", "y").contains(raw.toLowerCase())
-}
 
 object FhavroExport extends App {
   println(s"ARGS: " + args.mkString("[", ", ", "]"))
+
+  private def isVerbose(raw: String): Boolean = {
+    raw != null && List("yes", "true", "y").contains(raw.toLowerCase())
+  }
 
   val Array(releaseId, studyIds, project, verbose) = args
 
