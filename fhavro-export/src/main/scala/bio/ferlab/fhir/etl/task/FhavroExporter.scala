@@ -3,7 +3,6 @@ package bio.ferlab.fhir.etl.task
 import bio.ferlab.fhir.Fhavro
 import bio.ferlab.fhir.etl.config.FhirRequest
 import bio.ferlab.fhir.etl.fhir.FhirUtils
-import bio.ferlab.fhir.etl.logging.LoggerUtils
 import bio.ferlab.fhir.etl.s3.S3Utils.{buildKey, writeFile}
 import ca.uhn.fhir.rest.client.api.IGenericClient
 import org.apache.avro.Schema
@@ -15,8 +14,6 @@ import software.amazon.awssdk.services.s3.S3Client
 
 import java.io.{File, FileOutputStream}
 import java.nio.file.{Files, Paths}
-import java.util.concurrent.atomic.AtomicInteger
-import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters._
 
@@ -46,7 +43,6 @@ class FhavroExporter(bucketName: String, releaseId: String, studyId: String)(imp
     bEntries.addAll(getEntriesFromBundle(query))
 
     while (query.getLink("next") != null) {
-      LoggerUtils.logProgress("export", bEntries.length)
       //Update next link in case server base url changed, that happens if fhir client is configured to use ip address of fhir instance
       query.getLink("next").setUrl(FhirUtils.replaceBaseUrl(query.getLink("next").getUrl, fhirClient.getServerBase))
       query = fhirClient.loadPage().next(query).execute()
@@ -67,7 +63,6 @@ class FhavroExporter(bucketName: String, releaseId: String, studyId: String)(imp
     val resourceName = fhirRequest.`type`.toLowerCase
 
     LOGGER.info(s"--- Loading schema: ${fhirRequest.schema}")
-    println(fhirRequest.schema)
     val schema = Fhavro.loadSchemaFromResources(s"schema/${fhirRequest.schema}.avsc")
     LOGGER.info(s"--- Converting $resourceName to GenericRecord(s)")
     val genericRecords: List[GenericRecord] = convertBundleEntriesToGenericRecords(schema, bundleEntries)
@@ -82,10 +77,10 @@ class FhavroExporter(bucketName: String, releaseId: String, studyId: String)(imp
   }
 
   def convertBundleEntriesToGenericRecords(schema: Schema, bundleEntries: List[BundleEntryComponent]): List[GenericRecord] = {
-    val total = bundleEntries.length
-    val progress = new AtomicInteger()
+    // turningOff: val total = bundleEntries.length
+    // turningOff: val progress = new AtomicInteger()
     bundleEntries.map(be => {
-      LoggerUtils.logProgressAtomic("convert", progress, total)
+      // Disabling for awhile to see if it were really helpful: //LoggerUtils.logProgressAtomic("convert", progress, total)
       val record = Fhavro.convertResourceToGenericRecord(be.getResource.asInstanceOf[DomainResource], schema)
       record.put("fullUrl", be.getFullUrl)
       record

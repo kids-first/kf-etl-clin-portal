@@ -17,9 +17,7 @@ object FhirUtils {
   def buildFhirClient(config: Config, verbose: Boolean): GenericClient = {
     val loggingInterceptor = new LoggingInterceptor()
     val fhirClient: GenericClient = fhirContext.getRestfulClientFactory.newGenericClient(s"${config.fhirConfig.baseUrl}").asInstanceOf[GenericClient]
-    println(s"buildFhirClient boolean verbose=${verbose}")//TODO TEMP DEBUG
     if (verbose) {
-      println(s"buildFhirClient in branch verbose=true")//TODO TEMP DEBUG
       loggingInterceptor.setLogRequestSummary(true)
       loggingInterceptor.setLogRequestBody(true)
       fhirClient.registerInterceptor(loggingInterceptor);
