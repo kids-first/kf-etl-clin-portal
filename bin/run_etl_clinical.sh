@@ -29,7 +29,8 @@ usage() {
   echo "-p, --project    project name (kf-strides or include)"
   echo "-r, --release    release id"
   echo "-s, --studies    study ids separated by a comma"
-  echo "-b, --bucket    bucket name"
+  echo "-b, --bucket     bucket name"
+  echo "-v, --verbose    activate fhir logging interceptor (true)"
   echo "-e, --environment    environment"
   echo "--instance-type    instance type"
   echo "--instance-count    instance count"
@@ -40,11 +41,11 @@ usage() {
   echo "-h, --help    display usage"
   echo
   echo "Example(s):"
-  echo "run_etl -p include -r re_061 -s DS-COG-ALL,DS-PCGC,DS360-CHD,HTP,DSC -e qa --instance-type m5.8xlarge --instance-count 1 -b include-373997854230-datalake-qa --instance-profile include-ec2-qa-profile --service-role include-datalake-emr-qa-role --fhir-url 'http://app.sd-kf-api-fhir-service-qa.kf-strides.org:8000'"
+  echo "run_etl -p include -r re_061 -s DS-COG-ALL,DS-PCGC,DS360-CHD,HTP,DSC -e qa --instance-type m5.8xlarge --instance-count 1 -b include-373997854230-datalake-qa --instance-profile include-ec2-qa-profile --service-role include-datalake-emr-qa-role --fhir-url 'http://app.sd-kf-api-fhir-service-qa.kf-strides.org:8000' -v true"
   exit 1
 }
 
-PARSED_ARGUMENTS=$(getopt -a -n run_etl -o p:r:s:b:e:h --long project:,release:,studies:,bucket:,environment:,instance-type:,instance-count:,instance-profile:,service-role:,help,skip-steps:,fhir-url: -- "$@")
+PARSED_ARGUMENTS=$(getopt -a -n run_etl -o p:r:s:b:e:hv: --long project:,release:,studies:,bucket:,environment:,instance-type:,instance-count:,instance-profile:,service-role:,help,skip-steps:,fhir-url:,verbose: -- "$@")
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then
   usage
@@ -53,6 +54,7 @@ eval set -- "$PARSED_ARGUMENTS"
 
 RELEASE_ID=$(unset)
 BUCKET=$(unset)
+VERBOSE=$(unset)
 ENV=$(unset)
 INSTANCE_TYPE=$(unset)
 INSTANCE_COUNT=$(unset)
@@ -79,6 +81,10 @@ while :; do
     ;;
   -b | --bucket)
     BUCKET=$2
+    shift 2
+    ;;
+  -v | --verbose)
+    VERBOSE="$2"
     shift 2
     ;;
   -e | --environment)
@@ -131,6 +137,7 @@ if [ -z "${FHIR_URL}" ]; then
     exit 1
 fi
 
+
 SUBNET=$(net_conf_extractor "subnet" "${PROJECT}" "${ENV}")
 ES_ENDPOINT=$(net_conf_extractor "es" "${PROJECT}" "${ENV}")
 
@@ -156,7 +163,7 @@ STEPS=$(
     "Jar":"command-runner.jar",
     "Args":[
       "bash","-c",
-      "aws s3 cp s3://${BUCKET}/jobs/fhavro-export.jar /home/hadoop; export FHIR_URL='${FHIR_URL}'; export BUCKET='${BUCKET}'; cd /home/hadoop;/usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar fhavro-export.jar ${RELEASE_ID} ${STUDIES} default"
+      "aws s3 cp s3://${BUCKET}/jobs/fhavro-export.jar /home/hadoop; export FHIR_URL='${FHIR_URL}'; export BUCKET='${BUCKET}'; cd /home/hadoop;/usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar fhavro-export.jar ${RELEASE_ID} ${STUDIES} default ${VERBOSE}"
     ]
   },
  {

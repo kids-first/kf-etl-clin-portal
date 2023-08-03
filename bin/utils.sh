@@ -26,4 +26,3 @@ net_conf_extractor() {
 }
 
 SUBNET=$(net_conf_extractor "subnet" "kf-strides" "qa")
-echo $SUBNET

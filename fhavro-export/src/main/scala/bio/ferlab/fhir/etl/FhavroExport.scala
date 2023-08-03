@@ -8,10 +8,14 @@ import cats.implicits.catsSyntaxValidatedId
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent
 import software.amazon.awssdk.services.s3.S3Client
 
+def isVerbose(raw: String): Boolean = {
+  raw != null && List("yes", "true", "y").contains(raw.toLowerCase())
+}
+
 object FhavroExport extends App {
   println(s"ARGS: " + args.mkString("[", ", ", "]"))
 
-  val Array(releaseId, studyIds, project) = args
+  val Array(releaseId, studyIds, project, verbose) = args
 
   val studyList = studyIds.split(",").toList
 
@@ -20,7 +24,7 @@ object FhavroExport extends App {
       withLog {
         withConfiguration(project) { configuration =>
           implicit val s3Client: S3Client = buildS3Client()
-          implicit val fhirClient: GenericClient = buildFhirClient(configuration)
+          implicit val fhirClient: GenericClient = buildFhirClient(configuration, isVerbose(verbose))
 
           val fhavroExporter = new FhavroExporter(configuration.awsConfig.bucketName, releaseId, studyId)
 
