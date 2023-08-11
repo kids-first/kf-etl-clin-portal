@@ -1,0 +1,113 @@
+{
+  "StartAt": "Initialize Variant ETL",
+  "TimeoutSeconds": 10800,
+  "States": {
+    "Initialize Variant ETL": {
+      "Type": "Task",
+      "Resource": "${variant_etl_initialize_emr_arn}",
+      "Next": "Wait For EMR Cluster to Spin Up",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "Notify ETL Failed"
+        }
+      ]
+    },
+    "Wait For EMR Cluster to Spin Up" : {
+      "Type": "Wait",
+      "Seconds" : 60,
+      "Next": "Submit ETL Step"
+    },
+    "Submit ETL Step" : {
+      "Type": "Task",
+      "Resource": "${variant_etl_add_emr_step_arn}",
+      "Next" : "ETL Step Monitor Wait",
+       "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "Notify ETL Failed"
+        }
+      ]
+    },
+    "ETL Step Monitor Wait" : {
+      "Type": "Wait",
+      "Seconds": 60,
+      "Next" : "Monitor Variant ETL"
+    },
+    "Monitor Variant ETL": {
+      "Type": "Task",
+      "Resource": "${variant_etl_monitor_emr_arn}",
+      "Next": "Monitor Variant ETL Choice",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "Notify ETL Failed"
+        }
+      ]
+    },
+    "Monitor Variant ETL Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.etlStatus",
+          "StringEquals" : "COMPLETED",
+          "Next": "Notify ETL Success"
+        },
+        {
+          "And": [
+            {
+              "Variable": "$.etlStatus",
+              "StringEquals" : "RUNNING"
+            },
+            {
+              "Variable": "$.currentEtlStepStatus",
+              "StringEquals" : "COMPLETED"
+            }
+          ],
+        "Next": "Submit ETL Step"
+        },
+        {
+          "Or": [
+            {
+              "Variable": "$.etlStatus",
+              "StringEquals" : "FAILED"
+            },
+            {
+              "Variable": "$.currentEtlStepStatus",
+              "StringEquals" : "FAILED"
+            }
+          ],
+          "Next": "Notify ETL Failed"
+        }
+      ],
+      "Default": "ETL Step Monitor Wait"
+    },
+    "Notify ETL Failed": {
+      "Type": "Task",
+      "Resource": "${variant_etl_notify_emr_status_arn}",
+      "Next": "Terminate EMR Cluster"
+    },
+    "Notify ETL Success": {
+      "Type": "Task",
+      "Resource": "${variant_etl_notify_emr_status_arn}",
+      "Next": "Terminate EMR Cluster"
+    },
+    "Terminate EMR Cluster": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::elasticmapreduce:terminateCluster",
+      "Parameters": {
+        "ClusterId.$": "$.variantEtlClusterId"
+      },
+      "End": true
+    }
+  }
+}
