@@ -111,3 +111,8 @@ metastore_db/*
 .DS_store
 
 bin/spark_ivy
+
+*.zip
+**/.terraform
+*.terraform
+**/.terraform.lock.hcl
