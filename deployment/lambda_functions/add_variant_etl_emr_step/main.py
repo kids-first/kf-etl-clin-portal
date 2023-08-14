@@ -1,4 +1,5 @@
 import boto3
+import sys
 
 elastic_search_endpoint_map = {
     'es_kf-strides_qa'  : "https://vpc-kf-arranger-blue-es-service-exwupkrf4dyupg24dnfmvzcwri.us-east-1.es.amazonaws.com",
@@ -10,6 +11,7 @@ elastic_search_endpoint_map = {
 def add_variant_etl_emr_step(etl_args, context):
     print(f'Add Step to Variant ETL {etl_args}')
 
+    sys.exit()
     etl_variant_steps_to_execute = etl_args['etlVariantStepsToExecute']
     current_step = etl_args['currentEtlVariantStep']
 
