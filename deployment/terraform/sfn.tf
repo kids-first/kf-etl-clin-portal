@@ -41,10 +41,15 @@ data "aws_iam_policy_document" "step_functions_service_role_policy" {
     actions = [
       "lambda:InvokeFunction",
     ]
+    resources = ["*"]
+  }
+  statement {
+    effect = "Allow"
 
-    # Despite the "*" wildcard, only allow these actions for Batch jobs that were
-    # started by Step Functions.
-    # See: https://github.com/awsdocs/aws-step-functions-developer-guide/blob/master/doc_source/batch-iam.md
+    actions = [
+      "elasticmapreduce:DescribeCluster",
+      "elasticmapreduce:TerminateJobFlows",
+    ]
     resources = ["*"]
   }
 }
