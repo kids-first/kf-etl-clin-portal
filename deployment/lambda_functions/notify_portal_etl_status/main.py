@@ -1,5 +1,5 @@
 
-def notify_variant_etl_status(etl_args, context):
+def notify_portal_etl_status(etl_args, context):
     cluster_id = etl_args['variantEtlClusterId']
     step_id = etl_args['currentEtlVariantStepId']
     etl_status = etl_args['etlStatus']

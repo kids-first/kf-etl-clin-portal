@@ -7,14 +7,14 @@ locals {
 # Step Functions resources
 #
 resource "aws_sfn_state_machine" "default" {
-  name     = "stateMachine${local.short}${var.environment}"
+  name     = "stateMachine${local.short}-${var.environment}"
   role_arn = aws_iam_role.step_functions_service_role.arn
 
   definition = templatefile("step-functions/etl.json.tmpl", {
-    variant_etl_initialize_emr_arn    = aws_lambda_function.initialize-variant-etl-emr-lambda.arn,
-    variant_etl_monitor_emr_arn       = aws_lambda_function.monitor-variant-etl-emr-lambda.arn,
-    variant_etl_add_emr_step_arn      = aws_lambda_function.add-variant-etl-emr-step-lambda.arn,
-    variant_etl_notify_emr_status_arn = aws_lambda_function.notify-variant-etl-emr-status-lambda.arn,
+    portal_etl_initialize_emr_arn    = aws_lambda_function.initialize-portal-etl-emr-lambda.arn,
+    portal_etl_monitor_emr_arn       = aws_lambda_function.monitor-portal-etl-emr-lambda.arn,
+    portal_etl_add_emr_step_arn      = aws_lambda_function.add-portal-etl-emr-step-lambda.arn,
+    portal_etl_notify_emr_status_arn = aws_lambda_function.notify-portal-etl-emr-status-lambda.arn,
     environment                       = var.environment,
     portal_emr_ec2_subnet_id          = var.portal_emr_ec2_subnet_id
   })

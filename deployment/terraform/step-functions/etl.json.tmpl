@@ -4,7 +4,7 @@
   "States": {
     "Initialize Variant ETL": {
       "Type": "Task",
-      "Resource": "${variant_etl_initialize_emr_arn}",
+      "Resource": "${portal_etl_initialize_emr_arn}",
       "Next": "Wait For EMR Cluster to Spin Up",
       "Catch": [
         {
@@ -23,7 +23,7 @@
     },
     "Submit ETL Step" : {
       "Type": "Task",
-      "Resource": "${variant_etl_add_emr_step_arn}",
+      "Resource": "${portal_etl_add_emr_step_arn}",
       "Next" : "ETL Step Monitor Wait",
        "Catch": [
         {
@@ -42,7 +42,7 @@
     },
     "Monitor Variant ETL": {
       "Type": "Task",
-      "Resource": "${variant_etl_monitor_emr_arn}",
+      "Resource": "${portal_etl_monitor_emr_arn}",
       "Next": "Monitor Variant ETL Choice",
       "Catch": [
         {
@@ -93,19 +93,19 @@
     },
     "Notify ETL Failed": {
       "Type": "Task",
-      "Resource": "${variant_etl_notify_emr_status_arn}",
+      "Resource": "${portal_etl_notify_emr_status_arn}",
       "Next": "Terminate EMR Cluster"
     },
     "Notify ETL Success": {
       "Type": "Task",
-      "Resource": "${variant_etl_notify_emr_status_arn}",
+      "Resource": "${portal_etl_notify_emr_status_arn}",
       "Next": "Terminate EMR Cluster"
     },
     "Terminate EMR Cluster": {
       "Type": "Task",
       "Resource": "arn:aws:states:::elasticmapreduce:terminateCluster",
       "Parameters": {
-        "ClusterId.$": "$.variantEtlClusterId"
+        "ClusterId.$": "$.portalEtlClusterId"
       },
       "End": true
     }

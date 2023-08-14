@@ -1,7 +1,7 @@
 
 import boto3
 
-def check_variant_etl_emr_step_status(etl_args, context):
+def check_portal_etl_emr_step_status(etl_args, context):
     print(f'Check Status of Variant ETL Inputs: {etl_args}')
     cluster_id = etl_args['variantEtlClusterId']
     step_id = etl_args['currentEtlVariantStepId']

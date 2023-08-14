@@ -8,7 +8,7 @@ elastic_search_endpoint_map = {
     'es_include_prd'    : "https://vpc-arranger-es-service-ykxirqamjqxyiyfg2rruxusfg4.us-east-1.es.amazonaws.com"
 }
 
-def add_variant_etl_emr_step(etl_args, context):
+def add_portal_etl_emr_step(etl_args, context):
     print(f'Add Step to Variant ETL {etl_args}')
 
     sys.exit()
