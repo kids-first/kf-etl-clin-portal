@@ -1,5 +1,5 @@
 resource "aws_secretsmanager_secret" "portal_etl_secret" {
-  name = "${var.project}/${var.environment}/secret"
+  name = "${var.project}/secrets"
   description = "Portal ETL secrets"
 }
 

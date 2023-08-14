@@ -14,20 +14,20 @@ cluster_size_map = {
     'large' : 'm5.xlarge'
 }
 
-def initialize_variant_etl_emr(etl_args, context):
-    print('Initiate Variant ETL EMR')
+def initialize_portal_etl_emr(etl_args, context):
+    print('Initiate Portal ETL EMR')
     print(f'Inputs: ${etl_args}')
 
     # Extract Data From Input
     env = etl_args['env']
     release_id = etl_args['releaseId']
     studies = etl_args['studyIds']
-    bucket = etl_args['etlVariantBucket']
+    bucket = etl_args['etlPortalBucket']
     instance_count = etl_args['instanceCount']
     instance_profile = etl_args['instanceProfile']
     cluster_size = etl_args['clusterSize']
     service_role = etl_args['serviceRole']
-    customEmrName = etl_args['variantEtlName']
+    customEmrName = etl_args['portalEtlName']
 
     emr_name = customEmrName if customEmrName is not None else generate_emr_name(env, release_id, studies)
 
@@ -45,7 +45,7 @@ def initialize_variant_etl_emr(etl_args, context):
                         service_security_group=service_security_group_id, master_security_group=master_security_group_id,
                          slave_security_group=slave_security_group_id, cluster_size=cluster_size)
 
-    etl_args['variantEtlClusterId'] = emr_id
+    etl_args['portalEtlClusterId'] = emr_id
     return etl_args
 
 
@@ -155,4 +155,4 @@ if __name__ == '__main__':
     'project': 'kf-strides',
     }
 
-    initialize_variant_etl_emr(test_event, None)
+    initialize_portal_etl_emr(test_event, None)

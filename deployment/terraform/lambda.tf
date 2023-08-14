@@ -83,7 +83,7 @@ resource "aws_lambda_function" "initialize-variant-etl-emr-lambda" {
   function_name = "VariantEtl-Initialize-EMR"
   filename = "../lambda_functions/initialize_variant_etl_emr_archive.zip"
   role          = aws_iam_role.lambda_service_role.arn
-  handler = "main.initialize_variant_etl_emr"
+  handler = "main.initialize_portal_etl_emr"
   runtime = "python3.9"
   source_code_hash = data.archive_file.archive-initialize-variant-etl-emr-lambda.output_base64sha256
 

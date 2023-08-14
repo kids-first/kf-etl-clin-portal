@@ -29,3 +29,8 @@ variable "AWSLambdaBasicExecutionRoleManagedPolicy" {
   type = string
   default = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
+
+variable "portal_emr_ec2_subnet_id" {
+  type = string
+  description = "Subnet ID used for Ec2 (EMR)"
+}
