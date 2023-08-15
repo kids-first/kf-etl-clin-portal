@@ -15,12 +15,12 @@ def get_slack_webhook(secret_name: str):
     return secrets['slack_webhook']
 
 def format_message(etl_args : dict):
-    cluster_id = etl_args['portalEtlClusterId']
-    step_id = etl_args['currentEtlPortalStepId']
-    etl_status = etl_args['etlStatus']
-    current_step_status = etl_args['currentEtlStepStatus']
-    etl_portal_steps_to_execute = etl_args['etlPortalStepsToExecute']
-    etl_portal_current_step = etl_args['currentEtlPortalStep']
+    cluster_id = etl_args.get('portalEtlClusterId')
+    step_id = etl_args.get('currentEtlPortalStepId')
+    etl_status = etl_args.get('etlStatus')
+    current_step_status = etl_args.get('currentEtlStepStatus')
+    etl_portal_steps_to_execute = etl_args.get('etlPortalStepsToExecute')
+    etl_portal_current_step = etl_args.get('currentEtlPortalStep')
 
     log_message = (
         f"Cluster ID: {cluster_id}\n"
