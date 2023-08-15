@@ -56,6 +56,12 @@ data "aws_iam_policy_document" "describe_sg_role_policy" {
     actions = ["iam:PassRole"]
     resources = ["*"]
   }
+
+  statement {
+    effect = "Allow"
+    actions = ["secretsmanager:GetSecretValue"]
+    resources = ["arn:aws:secretsmanager:us-east-1:232196027141:secret:kf-etl-clin-portal/secrets-9oawVE"]
+  }
 }
 
 resource "aws_iam_role_policy" "describe_sg_role_policy" {

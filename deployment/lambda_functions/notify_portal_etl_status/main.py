@@ -1,7 +1,7 @@
-import json
-import boto3
 import os
-import requests
+import boto3
+import json
+import urllib3
 
 SECRET_NAME = os.environ['SECRET_NAME']
 
@@ -35,11 +35,14 @@ def format_message(etl_args : dict):
     return log_message
 
 def send_slack_message(webhook_url: str, message: str):
-    payload = {'text' : message}
-    requests.post(webhook_url, json=payload)
+    payload = json.dumps({'text' : message})
+    headers = {'Content-Type' : 'application/json'}
+    http = urllib3.PoolManager()
+
+    http.request('POST', webhook_url, headers=headers, body=payload)
 
 def notify_portal_etl_status(etl_args: dict, context):
-    print
+    print(etl_args)
     webhook_url = get_slack_webhook(SECRET_NAME)
     message = format_message(etl_args)
     send_slack_message(webhook_url, message)
