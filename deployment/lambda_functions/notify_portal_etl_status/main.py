@@ -30,7 +30,6 @@ def format_message(etl_args : dict):
         f"Etl Portal Steps to Execute: {etl_portal_steps_to_execute}\n"
         f"Current Etl Portal Step: {etl_portal_current_step}"
     )
-    print(log_message)
 
     return log_message
 
@@ -42,7 +41,6 @@ def send_slack_message(webhook_url: str, message: str):
     http.request('POST', webhook_url, headers=headers, body=payload)
 
 def notify_portal_etl_status(etl_args: dict, context):
-    print(etl_args)
     webhook_url = get_slack_webhook(SECRET_NAME)
     message = format_message(etl_args)
     send_slack_message(webhook_url, message)
