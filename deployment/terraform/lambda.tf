@@ -60,7 +60,7 @@ data "aws_iam_policy_document" "describe_sg_role_policy" {
   statement {
     effect = "Allow"
     actions = ["secretsmanager:GetSecretValue"]
-    resources = ["arn:aws:secretsmanager:us-east-1:232196027141:secret:kf-etl-clin-portal/secrets-9oawVE"]
+    resources = [aws_secretsmanager_secret.portal_etl_secret.arn]
   }
 }
 
