@@ -1,10 +1,19 @@
 {
-  "StartAt": "Initialize Variant ETL",
+  "StartAt": "Initialize Portal ETL",
   "TimeoutSeconds": 10800,
   "States": {
-    "Initialize Variant ETL": {
+    "Initialize Portal ETL": {
       "Type": "Task",
       "Resource": "${portal_etl_initialize_emr_arn}",
+      "Parameters": {
+        "input.$": "$",
+        "environment": "${environment}",
+        "emrEc2Subnet": "${portal_emr_ec2_subnet_id}",
+        "etlPortalBucket": "${portal_etl_bucket}",
+        "emrInstanceProfile": "${emr_instance_profile}",
+        "emrServiceRole": "${emr_service_role}",
+        "esEndpoint":     "${elastic_search_endpoint}"
+      },
       "Next": "Wait For EMR Cluster to Spin Up",
       "Catch": [
         {
@@ -38,12 +47,12 @@
     "ETL Step Monitor Wait" : {
       "Type": "Wait",
       "Seconds": 60,
-      "Next" : "Monitor Variant ETL"
+      "Next" : "Monitor Portal ETL"
     },
-    "Monitor Variant ETL": {
+    "Monitor Portal ETL": {
       "Type": "Task",
       "Resource": "${portal_etl_monitor_emr_arn}",
-      "Next": "Monitor Variant ETL Choice",
+      "Next": "Monitor Portal ETL Choice",
       "Catch": [
         {
           "ErrorEquals": [
@@ -54,7 +63,7 @@
         }
       ]
     },
-    "Monitor Variant ETL Choice": {
+    "Monitor Portal ETL Choice": {
       "Type": "Choice",
       "Choices": [
         {

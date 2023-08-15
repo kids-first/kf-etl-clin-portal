@@ -34,3 +34,21 @@ variable "portal_emr_ec2_subnet_id" {
   type = string
   description = "Subnet ID used for Ec2 (EMR)"
 }
+
+variable "portal_etl_bucket" {
+  type = string
+  description = "Portal ETL Bucket"
+}
+
+variable "emr_instance_profile" {
+  type = string
+  description = "EMR Instance Profile"
+}
+
+variable "emr_service_role" {
+  type = string
+}
+
+variable "elastic_search_endpoint" {
+  type = string
+}

@@ -2,13 +2,6 @@
 import boto3
 import json
 
-subnet_map = {
-    'subnet_kf-strides_qa'  : 'subnet-0f0c909ec60b377ce',
-    'subnet_kf-strides_prd' : 'subnet-00aab84919d5a44e2',
-    'subnet_include_qa'     : 'subnet-0f1161ac2ee2fba5b',
-    'subnet_include_prd'    : 'subnet-0cdbe9ba6231146b5'
-}
-
 cluster_size_map = {
     'small' : 'm5.xlarge',
     'large' : 'm5.xlarge'
@@ -18,18 +11,22 @@ def initialize_portal_etl_emr(etl_args, context):
     print('Initiate Portal ETL EMR')
     print(f'Inputs: ${etl_args}')
 
-    # Extract Data From Input
-    env = etl_args['env']
-    release_id = etl_args['releaseId']
-    studies = etl_args['studyIds']
+    # Extract Data From Inpu
+    env = etl_args['environment']
     bucket = etl_args['etlPortalBucket']
-    instance_count = etl_args['instanceCount']
-    instance_profile = etl_args['instanceProfile']
-    cluster_size = etl_args['clusterSize']
-    service_role = etl_args['serviceRole']
-    customEmrName = etl_args['portalEtlName']
+    instance_profile = etl_args['emrInstanceProfile']
+    service_role = etl_args['emrServiceRole']
+    subnet = etl_args['emrEc2Subnet']
 
-    emr_name = customEmrName if customEmrName is not None else generate_emr_name(env, release_id, studies)
+    # Portal Input
+    etl_user_input = etl_args['input']
+    custom_emr_name = etl_user_input['portalEtlName']
+    release_id = etl_user_input['releaseId']
+    studies = etl_user_input['studyIds']
+    instance_count = etl_user_input['instanceCount']
+    cluster_size = etl_user_input['clusterSize']
+
+    emr_name = custom_emr_name if custom_emr_name is not None else generate_emr_name(env, release_id, studies)
 
     # Grab Security Group Ids
     service_security_group_id = get_security_group_id(group_name=f'ElasticMapReduce-ServiceAccess-{env}-*')
@@ -38,7 +35,6 @@ def initialize_portal_etl_emr(etl_args, context):
 
 
     spark_config = read_spark_config()
-    subnet = subnet_map['subnet_kf-strides_qa']
 
     emr_id = create_emr_cluster(emr_name=emr_name, bucket=bucket, instance_count=instance_count, instance_profile=instance_profile,
                        service_role=service_role, subnet=subnet, spark_config=spark_config,

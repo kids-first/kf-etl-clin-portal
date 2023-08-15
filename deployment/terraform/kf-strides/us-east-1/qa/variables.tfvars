@@ -1,6 +1,10 @@
-environment            = "qa"
-project                = "kf-etl-clin-portal"
-vpc_availability_zones = ["us-east-1a", "us-east-1b"]
-vpc_id                 = "vpc-043115c17dd03a967"
-vpc_private_subnet_ids = ["subnet-0d416a1aeae6ae21d", "subnet-0845094d1e5537d8f"]
-portal_emr_ec2_subnet_id = "subnet-0f0c909ec60b377ce"
+environment               = "qa"
+project                   = "kf-etl-clin-portal"
+vpc_availability_zones    = ["us-east-1a", "us-east-1b"]
+vpc_id                    = "vpc-043115c17dd03a967"
+vpc_private_subnet_ids    = ["subnet-0d416a1aeae6ae21d", "subnet-0845094d1e5537d8f"]
+portal_emr_ec2_subnet_id  = "subnet-0f0c909ec60b377ce"
+portal_etl_bucket         = "kf-strides-232196027141-datalake-qa"
+emr_instance_profile      = "kf-variant-emr-ec2-qa-profile"
+emr_service_role          = "kf-variant-emr-qa-role"
+elastic_search_endpoint   = "https://vpc-kf-arranger-blue-es-service-exwupkrf4dyupg24dnfmvzcwri.us-east-1.es.amazonaws.com"
