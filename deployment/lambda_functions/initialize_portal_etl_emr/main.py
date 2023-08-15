@@ -11,7 +11,7 @@ def initialize_portal_etl_emr(etl_args, context):
     print('Initiate Portal ETL EMR')
     print(f'Inputs: ${etl_args}')
 
-    # Extract Data From Inpu
+    # Extract Data From Input
     env = etl_args['environment']
     bucket = etl_args['etlPortalBucket']
     instance_profile = etl_args['emrInstanceProfile']
@@ -20,11 +20,12 @@ def initialize_portal_etl_emr(etl_args, context):
 
     # Portal Input
     etl_user_input = etl_args['input']
-    custom_emr_name = etl_user_input['portalEtlName']
     release_id = etl_user_input['releaseId']
     studies = etl_user_input['studyIds']
     instance_count = etl_user_input['instanceCount']
     cluster_size = etl_user_input['clusterSize']
+
+    custom_emr_name = etl_user_input.get('portalEtlName')
 
     emr_name = custom_emr_name if custom_emr_name is not None else generate_emr_name(env, release_id, studies)
 

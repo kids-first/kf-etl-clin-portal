@@ -3,15 +3,15 @@ import boto3
 
 def check_portal_etl_emr_step_status(etl_args, context):
     print(f'Check Status of Variant ETL Inputs: {etl_args}')
-    cluster_id = etl_args['variantEtlClusterId']
-    step_id = etl_args['currentEtlVariantStepId']
+    cluster_id = etl_args['portalEtlClusterId']
+    step_id = etl_args['currentEtlStepId']
 
     print(f'ClusterID is {cluster_id}')
-    current_step_status = get_variant_etl_emr_step_status(cluster_id=cluster_id, step_id=step_id)
+    current_step_status = get_portal_etl_emr_step_status(cluster_id=cluster_id, step_id=step_id)
 
     print(f"ETL Cluster Id: {cluster_id} Step Status {current_step_status}")
     emr_cluster_status = get_emr_cluster_status(cluster_id)
-    etl_status = get_etl_status(current_step_status, emr_cluster_status, etl_args['etlVariantStepsToExecute'], etl_args['currentEtlVariantStep'])
+    etl_status = calculate_etl_status(current_step_status, emr_cluster_status, etl_args['etlPortalStepsToExecute'], etl_args['currentEtlStep'])
 
     etl_args['etlStatus'] = etl_status
     etl_args['currentEtlStepStatus'] = current_step_status
@@ -24,7 +24,7 @@ def get_emr_cluster_status(cluster_id : str) -> str :
     )
     return response['Cluster']['Status']['State']
 
-def get_etl_status(current_step_status : str, emr_cluster_status : str, etl_variant_steps_to_execute : list, current_step : str) -> str :
+def calculate_etl_status(current_step_status : str, emr_cluster_status : str, etl_variant_steps_to_execute : list, current_step : str) -> str :
     etl_status = "RUNNING"
     if current_step_status == 'COMPLETED':
         if etl_variant_steps_to_execute[-1] == current_step:
@@ -38,7 +38,7 @@ def get_etl_status(current_step_status : str, emr_cluster_status : str, etl_vari
     return etl_status
 
 
-def get_variant_etl_emr_step_status(cluster_id : str, step_id : str) -> str :
+def get_portal_etl_emr_step_status(cluster_id : str, step_id : str) -> str :
     step_status = "FAILED"
     if cluster_id is not None and step_id is not None:
         client = boto3.client('emr')
@@ -56,4 +56,4 @@ if __name__ == '__main__':
         'currentEtlVariantStepId' : 's-05048533OBXXV7C9Z5KR',
     }
 
-    check_variant_etl_emr_step_status(test_args, None)
+    check_portal_etl_emr_step_status(test_args, None)
