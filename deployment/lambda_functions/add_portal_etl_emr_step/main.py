@@ -14,7 +14,7 @@ def add_portal_etl_emr_step(etl_args, context):
 
     # Extract Data From Input
     variant_etl_cluster_id = etl_args['portalEtlClusterId']
-    elastic_search_endpoint = etl_args['esEnpoint']
+    elastic_search_endpoint = etl_args['esEndpoint']
 
     if next_etl_step is None:
         print('Next Step Could not be defined.... Exiting ETL')
@@ -35,12 +35,12 @@ def add_portal_etl_emr_step(etl_args, context):
 
 def grab_etl_step_and_list_of_steps(etl_args: dict) -> tuple:
     # Grab Current ETL Step and List of Steps to execute
-    etl_portal_steps_to_execute = etl_args.get('etlPortalStepsToExecute')
-    current_step = etl_args.get('currentEtlPortalStep')
+    etl_portal_steps_to_execute = etl_args.get('etlStepsToExecute')
+    current_step = etl_args.get('currentEtlStep')
 
     if etl_portal_steps_to_execute is None:
         etl_portal_steps_to_execute = default_portal_etl_steps
-        etl_args['etlPortalStepsToExecute'] = default_portal_etl_steps
+        etl_args['etlStepsToExecute'] = default_portal_etl_steps
 
     return (etl_portal_steps_to_execute, current_step)
 
@@ -61,75 +61,76 @@ def get_next_step(etl_variant_steps_to_execute : list, current_step : str):
 ###
 def generate_cleanup_jars_step():
     return {
-        "Type": "CUSTOM_JAR",
+        "HadoopJarStep" : {
+            "Args": [
+                "bash", "-c",
+                "sudo rm -f /usr/lib/spark/jars/spark-avro.jar"
+            ],
+            "Jar": "command-runner.jar"
+        },
         "Name": "Cleanup jars",
-        "ActionOnFailure": "TERMINATE_CLUSTER",
-        "Jar": "command-runner.jar",
-        "Args": [
-            "bash", "-c",
-            "sudo rm -f /usr/lib/spark/jars/spark-avro.jar"
-        ]
+        "ActionOnFailure": "CONTINUE"
     }
 
 def generate_download_and_run_fhavro_export_step(etl_config : dict):
     return {
-        "Type":"CUSTOM_JAR",
+        "HadoopJarStep": {
+            "Args":[
+                "bash","-c",
+                f"aws s3 cp s3://{etl_config['etlPortalBucket']}/jobs/fhavro-export.jar /home/hadoop; export FHIR_URL='{etl_config['input']['fhirUrl']}'; export BUCKET='{etl_config['etlPortalBucket']}'; cd /home/hadoop;/usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar fhavro-export.jar {etl_config['input']['releaseId']} {','.join(etl_config['input']['studyIds'])} default y"
+            ],
+            "Jar":"command-runner.jar"
+        },
         "Name":"Download and Run Fhavro-export",
-        "ActionOnFailure":"TERMINATE_CLUSTER",
-        "Jar":"command-runner.jar",
-        "Args":[
-            "bash","-c",
-            f"aws s3 cp s3://{etl_config['etlVariantBucket']}/jobs/fhavro-export.jar /home/hadoop; export FHIR_URL='{etl_config['fhirUrl']}'; export BUCKET='{etl_config['etlVariantBucket']}'; cd /home/hadoop;/usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar fhavro-export.jar {etl_config['releaseId']} {' '.join(etl_config['studyIds'])} default"
-        ]
+        "ActionOnFailure":"CONTINUE"
     }
 
 def generate_portal_etl_step(class_name : str, step_name : str, etl_config : dict):
     return {
-        "Args": [
-            "spark-submit",
-            "--packages",
-            "com.typesafe.play:play-ahc-ws-standalone_2.12:2.0.3",
-            "--deploy-mode",
-            "client",
-            "--class",
-            f"{class_name}",
-            f"s3a://{etl_config['etlVariantBucket']}/jobs/etl.jar",
-            "--config", f"config/{etl_config['env']}-{etl_config['project']}.conf",
-            "--steps", "default",
-            "--release-id", f"{etl_config['releaseId']}",
-            "--study-id", f"{' '.join(etl_config['studyIds'])}"
-        ],
-        "Type": "CUSTOM_JAR",
-        "ActionOnFailure": "TERMINATE_CLUSTER",
-        "Jar": "command-runner.jar",
-        "Properties": "",
-        "Name": f"{step_name}"
+        "HadoopJarStep": {
+            "Args": [
+                "spark-submit",
+                "--packages",
+                "com.typesafe.play:play-ahc-ws-standalone_2.12:2.0.3",
+                "--deploy-mode",
+                "client",
+                "--class",
+                f"{class_name}",
+                f"s3a://{etl_config['etlPortalBucket']}/jobs/etl.jar",
+                "--config", f"config/{etl_config['environment']}-{etl_config['project']}.conf",
+                "--steps", "default",
+                "--release-id", f"{etl_config['input']['releaseId']}",
+                "--study-id", f"{','.join(etl_config['input']['studyIds'])}"
+            ],
+            "Jar": "command-runner.jar"
+        },
+        "Name": f"{step_name}",
+        "ActionOnFailure": "CONTINUE"
     }
 
 def generate_indexing_step(index_centric : str, step_name : str, etl_config : dict, elastic_search_endpoint : str):
     return {
-     "Args": [
-       "spark-submit",
-       "--deploy-mode",
-       "client",
-       "--packages",
-       "org.elasticsearch:elasticsearch-spark-30_2.12:7.17.12",
-       "--class",
-       "bio.ferlab.etl.indexed.clinical.RunIndexClinical",
-       f"s3a://{etl_config['etlVariantBucket']}/jobs/etl.jar",
-       f"{elastic_search_endpoint}",
-       "443",
-       f"{etl_config['releaseId']}",
-       f"{' '.join(etl_config['studyIds'])}",
-       f"{index_centric}",
-       f"config/{etl_config['env']}-{etl_config['project']}.conf"
-     ],
-     "Type": "CUSTOM_JAR",
-     "ActionOnFailure": "TERMINATE_CLUSTER",
-     "Jar": "command-runner.jar",
-     "Properties": "",
-     "Name": f"{step_name}"
-
+        "HadoopJarStep": {
+            "Args": [
+                "spark-submit",
+                "--deploy-mode",
+                "client",
+                "--packages",
+                "org.elasticsearch:elasticsearch-spark-30_2.12:7.17.12",
+                "--class",
+                "bio.ferlab.etl.indexed.clinical.RunIndexClinical",
+                f"s3a://{etl_config['etlPortalBucket']}/jobs/etl.jar",
+                f"{elastic_search_endpoint}",
+                "443",
+                f"{etl_config['input']['releaseId']}",
+                f"{','.join(etl_config['input']['studyIds'])}",
+                f"{index_centric}",
+                f"config/{etl_config['environment']}-{etl_config['project']}.conf"
+            ],
+            "Jar": "command-runner.jar"
+        },
+        "Name": f"{step_name}",
+        "ActionOnFailure": "CONTINUE"
     }
 
 variant_etl_map = {

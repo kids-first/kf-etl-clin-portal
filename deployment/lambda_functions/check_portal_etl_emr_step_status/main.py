@@ -11,7 +11,7 @@ def check_portal_etl_emr_step_status(etl_args, context):
 
     print(f"ETL Cluster Id: {cluster_id} Step Status {current_step_status}")
     emr_cluster_status = get_emr_cluster_status(cluster_id)
-    etl_status = calculate_etl_status(current_step_status, emr_cluster_status, etl_args['etlPortalStepsToExecute'], etl_args['currentEtlStep'])
+    etl_status = calculate_etl_status(current_step_status, emr_cluster_status, etl_args['etlStepsToExecute'], etl_args['currentEtlStep'])
 
     etl_args['etlStatus'] = etl_status
     etl_args['currentEtlStepStatus'] = current_step_status
