@@ -56,6 +56,12 @@ data "aws_iam_policy_document" "describe_sg_role_policy" {
     actions = ["iam:PassRole"]
     resources = ["*"]
   }
+
+  statement {
+    effect = "Allow"
+    actions = ["secretsmanager:GetSecretValue"]
+    resources = [aws_secretsmanager_secret.portal_etl_secret.arn]
+  }
 }
 
 resource "aws_iam_role_policy" "describe_sg_role_policy" {
@@ -131,6 +137,11 @@ resource "aws_lambda_function" "notify-portal-etl-emr-status-lambda" {
   filename = "../lambda_functions/notify_portal_etl_status_archive.zip"
   role          = aws_iam_role.lambda_service_role.arn
   handler = "main.notify_portal_etl_status"
+  environment {
+    variables = {
+      SECRET_NAME = aws_secretsmanager_secret.portal_etl_secret.name
+    }
+  }
   runtime = "python3.9"
   source_code_hash = data.archive_file.archive-notify-portal-etl-emr-status-lambda.output_base64sha256
 }
