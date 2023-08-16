@@ -131,7 +131,7 @@ def generate_download_and_run_fhavro_export_step(etl_config : dict):
         "aws", "s3", "cp",
         f"s3://{etl_portal_bucket}/jobs/fhavro-export.jar", "/home/hadoop;",
         f"export FHIR_URL='{fhir_url}'; export BUCKET='{etl_portal_bucket}';",
-        "/usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar",
+        "cd /home/hadoop;","/usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar",
         f"fhavro-export.jar {release_id} {study_ids} default y"
     ]
 
