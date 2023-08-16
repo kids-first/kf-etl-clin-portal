@@ -1,10 +1,21 @@
 import boto3
 import sys
 
-default_portal_etl_steps = ['Cleanup jars', 'Download and Run Fhavro-export', 'Normalize Dataservice', 'Normalize Clinical',
-                            'Enrich All', 'Prepare Index', 'Index Study', 'Index Participant', 'Index File', 'Index Biospecimen']
+# Default list of Portal ETL Steps
+DEFAULT_PORTAL_ETL_STEPS = ['cleanup jars', 'download and run fhavro-export', 'normalize dataservice', 'normalize clinical',
+                            'enrich all', 'prepare index', 'index study', 'index participant', 'index file', 'index biospecimen']
 
 def add_portal_etl_emr_step(etl_args, context):
+    """
+    Adds a new ETL step to the EMR cluster for portal ETL.
+
+    Args:
+        etl_args (dict): ETL configuration arguments.
+        context: Context information.
+
+    Returns:
+        dict: Updated ETL arguments.
+    """
     print(f'Add Step to Variant ETL {etl_args}')
 
     (etl_portal_steps_to_execute, current_step) = grab_etl_step_and_list_of_steps(etl_args=etl_args)
@@ -34,17 +45,55 @@ def add_portal_etl_emr_step(etl_args, context):
     return etl_args
 
 def grab_etl_step_and_list_of_steps(etl_args: dict) -> tuple:
+    """
+    Retrieves the current ETL step and list of steps to execute.
+
+    Args:
+        etl_args (dict): ETL configuration arguments.
+
+    Returns:
+        tuple: A tuple containing the list of steps and the current step.
+    """
     # Grab Current ETL Step and List of Steps to execute
     etl_portal_steps_to_execute = etl_args.get('etlStepsToExecute')
     current_step = etl_args.get('currentEtlStep')
 
     if etl_portal_steps_to_execute is None:
-        etl_portal_steps_to_execute = default_portal_etl_steps
-        etl_args['etlStepsToExecute'] = default_portal_etl_steps
+        etl_portal_steps_to_execute = DEFAULT_PORTAL_ETL_STEPS
+        etl_args['etlStepsToExecute'] = DEFAULT_PORTAL_ETL_STEPS
+    # Validate User's Custom ETL Portal Steps before submitting first step (currentEtlStep is None)
+    elif current_step is None:
+        validate_custom_etl_portal_steps_to_execute(etl_portal_steps_to_execute)
 
     return (etl_portal_steps_to_execute, current_step)
 
+def validate_custom_etl_portal_steps_to_execute(etl_portal_steps_to_execute : list):
+    """
+    Validates user's custom ETL portal steps to execute.
+
+    Args:
+        etl_portal_steps_to_execute (list): List of ETL steps to execute.
+
+    Returns:
+        bool: True if custom ETL steps are valid, False otherwise.
+    """
+    custom_etl_steps_valid = all(etl_step.lower() in DEFAULT_PORTAL_ETL_STEPS for etl_step in etl_portal_steps_to_execute)
+    if not custom_etl_steps_valid or len(custom_etl_steps_valid) > len(DEFAULT_PORTAL_ETL_STEPS):
+        print(f'Custom Portal ETL Steps not valid: steps input: ${etl_portal_steps_to_execute}')
+        sys.exit('Invalid Custom ETL Steps')
+    return
+
 def get_next_step(etl_variant_steps_to_execute : list, current_step : str):
+    """
+    Gets the next ETL step in the process.
+
+    Args:
+        etl_variant_steps_to_execute (list): List of ETL steps to execute.
+        current_step (str): Current ETL step.
+
+    Returns:
+        str: The next ETL step.
+    """
     if current_step is None or len(current_step) < 1:
         return etl_variant_steps_to_execute[0]
     try:
@@ -73,19 +122,34 @@ def generate_cleanup_jars_step():
     }
 
 def generate_download_and_run_fhavro_export_step(etl_config : dict):
+    etl_portal_bucket = etl_config['etlPortalBucket']
+    fhir_url = etl_config['input']['fhirUrl']
+    release_id = etl_config['input']['releaseId']
+    study_ids = ','.join(etl_config['input']['studyIds'])
+
+    fhavro_export_args = [
+        "aws", "s3", "cp",
+        f"s3://{etl_portal_bucket}/jobs/fhavro-export.jar", "/home/hadoop;",
+        f"export FHIR_URL='{fhir_url}'; export BUCKET='{etl_portal_bucket}';",
+        "/usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar",
+        f"fhavro-export.jar {release_id} {study_ids} default y"
+    ]
+
     return {
         "HadoopJarStep": {
-            "Args":[
-                "bash","-c",
-                f"aws s3 cp s3://{etl_config['etlPortalBucket']}/jobs/fhavro-export.jar /home/hadoop; export FHIR_URL='{etl_config['input']['fhirUrl']}'; export BUCKET='{etl_config['etlPortalBucket']}'; cd /home/hadoop;/usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar fhavro-export.jar {etl_config['input']['releaseId']} {','.join(etl_config['input']['studyIds'])} default y"
-            ],
-            "Jar":"command-runner.jar"
+            "Args": ["bash", "-c", " ".join(fhavro_export_args)],
+            "Jar": "command-runner.jar"
         },
-        "Name":"Download and Run Fhavro-export",
-        "ActionOnFailure":"CONTINUE"
+        "Name": "Download and Run Fhavro-export",
+        "ActionOnFailure": "CONTINUE"
     }
 
 def generate_portal_etl_step(class_name : str, step_name : str, etl_config : dict):
+    etl_portal_bucket = etl_config['etlPortalBucket']
+    env = etl_config['environment']
+    project_name = etl_config['project']
+    release_id = etl_config['input']['releaseId']
+    study_ids = ','.join(etl_config['input']['studyIds'])
     return {
         "HadoopJarStep": {
             "Args": [
@@ -96,11 +160,11 @@ def generate_portal_etl_step(class_name : str, step_name : str, etl_config : dic
                 "client",
                 "--class",
                 f"{class_name}",
-                f"s3a://{etl_config['etlPortalBucket']}/jobs/etl.jar",
-                "--config", f"config/{etl_config['environment']}-{etl_config['project']}.conf",
+                f"s3a://{etl_portal_bucket}/jobs/etl.jar",
+                "--config", f"config/{env}-{project_name}.conf",
                 "--steps", "default",
-                "--release-id", f"{etl_config['input']['releaseId']}",
-                "--study-id", f"{','.join(etl_config['input']['studyIds'])}"
+                "--release-id", f"{release_id}",
+                "--study-id", f"{study_ids}"
             ],
             "Jar": "command-runner.jar"
         },
@@ -109,6 +173,11 @@ def generate_portal_etl_step(class_name : str, step_name : str, etl_config : dic
     }
 
 def generate_indexing_step(index_centric : str, step_name : str, etl_config : dict, elastic_search_endpoint : str):
+    etl_portal_bucket = etl_config['etlPortalBucket']
+    env = etl_config['environment']
+    project_name = etl_config['project']
+    release_id = etl_config['input']['releaseId']
+    study_ids = ','.join(etl_config['input']['studyIds'])
     return {
         "HadoopJarStep": {
             "Args": [
@@ -119,13 +188,13 @@ def generate_indexing_step(index_centric : str, step_name : str, etl_config : di
                 "org.elasticsearch:elasticsearch-spark-30_2.12:7.17.12",
                 "--class",
                 "bio.ferlab.etl.indexed.clinical.RunIndexClinical",
-                f"s3a://{etl_config['etlPortalBucket']}/jobs/etl.jar",
+                f"s3a://{etl_portal_bucket}/jobs/etl.jar",
                 f"{elastic_search_endpoint}",
                 "443",
-                f"{etl_config['input']['releaseId']}",
-                f"{','.join(etl_config['input']['studyIds'])}",
+                f"{release_id}",
+                f"{study_ids}",
                 f"{index_centric}",
-                f"config/{etl_config['environment']}-{etl_config['project']}.conf"
+                f"config/{env}-{project_name}.conf"
             ],
             "Jar": "command-runner.jar"
         },
@@ -134,33 +203,33 @@ def generate_indexing_step(index_centric : str, step_name : str, etl_config : di
     }
 
 variant_etl_map = {
-    'Cleanup jars' : lambda etl_config , elastic_search_endpoint : generate_cleanup_jars_step(),
+    'cleanup jars' : lambda etl_config , elastic_search_endpoint : generate_cleanup_jars_step(),
 
-    'Download and Run Fhavro-export' : lambda etl_config , elastic_search_endpoint:
+    'download and run fhavro-export' : lambda etl_config , elastic_search_endpoint:
         generate_download_and_run_fhavro_export_step(etl_config=etl_config),
 
-    'Normalize Dataservice' : lambda etl_config , elastic_search_endpoint : generate_portal_etl_step(
+    'normalize dataservice' : lambda etl_config , elastic_search_endpoint : generate_portal_etl_step(
         "bio.ferlab.etl.normalized.dataservice.RunNormalizeDataservice", "Normalize Dataservice", etl_config=etl_config),
 
-    'Normalize Clinical' : lambda etl_config , elastic_search_endpoint : generate_portal_etl_step(
+    'normalize clinical' : lambda etl_config , elastic_search_endpoint : generate_portal_etl_step(
         "bio.ferlab.etl.normalized.clinical.RunNormalizeClinical", "Normalize Clinical", etl_config=etl_config),
 
-    'Enrich All' : lambda etl_config , elastic_search_endpoint : generate_portal_etl_step(
+    'enrich all' : lambda etl_config , elastic_search_endpoint : generate_portal_etl_step(
         "bio.ferlab.etl.enriched.clinical.RunEnrichClinical", "Enrich All", etl_config=etl_config),
 
-    'Prepare Index' : lambda etl_config , elastic_search_endpoint : generate_portal_etl_step(
+    'prepare index' : lambda etl_config , elastic_search_endpoint : generate_portal_etl_step(
         "bio.ferlab.etl.prepared.clinical.RunPrepareClinical", "Prepare Index", etl_config=etl_config),
 
-    'Index Study' : lambda etl_config , elastic_search_endpoint : generate_indexing_step(
+    'index study' : lambda etl_config , elastic_search_endpoint : generate_indexing_step(
         "study_centric", "Index Study", etl_config=etl_config, elastic_search_endpoint=elastic_search_endpoint),
 
-    'Index Participant' : lambda etl_config , elastic_search_endpoint : generate_indexing_step(
+    'index participant' : lambda etl_config , elastic_search_endpoint : generate_indexing_step(
         "participant_centric", "Index Participant", etl_config=etl_config, elastic_search_endpoint=elastic_search_endpoint),
 
-    'Index File' : lambda etl_config , elastic_search_endpoint : generate_indexing_step(
+    'index file' : lambda etl_config , elastic_search_endpoint : generate_indexing_step(
         "file_centric", "Index File'", etl_config=etl_config, elastic_search_endpoint=elastic_search_endpoint),
 
-    'Index Biospecimen' : lambda etl_config , elastic_search_endpoint : generate_indexing_step(
+    'index biospecimen' : lambda etl_config , elastic_search_endpoint : generate_indexing_step(
         "biospecimen_centric", "Index Biospecimen", etl_config=etl_config, elastic_search_endpoint=elastic_search_endpoint),
 }
 
