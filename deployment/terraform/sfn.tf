@@ -20,7 +20,8 @@ resource "aws_sfn_state_machine" "default" {
     portal_etl_bucket                 = var.portal_etl_bucket,
     emr_instance_profile              = var.emr_instance_profile,
     emr_service_role                  = var.emr_service_role,
-    elastic_search_endpoint          = var.elastic_search_endpoint
+    elastic_search_endpoint          = var.elastic_search_endpoint,
+    account                          = var.account
   })
 }
 

@@ -44,3 +44,4 @@ def notify_portal_etl_status(etl_args: dict, context):
     webhook_url = get_slack_webhook(SECRET_NAME)
     message = format_message(etl_args)
     send_slack_message(webhook_url, message)
+    return etl_args

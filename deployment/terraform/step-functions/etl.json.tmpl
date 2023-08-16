@@ -8,6 +8,7 @@
       "Parameters": {
         "input.$": "$",
         "environment": "${environment}",
+        "account": "${account}",
         "emrEc2Subnet": "${portal_emr_ec2_subnet_id}",
         "etlPortalBucket": "${portal_etl_bucket}",
         "emrInstanceProfile": "${emr_instance_profile}",
@@ -27,7 +28,7 @@
     },
     "Wait For EMR Cluster to Spin Up" : {
       "Type": "Wait",
-      "Seconds" : 60,
+      "Seconds" : 240,
       "Next": "Submit ETL Step"
     },
     "Submit ETL Step" : {
