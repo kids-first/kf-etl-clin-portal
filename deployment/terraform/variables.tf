@@ -7,6 +7,10 @@ variable "environment" {
   description = "An environment namespace for the infrastructure."
 }
 
+variable "account" {
+  type = string
+}
+
 variable "region" {
   type        = string
   default     = "us-east-1"

@@ -147,7 +147,7 @@ def generate_download_and_run_fhavro_export_step(etl_config : dict):
 def generate_portal_etl_step(class_name : str, step_name : str, etl_config : dict):
     etl_portal_bucket = etl_config['etlPortalBucket']
     env = etl_config['environment']
-    project_name = etl_config['project']
+    account = etl_config['account']
     release_id = etl_config['input']['releaseId']
     study_ids = ','.join(etl_config['input']['studyIds'])
     return {
@@ -161,7 +161,7 @@ def generate_portal_etl_step(class_name : str, step_name : str, etl_config : dic
                 "--class",
                 f"{class_name}",
                 f"s3a://{etl_portal_bucket}/jobs/etl.jar",
-                "--config", f"config/{env}-{project_name}.conf",
+                "--config", f"config/{env}-{account}.conf",
                 "--steps", "default",
                 "--release-id", f"{release_id}",
                 "--study-id", f"{study_ids}"
@@ -175,7 +175,7 @@ def generate_portal_etl_step(class_name : str, step_name : str, etl_config : dic
 def generate_indexing_step(index_centric : str, step_name : str, etl_config : dict, elastic_search_endpoint : str):
     etl_portal_bucket = etl_config['etlPortalBucket']
     env = etl_config['environment']
-    project_name = etl_config['project']
+    account = etl_config['account']
     release_id = etl_config['input']['releaseId']
     study_ids = ','.join(etl_config['input']['studyIds'])
     return {
@@ -194,7 +194,7 @@ def generate_indexing_step(index_centric : str, step_name : str, etl_config : di
                 f"{release_id}",
                 f"{study_ids}",
                 f"{index_centric}",
-                f"config/{env}-{project_name}.conf"
+                f"config/{env}-{account}.conf"
             ],
             "Jar": "command-runner.jar"
         },
