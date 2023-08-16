@@ -55,12 +55,13 @@ def grab_etl_step_and_list_of_steps(etl_args: dict) -> tuple:
         tuple: A tuple containing the list of steps and the current step.
     """
     # Grab Current ETL Step and List of Steps to execute
-    etl_portal_steps_to_execute = etl_args.get('etlStepsToExecute')
+    user_input = etl_args['input']
+    etl_portal_steps_to_execute = user_input.get('etlStepsToExecute')
     current_step = etl_args.get('currentEtlStep')
 
     if etl_portal_steps_to_execute is None:
         etl_portal_steps_to_execute = DEFAULT_PORTAL_ETL_STEPS
-        etl_args['etlStepsToExecute'] = DEFAULT_PORTAL_ETL_STEPS
+        etl_args['input']['etlStepsToExecute'] = DEFAULT_PORTAL_ETL_STEPS
     # Validate User's Custom ETL Portal Steps before submitting first step (currentEtlStep is None)
     elif current_step is None:
         validate_custom_etl_portal_steps_to_execute(etl_portal_steps_to_execute)
@@ -78,7 +79,7 @@ def validate_custom_etl_portal_steps_to_execute(etl_portal_steps_to_execute : li
         bool: True if custom ETL steps are valid, False otherwise.
     """
     custom_etl_steps_valid = all(etl_step.lower() in DEFAULT_PORTAL_ETL_STEPS for etl_step in etl_portal_steps_to_execute)
-    if not custom_etl_steps_valid or len(custom_etl_steps_valid) > len(DEFAULT_PORTAL_ETL_STEPS):
+    if not custom_etl_steps_valid or len(etl_portal_steps_to_execute) > len(DEFAULT_PORTAL_ETL_STEPS):
         print(f'Custom Portal ETL Steps not valid: steps input: ${etl_portal_steps_to_execute}')
         sys.exit('Invalid Custom ETL Steps')
     return
