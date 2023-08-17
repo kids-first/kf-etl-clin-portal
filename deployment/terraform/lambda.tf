@@ -88,7 +88,7 @@ data "archive_file" "archive-initialize-portal-etl-emr-lambda" {
 }
 
 resource "aws_lambda_function" "initialize-portal-etl-emr-lambda" {
-  function_name = "PortalEtl-Initialize-EMR"
+  function_name = "PortalEtl-Initialize-EMR-${var.environment}"
   filename = "../lambda_functions/initialize_portal_etl_emr_archive.zip"
   role          = aws_iam_role.lambda_service_role.arn
   handler = "main.initialize_portal_etl_emr"
@@ -105,7 +105,7 @@ data "archive_file" "archive-check-portal-etl-emr-step-status-lambda" {
 }
 
 resource "aws_lambda_function" "monitor-portal-etl-emr-lambda" {
-  function_name = "PortalEtl-Monitor-EMR"
+  function_name = "PortalEtl-Monitor-EMR-${var.environment}"
   filename = "../lambda_functions/check_portal_etl_emr_step_status_archive.zip"
   role          = aws_iam_role.lambda_service_role.arn
   handler = "main.check_portal_etl_emr_step_status"
@@ -120,7 +120,7 @@ data "archive_file" "archive-add-portal-etl-emr-step-lambda" {
 }
 
 resource "aws_lambda_function" "add-portal-etl-emr-step-lambda" {
-  function_name = "PortalEtl-Submit-ETL-Step"
+  function_name = "PortalEtl-Submit-ETL-Step-${var.environment}"
   filename = "../lambda_functions/add_portal_etl_emr_step_archive.zip"
   role          = aws_iam_role.lambda_service_role.arn
   handler = "main.add_portal_etl_emr_step"
@@ -135,7 +135,7 @@ data "archive_file" "archive-notify-portal-etl-emr-status-lambda" {
 }
 
 resource "aws_lambda_function" "notify-portal-etl-emr-status-lambda" {
-  function_name = "PortalEtl-Notify-ETL-Status"
+  function_name = "PortalEtl-Notify-ETL-Status-${var.environment}"
   filename = "../lambda_functions/notify_portal_etl_status_archive.zip"
   role          = aws_iam_role.lambda_service_role.arn
   handler = "main.notify_portal_etl_status"
