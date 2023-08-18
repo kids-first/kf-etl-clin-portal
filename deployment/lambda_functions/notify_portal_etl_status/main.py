@@ -5,7 +5,7 @@ import urllib3
 
 SECRET_NAME = os.environ['SECRET_NAME']
 
-def get_slack_webhook(secret_name: str):
+def get_slack_webhook(secret_name: str) -> str:
     print(f"Getting secret {secret_name}")
 
     client = boto3.client('secretsmanager')
@@ -14,13 +14,15 @@ def get_slack_webhook(secret_name: str):
 
     return secrets['slack_webhook']
 
-def format_message(etl_args : dict):
+def format_message(etl_args : dict) -> str:
     cluster_id = etl_args.get('portalEtlClusterId')
-    step_id = etl_args.get('currentEtlPortalStepId')
+    step_id = etl_args.get('currentEtlStepId')
     etl_status = etl_args.get('etlStatus')
     current_step_status = etl_args.get('currentEtlStepStatus')
-    etl_portal_steps_to_execute = etl_args.get('etlPortalStepsToExecute')
-    etl_portal_current_step = etl_args.get('currentEtlPortalStep')
+    etl_portal_current_step = etl_args.get('currentEtlStep')
+
+    user_input = etl_args.get('input')
+    etl_portal_steps_to_execute = user_input.get('etlStepsToExecute')
 
     log_message = (
         f"Cluster ID: {cluster_id}\n"
