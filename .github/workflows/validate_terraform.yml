@@ -1,8 +1,8 @@
 name: Validate Terraform
 
 on:
-  pull_request:
-    branches: [ master ]
+  push:
+    branches: [ feature/**, bugfix/** ]
 
 permissions:
     contents: read
