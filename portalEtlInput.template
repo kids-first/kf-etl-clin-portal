@@ -1,0 +1,10 @@
+{
+  "releaseId": "re_TEST",
+  "studyIds": [
+    "SD_65064P2Z",
+    "SD_Y6VRG6MD"
+  ],
+  "clusterSize": "medium",
+  "portalEtlName": "TEST",
+  "fhirUrl": "http://app.sd-kf-api-fhir-service-qa.kf-strides.org:8000"
+}
