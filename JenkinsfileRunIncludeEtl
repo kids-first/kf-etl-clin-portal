@@ -1,6 +1,6 @@
 @Library(value="kids-first/aws-infra-jenkins-shared-libraries", changelog=false) _
 simple_pipeline {
    stage_name_1 = "run_etl.sh"
-   script_1 = "cd bin && ./run_etl_clinical.sh -p include -r re_002_22_08_2023 -s ABC-DS,BRI-DSR,DSC,DS-Sleep,X01-deSmith,X01-Hakonarson,HTP  -e prd --instance-type m5.8xlarge --instance-count 1 -b include-373997854230-datalake-prd --instance-profile include-ec2-prd-profile --service-role include-datalake-emr-prd-role --fhir-url 'https://kf-api-fhir-service-prd.kidsfirstdrc.org'"
+   script_1 = "cd bin && ./run_etl_clinical.sh -p include -r re_002_22_08_2023 -s ABC-DS,BRI-DSR,DSC,DS-Sleep,X01-deSmith,X01-Hakonarson,HTP  -e prd --instance-type m5.8xlarge --instance-count 1 -b include-373997854230-datalake-prd --instance-profile include-ec2-prd-profile --service-role include-datalake-emr-prd-role --fhir-url 'http://app.include-api-fhir-service-prd.373997854230.d3b.io:8000'"
    projectName = "include-etl-clin-portal"
 }
