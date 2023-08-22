@@ -18,22 +18,22 @@ variable "region" {
 }
 
 variable "AWSLambdaBasicExecutionRoleManagedPolicy" {
-  type = string
+  type    = string
   default = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
 variable "portal_emr_ec2_subnet_id" {
-  type = string
+  type        = string
   description = "Subnet ID used for Ec2 (EMR)"
 }
 
 variable "portal_etl_bucket" {
-  type = string
+  type        = string
   description = "Portal ETL Bucket"
 }
 
 variable "emr_instance_profile" {
-  type = string
+  type        = string
   description = "EMR Instance Profile"
 }
 
