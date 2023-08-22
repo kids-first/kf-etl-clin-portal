@@ -24,6 +24,8 @@ def format_message(etl_args : dict) -> str:
     user_input = etl_args.get('input')
     etl_portal_steps_to_execute = user_input.get('etlStepsToExecute')
 
+    error_msg = etl_args.get('error')
+
     log_message = (
         f"Cluster ID: {cluster_id}\n"
         f"Step ID: {step_id}\n"
@@ -31,6 +33,7 @@ def format_message(etl_args : dict) -> str:
         f"Current Step Status: {current_step_status}\n"
         f"Etl Portal Steps to Execute: {etl_portal_steps_to_execute}\n"
         f"Current Etl Portal Step: {etl_portal_current_step}"
+        f"{error_msg if error_msg else ''}"
     )
 
     return log_message
