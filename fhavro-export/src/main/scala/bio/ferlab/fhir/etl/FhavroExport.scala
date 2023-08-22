@@ -12,20 +12,25 @@ import software.amazon.awssdk.services.s3.S3Client
 object FhavroExport extends App {
   println(s"ARGS: " + args.mkString("[", ", ", "]"))
 
-  private def isVerbose(raw: String): Boolean = {
-    raw != null && List("yes", "true", "y").contains(raw.toLowerCase())
+  private def extractVerboseParamOrDefault(array: Array[String]): Boolean = {
+    def isVerbose(raw: String): Boolean = {
+      raw != null && List("yes", "true", "y").contains(raw.toLowerCase())
+    }
+    val argsLengthWhenVerbose = 4
+    val verbosePositionInArgs = 3
+    if (array.length == argsLengthWhenVerbose) isVerbose(array(verbosePositionInArgs)) else false
   }
 
-  val Array(releaseId, studyIds, project, verbose) = args
+  val Array(releaseId, studyIds, project) = args
 
-  val studyList = studyIds.split(",").toList
+  private val studyList = studyIds.split(",").toList
 
   studyList.foreach(studyId => {
     withSystemExit {
       withLog {
         withConfiguration(project) { configuration =>
           implicit val s3Client: S3Client = buildS3Client()
-          implicit val fhirClient: GenericClient = buildFhirClient(configuration, isVerbose(verbose))
+          implicit val fhirClient: GenericClient = buildFhirClient(configuration, extractVerboseParamOrDefault(args))
 
           val fhavroExporter = new FhavroExporter(configuration.awsConfig.bucketName, releaseId, studyId)
 
