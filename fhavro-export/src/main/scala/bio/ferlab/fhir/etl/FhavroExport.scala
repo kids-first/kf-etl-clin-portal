@@ -11,7 +11,7 @@ import software.amazon.awssdk.services.s3.S3Client
 object FhavroExport extends App {
   println(s"ARGS: " + args.mkString("[", ", ", "]"))
 
-  private val argsPositions = Map(
+  private val positions = Map(
     "releaseId" -> 0,
     "studyIds" -> 1,
     "project" -> 2,
@@ -24,12 +24,12 @@ object FhavroExport extends App {
     }
     val argsLengthWhenVerbose = 4
     val hasVerboseArg = array.length == argsLengthWhenVerbose
-    if (hasVerboseArg) isVerbose(array(argsPositions("verbose"))) else false
+    if (hasVerboseArg) isVerbose(array(positions("verbose"))) else false
   }
 
-  val releaseId = args(argsPositions("releaseId"))
-  val studyIds = args(argsPositions("studyIds"))
-  val project = args(argsPositions("project"))
+  val releaseId = args(positions("releaseId"))
+  val studyIds = args(positions("studyIds"))
+  val project = args(positions("project"))
 
   private val studyList = studyIds.split(",").toList
 
