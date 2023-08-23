@@ -8,20 +8,28 @@ import cats.implicits.catsSyntaxValidatedId
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent
 import software.amazon.awssdk.services.s3.S3Client
 
-
 object FhavroExport extends App {
   println(s"ARGS: " + args.mkString("[", ", ", "]"))
+
+  private val positions = Map(
+    "releaseId" -> 0,
+    "studyIds" -> 1,
+    "project" -> 2,
+    "verbose" -> 3,
+  )
 
   private def extractVerboseParamOrDefault(array: Array[String]): Boolean = {
     def isVerbose(raw: String): Boolean = {
       raw != null && List("yes", "true", "y").contains(raw.toLowerCase())
     }
     val argsLengthWhenVerbose = 4
-    val verbosePositionInArgs = 3
-    if (array.length == argsLengthWhenVerbose) isVerbose(array(verbosePositionInArgs)) else false
+    val hasVerboseArg = array.length == argsLengthWhenVerbose
+    if (hasVerboseArg) isVerbose(array(positions("verbose"))) else false
   }
 
-  val Array(releaseId, studyIds, project) = args
+  val releaseId = args(positions("releaseId"))
+  val studyIds = args(positions("studyIds"))
+  val project = args(positions("project"))
 
   private val studyList = studyIds.split(",").toList
 
