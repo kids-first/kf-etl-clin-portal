@@ -145,12 +145,13 @@ def generate_download_and_run_fhavro_export_step(etl_config : dict):
         "ActionOnFailure": "CONTINUE"
     }
 
-def generate_portal_etl_step(class_name : str, step_name : str, etl_config : dict):
+def generate_portal_etl_step(class_name : str, step_name : str, etl_config : dict, enable_all_config = False):
     etl_portal_bucket = etl_config['etlPortalBucket']
     env = etl_config['environment']
     account = etl_config['account']
     release_id = etl_config['input']['releaseId']
     study_ids = ','.join(etl_config['input']['studyIds'])
+    enable_all = "all" if enable_all_config else ""
     return {
         "HadoopJarStep": {
             "Args": [
@@ -162,6 +163,7 @@ def generate_portal_etl_step(class_name : str, step_name : str, etl_config : dic
                 "--class",
                 f"{class_name}",
                 f"s3a://{etl_portal_bucket}/jobs/etl.jar",
+                f"{enable_all}",
                 "--config", f"config/{env}-{account}.conf",
                 "--steps", "default",
                 "--release-id", f"{release_id}",
@@ -216,10 +218,10 @@ variant_etl_map = {
         "bio.ferlab.etl.normalized.clinical.RunNormalizeClinical", "Normalize Clinical", etl_config=etl_config),
 
     'enrich all' : lambda etl_config , elastic_search_endpoint : generate_portal_etl_step(
-        "bio.ferlab.etl.enriched.clinical.RunEnrichClinical", "Enrich All", etl_config=etl_config),
+        "bio.ferlab.etl.enriched.clinical.RunEnrichClinical", "Enrich All", etl_config=etl_config, enable_all_config=True),
 
     'prepare index' : lambda etl_config , elastic_search_endpoint : generate_portal_etl_step(
-        "bio.ferlab.etl.prepared.clinical.RunPrepareClinical", "Prepare Index", etl_config=etl_config),
+        "bio.ferlab.etl.prepared.clinical.RunPrepareClinical", "Prepare Index", etl_config=etl_config, enable_all_config=True),
 
     'index study' : lambda etl_config , elastic_search_endpoint : generate_indexing_step(
         "study_centric", "Index Study", etl_config=etl_config, elastic_search_endpoint=elastic_search_endpoint),
