@@ -145,13 +145,12 @@ def generate_download_and_run_fhavro_export_step(etl_config : dict):
         "ActionOnFailure": "CONTINUE"
     }
 
-def generate_portal_etl_step(class_name : str, step_name : str, etl_config : dict, enable_all_config = False):
+def generate_normalize_portal_etl_step(class_name : str, step_name : str, etl_config : dict):
     etl_portal_bucket = etl_config['etlPortalBucket']
     env = etl_config['environment']
     account = etl_config['account']
     release_id = etl_config['input']['releaseId']
     study_ids = ','.join(etl_config['input']['studyIds'])
-    enable_all = "all" if enable_all_config else ""
     return {
         "HadoopJarStep": {
             "Args": [
@@ -163,10 +162,36 @@ def generate_portal_etl_step(class_name : str, step_name : str, etl_config : dic
                 "--class",
                 f"{class_name}",
                 f"s3a://{etl_portal_bucket}/jobs/etl.jar",
-                f"{enable_all}",
                 "--config", f"config/{env}-{account}.conf",
                 "--steps", "default",
                 "--release-id", f"{release_id}",
+                "--study-id", f"{study_ids}"
+            ],
+            "Jar": "command-runner.jar"
+        },
+        "Name": f"{step_name}",
+        "ActionOnFailure": "CONTINUE"
+    }
+
+def generate_portal_etl_step(class_name : str, step_name : str, etl_config : dict):
+    etl_portal_bucket = etl_config['etlPortalBucket']
+    env = etl_config['environment']
+    account = etl_config['account']
+    study_ids = ','.join(etl_config['input']['studyIds'])
+    return {
+        "HadoopJarStep": {
+            "Args": [
+                "spark-submit",
+                "--packages",
+                "com.typesafe.play:play-ahc-ws-standalone_2.12:2.0.3",
+                "--deploy-mode",
+                "client",
+                "--class",
+                f"{class_name}",
+                f"s3a://{etl_portal_bucket}/jobs/etl.jar",
+                f"all",
+                "--config", f"config/{env}-{account}.conf",
+                "--steps", "default",
                 "--study-id", f"{study_ids}"
             ],
             "Jar": "command-runner.jar"
@@ -211,17 +236,17 @@ variant_etl_map = {
     'download and run fhavro-export' : lambda etl_config , elastic_search_endpoint:
         generate_download_and_run_fhavro_export_step(etl_config=etl_config),
 
-    'normalize dataservice' : lambda etl_config , elastic_search_endpoint : generate_portal_etl_step(
+    'normalize dataservice' : lambda etl_config , elastic_search_endpoint : generate_normalize_portal_etl_step(
         "bio.ferlab.etl.normalized.dataservice.RunNormalizeDataservice", "Normalize Dataservice", etl_config=etl_config),
 
-    'normalize clinical' : lambda etl_config , elastic_search_endpoint : generate_portal_etl_step(
+    'normalize clinical' : lambda etl_config , elastic_search_endpoint : generate_normalize_portal_etl_step(
         "bio.ferlab.etl.normalized.clinical.RunNormalizeClinical", "Normalize Clinical", etl_config=etl_config),
 
     'enrich all' : lambda etl_config , elastic_search_endpoint : generate_portal_etl_step(
-        "bio.ferlab.etl.enriched.clinical.RunEnrichClinical", "Enrich All", etl_config=etl_config, enable_all_config=True),
+        "bio.ferlab.etl.enriched.clinical.RunEnrichClinical", "Enrich All", etl_config=etl_config),
 
     'prepare index' : lambda etl_config , elastic_search_endpoint : generate_portal_etl_step(
-        "bio.ferlab.etl.prepared.clinical.RunPrepareClinical", "Prepare Index", etl_config=etl_config, enable_all_config=True),
+        "bio.ferlab.etl.prepared.clinical.RunPrepareClinical", "Prepare Index", etl_config=etl_config),
 
     'index study' : lambda etl_config , elastic_search_endpoint : generate_indexing_step(
         "study_centric", "Index Study", etl_config=etl_config, elastic_search_endpoint=elastic_search_endpoint),
