@@ -61,7 +61,10 @@ def grab_etl_step_and_list_of_steps(etl_args: dict) -> tuple:
 
     if etl_portal_steps_to_execute is None:
         etl_portal_steps_to_execute = DEFAULT_PORTAL_ETL_STEPS
-        etl_args['input']['etlStepsToExecute'] = DEFAULT_PORTAL_ETL_STEPS
+        # Hack to remove normalize dataservice step when in INCLUDE account
+        if etl_args['account'] == 'include':
+            etl_portal_steps_to_execute.remove('normalize dataservice')
+        etl_args['input']['etlStepsToExecute'] = etl_portal_steps_to_execute
     # Validate User's Custom ETL Portal Steps before submitting first step (currentEtlStep is None)
     elif current_step is None:
         validate_custom_etl_portal_steps_to_execute(etl_portal_steps_to_execute)
