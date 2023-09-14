@@ -3,7 +3,6 @@ package bio.ferlab.etl.prepared.clinical
 import bio.ferlab.datalake.commons.config.{DatasetConf, RuntimeETLContext}
 import bio.ferlab.datalake.spark3.etl.v3.SimpleSingleETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits._
-import bio.ferlab.etl.prepared.clinical.OntologyUtils.firstCategory
 import bio.ferlab.etl.prepared.clinical.Utils._
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.{col, lit, struct}
@@ -41,7 +40,9 @@ case class SimpleParticipant(rc: RuntimeETLContext, studyIds: List[String]) exte
                                lastRunDateTime: LocalDateTime = minDateTime,
                                currentRunDateTime: LocalDateTime = LocalDateTime.now()): DataFrame = {
     val patientDF = data(normalized_patient.id)
-    val disease = data(normalized_disease.id).withColumn("mondo_id", observableTitleStandard(firstCategory("MONDO", col("condition_coding"))))
+    val disease = data(normalized_disease.id)
+      //FIXME: We may not need it. test one release without it to see if we really need it
+      // .withColumn("mondo_code", observableTitleStandard(firstCategory("MONDO", col("condition_coding"))))
     val transformedParticipant =
       patientDF
         .addStudy(data(es_index_study_centric.id))

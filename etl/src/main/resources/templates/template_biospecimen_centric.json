@@ -62,10 +62,19 @@
         "diagnosis_icd": {
           "type": "keyword"
         },
+        "icd_code": {
+          "type": "keyword"
+        },
         "diagnosis_mondo": {
           "type": "keyword"
         },
+        "mondo_code": {
+          "type": "keyword"
+        },
         "diagnosis_ncit": {
+          "type": "keyword"
+        },
+        "ncit_code": {
           "type": "keyword"
         },
         "external_collection_sample_id": {
@@ -321,13 +330,22 @@
                 "diagnosis_icd": {
                   "type": "keyword"
                 },
+                "icd_code": {
+                  "type": "keyword"
+                },
                 "diagnosis_id": {
                   "type": "keyword"
                 },
                 "diagnosis_mondo": {
                   "type": "keyword"
                 },
+                "mondo_code": {
+                  "type": "keyword"
+                },
                 "diagnosis_ncit": {
+                  "type": "keyword"
+                },
+                "ncit_code": {
                   "type": "keyword"
                 },
                 "fhir_id": {
@@ -336,13 +354,22 @@
                 "icd_id_diagnosis": {
                   "type": "keyword"
                 },
+                "icd_display_term": {
+                  "type": "keyword"
+                },
                 "mondo_id": {
                   "type": "keyword"
                 },
                 "mondo_id_diagnosis": {
                   "type": "keyword"
                 },
+                "mondo_display_term": {
+                  "type": "keyword"
+                },
                 "ncit_id_diagnosis": {
+                  "type": "keyword"
+                },
+                "ncit_display_term": {
                   "type": "keyword"
                 },
                 "source_text": {
@@ -710,6 +737,9 @@
               "type": "keyword"
             },
             "website": {
+              "type": "keyword"
+            },
+            "investigator_id": {
               "type": "keyword"
             }
           }

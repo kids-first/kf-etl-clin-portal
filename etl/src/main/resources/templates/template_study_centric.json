@@ -80,6 +80,9 @@
         },
         "website": {
           "type": "keyword"
+        },
+        "investigator_id": {
+          "type": "keyword"
         }
       }
     }

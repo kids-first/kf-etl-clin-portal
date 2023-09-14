@@ -1,6 +1,7 @@
 package bio.ferlab.etl.normalized.clinical
 
 import bio.ferlab.datalake.spark3.transformation.{Custom, Drop, Transformation}
+import bio.ferlab.etl.Utils.{firstCategory, observableTitleStandard}
 import bio.ferlab.etl.normalized.clinical.Utils._
 import bio.ferlab.etl.normalized.clinical.clinical._
 import org.apache.spark.sql.functions._
@@ -63,6 +64,8 @@ object Transformations {
     Drop("subject", "identifier", "focus", "valueCodeableConcept", "meta")
   )
 
+  private val extractThenReformatConditionCoding = (category: String) => observableTitleStandard(firstCategory(category, col("condition_coding")))
+
   val diseaseMappings: List[Transformation] = List(
     Custom(_
       .select("fhir_id", "study_id", "release_id", "identifier", "code", "bodySite", "subject", "verificationStatus", "_recordedDate", "category")
@@ -81,8 +84,14 @@ object Transformations {
         extractFirstForSystem(col("_recordedDate")("recordedDate")("event")("coding"), Seq("http://snomed.info/sct"))("display") as "from"
       ))
       .withColumn("diagnosis_mondo", filter(col("condition_coding"), x => x("category") === "MONDO")(0)("code"))
+      //**Duplication** needed to rename this fields without breaking other services such as the portal.
+      .withColumn("mondo_code", extractThenReformatConditionCoding("MONDO"))
       .withColumn("diagnosis_ncit", filter(col("condition_coding"), x => x("category") === "NCIT")(0)("code"))
+      //**Duplication** needed to rename this fields without breaking other services such as the portal.
+      .withColumn("ncit_code", extractThenReformatConditionCoding("NCIT"))
       .withColumn("diagnosis_icd", filter(col("condition_coding"), x => x("category") === "ICD")(0)("code"))
+      //**Duplication** needed to rename this fields without breaking other services such as the portal.
+      .withColumn("icd_code", extractThenReformatConditionCoding("ICD"))
       // TODO external_id
       // TODO diagnosis_category
     ),
