@@ -29,7 +29,7 @@ object Utils {
 
   def extractSpecimenNcitAnatomySiteId(xs: Column): Column = filter(xs, x => x("code").startsWith("NCIT:"))(0)("code")
 
-  def extractKfSpecimenConsentType(xs: Column): Column = filter(xs, x => x("system").contains("consent_type"))(0)("code")
+  def extractSpecimenConsentType(xs: Column): Column = filter(xs, x => x("system").contains("consent_type"))(0)("code")
 
   def extractLatestDid(urlCol: Column): Column = when(urlCol.startsWith(DRS_HOSTNAME), DRS_HOSTNAME).otherwise("")
 
@@ -91,5 +91,11 @@ object Utils {
   val ignoredOmbCategoryCodes = Seq("UNK", "NAVU", "NI")
 
   val ombCategory: Column => Column = c => when(c("code").isin(ignoredOmbCategoryCodes: _*), lit(null)).otherwise(c("display"))
+
+  val patternPractitionerRoleResearchStudy = "PractitionerRole\\/([0-9]+)"
+
+  val officialIdentifier: Column = extractOfficial(col("identifier"))
+
+  val age_at_bio_collection_on_set_intervals: Seq[(Int, Int)] = Seq((0, 5), (5, 10), (10, 20), (20, 30), (30, 40), (40, 50), (50, 60), (60, 70), (70, 80))
 
 }

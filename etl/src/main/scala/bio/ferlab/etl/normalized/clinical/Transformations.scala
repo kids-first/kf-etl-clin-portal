@@ -5,13 +5,8 @@ import bio.ferlab.etl.normalized.clinical.Utils._
 import bio.ferlab.etl.normalized.clinical.clinical._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.BooleanType
-import org.apache.spark.sql.{Column, DataFrame}
 
 object Transformations {
-
-  val patternPractitionerRoleResearchStudy = "PractitionerRole\\/([0-9]+)"
-
-  val officialIdentifier: Column = extractOfficial(col("identifier"))
 
   val patientMappings: List[Transformation] = List(
     Custom(_
@@ -35,8 +30,6 @@ object Transformations {
     ),
     Drop("identifier")
   )
-
-  val age_at_bio_collection_on_set_intervals: Seq[(Int, Int)] = Seq((0, 5), (5, 10), (10, 20), (20, 30), (30, 40), (40, 50), (50, 60), (60, 70), (70, 80))
 
   val observationVitalStatusMappings: List[Transformation] = List(
     Custom(_
@@ -242,82 +235,6 @@ object Transformations {
   )
 
 
-  private def addParentsToSpecimen(specimen: DataFrame, isFlatSpecimenModel: Boolean): DataFrame = {
-    def noopWhenFlatModel(c: Column) = if (isFlatSpecimenModel) nullLitStr() else c
-
-    val parentRange = 1 to 10
-    val samplesWithParent = parentRange.foldLeft(specimen) { case (s, i) =>
-      val joined = specimen.select(struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(i) as "level") as s"parent_$i")
-      s.join(joined, s(s"parent_${i - 1}.parent_id") === joined(s"parent_$i.fhir_id"), "left")
-    }
-      .withColumn("parent_sample_type", if (isFlatSpecimenModel) col("type")("coding")(0)("display") else col("parent_1.sample_type"))
-      .withColumn("parent_sample_id", noopWhenFlatModel(col("parent_1.sample_id")))
-      .withColumn("parent_fhir_id", noopWhenFlatModel(col("parent_1.fhir_id")))
-      .withColumn("collection_sample", coalesce(parentRange.reverse.map(p => col(s"parent_$p")): _*))
-      .withColumn("collection_sample_id", noopWhenFlatModel(col("collection_sample.sample_id")))
-      .withColumn("collection_sample_type", noopWhenFlatModel(col("collection_sample.sample_type")))
-      .withColumn("collection_fhir_id", col("collection_sample.fhir_id"))
-    val sampleWithParentFiltered =
-      if (isFlatSpecimenModel) samplesWithParent else samplesWithParent.where(col("collection_fhir_id") =!= col("fhir_id"))
-    sampleWithParentFiltered.drop(parentRange.map(p => s"parent_$p"): _*).select(struct(col("*")) as "specimen")
-  }
-
-  val nullLitStr = () => lit(null).cast("string")
-
-  private def extractSpSampleType(isFlatSpecimenModel: Boolean): Column = if (isFlatSpecimenModel) {
-    col("type")("coding")(1)("display")
-  } else {
-    firstSystemEquals(col("type")("coding"), SYS_SAMPLE_TYPE)("display")
-  }
-
-  def specimenMappings(isFlatSpecimenModel: Boolean): List[Transformation] = List(
-    Custom { input =>
-      val specimen = input
-        .select("fhir_id", "release_id", "study_id", "type", "identifier", "collection", "subject", "status", "container", "parent", "processing", "meta")
-        .withColumn("sample_type", extractSpSampleType(isFlatSpecimenModel))
-        .withColumn("sample_id", officialIdentifier)
-        .withColumn("laboratory_procedure", col("processing")(0)("description"))
-        .withColumn("participant_fhir_id", extractReferenceId(col("subject")("reference")))
-        .withColumn("age_at_biospecimen_collection", col("collection._collectedDateTime.relativeDateTime.offset.value"))
-        .withColumn("age_at_biospecimen_collection_years", floor(col("age_at_biospecimen_collection") / 365).cast("int"))
-        .withColumn("age_at_biospecimen_collection_onset", age_on_set(col("age_at_biospecimen_collection_years"), age_at_bio_collection_on_set_intervals))
-        .withColumn("container", explode_outer(col("container")))
-        .withColumn("container_id", col("container")("identifier")(0)("value"))
-        .withColumn("volume", if (isFlatSpecimenModel) col("collection")("quantity")("value") else col("container")("specimenQuantity")("value"))
-        .withColumn("volume_unit", if (isFlatSpecimenModel) col("collection")("quantity")("unit") else col("container")("specimenQuantity")("unit"))
-        .withColumn("biospecimen_storage", col("container")("description"))
-        .withColumn("parent", col("parent")(0))
-        .withColumn("parent_id", extractReferenceId(col("parent.reference")))
-        .withColumn("parent_0", struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(0) as "level"))
-        .withColumn("external_collection_sample_id", if (isFlatSpecimenModel) extractSpecimenSecondaryIdentifier(col("identifier"), "external_sample_id") else nullLitStr())
-        .withColumn("external_sample_id", extractSpecimenSecondaryIdentifier(col("identifier"), if (isFlatSpecimenModel) "external_aliquot_id" else "/specimen"))
-        .withColumn("method_of_sample_procurement", col("collection.method.text"))
-        .withColumn("ncit_anatomy_site_id", extractSpecimenNcitAnatomySiteId(col("collection.bodySite.coding")))
-        .withColumn("anatomy_site", col("collection.bodySite.text"))
-        .withColumn("tissue_type_source_text", col("type")("text"))
-        .withColumn("ncit_id_tissue_type", extractSpecimenNcitAnatomySiteId(col("type")("coding")))
-        .withColumn("consent_type", if (isFlatSpecimenModel) extractKfSpecimenConsentType(col("meta")("security")) else nullLitStr())
-
-      val grouped = addParentsToSpecimen(specimen, isFlatSpecimenModel)
-        .groupBy("specimen.fhir_id", "specimen.container_id")
-        .agg(first("specimen") as "specimen")
-        .select("specimen.*")
-      grouped
-
-    },
-    Drop(
-      "type",
-      "identifier",
-      "collection",
-      "subject",
-      "parent",
-      "container",
-      "collection_sample",
-      "meta",
-      "processing"
-    )
-  )
-
   val probandObservationMappings: List[Transformation] = List(
     Custom(input =>
       input.select("subject", "valueCodeableConcept", "release_id", "study_id")
@@ -327,9 +244,8 @@ object Transformations {
     Drop("subject", "valueCodeableConcept")
   )
 
-  def extractionMappingsFor(isFlatSpecimenModel: Boolean): Map[String, List[Transformation]] = Map(
+  def extractionMappingsFor(): Map[String, List[Transformation]] = Map(
     "patient" -> patientMappings,
-    "specimen" -> specimenMappings(isFlatSpecimenModel),
     "vital_status" -> observationVitalStatusMappings,
     "family_relationship" -> observationFamilyRelationshipMappings,
     "phenotype" -> conditionPhenotypeMappings,
@@ -340,6 +256,7 @@ object Transformations {
     "document_reference" -> documentreferenceMappings,
     "organization" -> organizationMappings,
     "proband_observation" -> probandObservationMappings,
-    "histology_observation" -> histologyObservationMappings
+    "histology_observation" -> histologyObservationMappings,
+    "specimen" -> SpecimensTransformations(),
   )
 }

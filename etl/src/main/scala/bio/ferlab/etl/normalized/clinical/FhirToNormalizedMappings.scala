@@ -26,7 +26,7 @@ object FhirToNormalizedMappings {
   def mappings(releaseId: String, c: ETLConfiguration): List[(DatasetConf, DatasetConf, List[Transformation])] = {
     c.sources.filter(s => s.format == Format.AVRO).map(s => {
       val pattern(table) = s.id
-      val mappings = extractionMappingsFor(c.isFlatSpecimenModel)
+      val mappings = extractionMappingsFor()
       (s, c.getDataset(s"normalized_$table"), defaultTransformations(releaseId) ++ mappings.getOrElse(table, Nil))
     }
     )
