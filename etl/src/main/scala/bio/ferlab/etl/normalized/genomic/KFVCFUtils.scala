@@ -45,19 +45,20 @@ object KFVCFUtils {
   /**
    * Get the versions of the vcf files. The version is inferred from the first line of each vcf file.
    *
-   * @param files    a dataframe containing the s3 urls of the vcf files.
-   * @param studyId  id of the study used to filter the files.
-   * @param endsWith the pattern to filter the files.
+   * @param files         a dataframe containing the s3 urls of the vcf files.
+   * @param studyId       id of the study used to filter the files.
+   * @param regexpMatched regular expression used to filter the files.
    * @param spark
    * @return a list of VCFFiles containing the version and the list of files.
    */
-  private def getVCFFiles(files: DataFrame, studyId: String, endsWith: String)(implicit spark: SparkSession): Seq[VCFFiles] = {
+  private def getVCFFiles(files: DataFrame, studyId: String, regexpMatched: String)(implicit spark: SparkSession): Seq[VCFFiles] = {
     import spark.implicits._
-    val filesUrl = files.select("s3_url")
-      .where(col("study_id") === studyId and col("s3_url").isNotNull)
+    val filesUrl = files
+      .where(col("study_id") === studyId and col("s3_url").rlike(regexpMatched))
+      .select("s3_url")
       .distinct()
       .as[String].collect()
-      .collect { case s if s != null && s.endsWith(endsWith) => s.replace("s3://", "s3a://") }
+      .collect { case s if s != null => s.replace("s3://", "s3a://") }
 
     val filesUrlWithBucket = extractBucketNames(filesUrl)
     val buckets = filesUrlWithBucket.map { case (_, bucket) => bucket }.toSet
