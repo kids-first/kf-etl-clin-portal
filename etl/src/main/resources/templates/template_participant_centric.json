@@ -253,7 +253,7 @@
                 "tissue_type_source_text": {
                   "type": "keyword"
                 },
-                "volume_ul": {
+                "volume": {
                   "type": "float"
                 },
                 "volume_unit": {
