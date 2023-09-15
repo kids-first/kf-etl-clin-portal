@@ -1,6 +1,9 @@
 
 import boto3
 
+STEP_FAILED_STATES =  ["CANCELLED" ,"FAILED", "INTERRUPTED"]
+EMR_CLUSTER_FAILED_STATES = ["TERMINATING","TERMINATED","TERMINATED_WITH_ERRORS"]
+
 def check_portal_etl_emr_step_status(etl_args, context):
     """
     Checks the status of a specific ETL step and the overall EMR cluster status.
@@ -15,17 +18,17 @@ def check_portal_etl_emr_step_status(etl_args, context):
 
     print(f'Check Status of Variant ETL Inputs: {etl_args}')
     cluster_id = etl_args['portalEtlClusterId']
-    step_id = etl_args['currentEtlStepId']
+    step_ids = etl_args['currentEtlStepIds']
 
-    current_step_status = get_portal_etl_emr_step_status(cluster_id=cluster_id, step_id=step_id)
+    step_statuses = [get_portal_etl_emr_step_status(cluster_id=cluster_id, step_id=step_id) for step_id in step_ids]
     emr_cluster_status = get_emr_cluster_status(cluster_id)
-    etl_status = calculate_etl_status(current_step_status, emr_cluster_status, etl_args['input']['etlStepsToExecute'], etl_args['currentEtlStep'])
+    etl_status = calculate_etl_status(step_statuses, emr_cluster_status, etl_args['input']['etlStepsToExecute'], etl_args['currentEtlSteps'])
 
     print(f'ClusterID is {cluster_id}')
-    print(f"ETL Cluster Id: {cluster_id} Step Status {current_step_status}")
+    print(f"ETL Cluster Id: {cluster_id} Step Status {step_statuses}")
 
     etl_args['etlStatus'] = etl_status
-    etl_args['currentEtlStepStatus'] = current_step_status
+    etl_args['currentEtlStepStatuses'] = step_statuses
     return etl_args
 
 def get_emr_cluster_status(cluster_id : str) -> str :
@@ -45,7 +48,7 @@ def get_emr_cluster_status(cluster_id : str) -> str :
     )
     return response['Cluster']['Status']['State']
 
-def calculate_etl_status(current_step_status : str, emr_cluster_status : str, etl_variant_steps_to_execute : list, current_step : str) -> str :
+def calculate_etl_status(current_step_statuses : list, emr_cluster_status : str, etl_variant_steps_to_execute : list, current_steps : list) -> str :
     """
     Calculates the overall ETL status based on step and cluster statuses.
 
@@ -59,9 +62,14 @@ def calculate_etl_status(current_step_status : str, emr_cluster_status : str, et
         str: The calculated ETL status.
     """
 
-    if current_step_status == 'COMPLETED' and etl_variant_steps_to_execute[-1] == current_step:
+    steps_completed = [current_step_status for current_step_status in current_step_statuses if current_step_status == 'COMPLETED']
+    steps_failed = [current_step_status for current_step_status in current_step_statuses if current_step_status in STEP_FAILED_STATES ]
+
+    if len(steps_completed) == len(current_step_statuses) and current_steps[-1].startswith(etl_variant_steps_to_execute[-1]):
         etl_status = "COMPLETED"
-    elif current_step_status in ["CANCELLED" ,"FAILED", "INTERRUPTED"] or emr_cluster_status in ["TERMINATING","TERMINATED","TERMINATED_WITH_ERRORS"]:
+    elif len(steps_completed) == len(current_steps):
+        etl_status = "SUBMIT_STEP"
+    elif len(steps_failed) > 0 or emr_cluster_status in EMR_CLUSTER_FAILED_STATES:
         etl_status = "FAILED"
     else:
         etl_status = "RUNNING"

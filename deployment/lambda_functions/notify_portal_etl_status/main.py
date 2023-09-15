@@ -16,10 +16,10 @@ def get_slack_webhook(secret_name: str) -> str:
 
 def format_message(etl_args : dict) -> str:
     cluster_id = etl_args.get('portalEtlClusterId')
-    step_id = etl_args.get('currentEtlStepId')
+    step_id = etl_args.get('currentEtlStepIds')
     etl_status = etl_args.get('etlStatus')
-    current_step_status = etl_args.get('currentEtlStepStatus')
-    etl_portal_current_step = etl_args.get('currentEtlStep')
+    current_step_status = etl_args.get('currentEtlStepStatuses')
+    etl_portal_current_step = etl_args.get('currentEtlSteps')
 
     user_input = etl_args.get('input')
     etl_portal_steps_to_execute = user_input.get('etlStepsToExecute')
