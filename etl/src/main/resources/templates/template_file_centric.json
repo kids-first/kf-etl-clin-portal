@@ -309,9 +309,6 @@
                 "icd_display_term": {
                   "type": "keyword"
                 },
-                "mondo_id": {
-                  "type": "keyword"
-                },
                 "mondo_id_diagnosis": {
                   "type": "keyword"
                 },
