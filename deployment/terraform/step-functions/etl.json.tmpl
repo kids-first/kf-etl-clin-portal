@@ -73,29 +73,13 @@
           "Next": "Notify ETL Success"
         },
         {
-          "And": [
-            {
-              "Variable": "$.etlStatus",
-              "StringEquals" : "RUNNING"
-            },
-            {
-              "Variable": "$.currentEtlStepStatus",
-              "StringEquals" : "COMPLETED"
-            }
-          ],
-        "Next": "Submit ETL Step"
+          "Variable": "$.etlStatus",
+          "StringEquals" : "SUBMIT_STEP",
+          "Next": "Submit ETL Step"
         },
         {
-          "Or": [
-            {
-              "Variable": "$.etlStatus",
-              "StringEquals" : "FAILED"
-            },
-            {
-              "Variable": "$.currentEtlStepStatus",
-              "StringEquals" : "FAILED"
-            }
-          ],
+          "Variable": "$.etlStatus",
+          "StringEquals" : "FAILED",
           "Next": "Notify ETL Failed"
         }
       ],
