@@ -2,27 +2,31 @@ package bio.ferlab.etl.normalized.genomic
 
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf, RuntimeETLContext}
 import bio.ferlab.datalake.spark3.etl.ETLSingleDestination
-import bio.ferlab.datalake.spark3.etl.v3.SimpleSingleETL
+import bio.ferlab.datalake.spark3.etl.v3.{SimpleSingleETL, SingleETL}
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits._
 import bio.ferlab.datalake.spark3.implicits.GenomicImplicits._
 import bio.ferlab.datalake.spark3.implicits.GenomicImplicits.columns._
 import bio.ferlab.etl.Constants.columns.{GENES_SYMBOL, TRANSMISSION_MODE}
 import bio.ferlab.etl.normalized.genomic.KFVCFUtils.loadVCFs
+import bio.ferlab.fhir.etl.config.{KFRuntimeETLContext, StudyConfiguration}
+import bio.ferlab.fhir.etl.config.StudyConfiguration.defaultStudyConfiguration
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SparkSession, functions}
 
 import java.time.LocalDateTime
 
-case class SNV(rc:RuntimeETLContext, studyId: String, releaseId: String, vcfPattern: String, referenceGenomePath: Option[String]) extends SimpleSingleETL(rc) {
+case class SNV(rc:KFRuntimeETLContext, studyId: String, releaseId: String, referenceGenomePath: Option[String]) extends SingleETL(rc) {
   private val enriched_specimen: DatasetConf = conf.getDataset("enriched_specimen")
   private val document_reference: DatasetConf = conf.getDataset("normalized_document_reference")
   override val mainDestination: DatasetConf = conf.getDataset("normalized_snv")
+
+  private val studyConfiguration: StudyConfiguration = rc.config.studies.getOrElse(studyId, defaultStudyConfiguration)
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now()): Map[String, DataFrame] = {
 
     Map(
-      "vcf" -> loadVCFs(document_reference.read, studyId, vcfPattern, referenceGenomePath),
+      "vcf" -> loadVCFs(document_reference.read, studyConfiguration, studyId, referenceGenomePath),
       enriched_specimen.id -> enriched_specimen.read.where(col("study_id") === studyId)
     )
 

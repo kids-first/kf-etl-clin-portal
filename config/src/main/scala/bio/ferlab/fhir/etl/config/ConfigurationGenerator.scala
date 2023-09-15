@@ -7,6 +7,7 @@ import bio.ferlab.datalake.commons.file.FileSystemType.S3
 import bio.ferlab.datalake.spark3.genomics.GenomicDatasets
 import bio.ferlab.datalake.spark3.publictables.PublicDatasets
 import bio.ferlab.datalake.spark3.publictables.PublicDatasets.gnomadStorage
+import bio.ferlab.fhir.etl.config.StudyConfiguration.studiesConfigurations
 import pureconfig.generic.auto._
 
 case class SourceConfig(entityType: String, partitionBy: List[String])
@@ -234,7 +235,8 @@ object ConfigurationGenerator extends App {
       args = args.toList,
       sparkconf = spark_conf
     ),
-      dataservice_url = "https://kf-api-dataservice-qa.kidsfirstdrc.org"
+      dataservice_url = "https://kf-api-dataservice-qa.kidsfirstdrc.org",
+      studies = studiesConfigurations(project)
     ))
 
     ConfigurationWriter.writeTo(s"config/output/config/prd-$project.conf", ETLConfiguration(DatalakeConf(
@@ -246,7 +248,8 @@ object ConfigurationGenerator extends App {
       args = args.toList,
       sparkconf = spark_conf
     ),
-      dataservice_url = "https://kf-api-dataservice.kidsfirstdrc.org"
+      dataservice_url = "https://kf-api-dataservice.kidsfirstdrc.org",
+      studies = studiesConfigurations(project)
     ))
   }
 
