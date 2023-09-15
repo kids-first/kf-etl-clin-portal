@@ -27,7 +27,6 @@ steps=$(
        "--steps", "default",
        "--study-id", "${study_id}",
        "--release-id", "${release_id}",
-       "--vcf-pattern", ".CGP.filtered.deNovo.vep.vcf.gz",
        "--reference-genome-path", "/mnt/GRCh38_full_analysis_set_plus_decoy_hla.fa"
      ],
      "Type": "CUSTOM_JAR",

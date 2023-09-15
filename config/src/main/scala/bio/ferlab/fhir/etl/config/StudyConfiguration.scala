@@ -10,7 +10,7 @@ object StudyConfiguration {
   def studiesConfigurations(project: String): StudiesConfiguration = if (project == pKfStrides) kfStudiesConfiguration else Map.empty[String, StudyConfiguration]
 
   val defaultStudyConfiguration: StudyConfiguration = StudyConfiguration(
-    snvVCFPattern = "*/harmonized-data/family-variants/.*filtered.deNovo.vep.vcf.gz"
+    snvVCFPattern = ".*/harmonized-data/family-variants/.*filtered.deNovo.vep.vcf.gz"
   )
 
   private val kfStudiesConfiguration = Map(
