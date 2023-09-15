@@ -24,13 +24,6 @@ object Utils {
     }
   }
 
-  def extractSpecimenSecondaryIdentifier(xs: Column, systemParam: String): Column =
-    filter(xs, x => x("use") === "secondary" && x("system").contains(systemParam))(0)("value")
-
-  def extractSpecimenNcitAnatomySiteId(xs: Column): Column = filter(xs, x => x("code").startsWith("NCIT:"))(0)("code")
-
-  def extractSpecimenConsentType(xs: Column): Column = filter(xs, x => x("system").contains("consent_type"))(0)("code")
-
   def extractLatestDid(urlCol: Column): Column = when(urlCol.startsWith(DRS_HOSTNAME), DRS_HOSTNAME).otherwise("")
 
   def extractFirstMatchingSystem(column: Column, systemUrls: Seq[String]): Column = filter(column, c => c("system").isin(systemUrls: _*))(0)

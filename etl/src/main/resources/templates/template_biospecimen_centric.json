@@ -56,6 +56,9 @@
         "consent_type": {
           "type": "keyword"
         },
+        "dbgap_consent_code": {
+          "type": "keyword"
+        },
         "container_id": {
           "type": "keyword"
         },
