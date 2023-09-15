@@ -134,11 +134,11 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithTestSimpleConfigurati
     ).toDF()
 
     val inputDiseases = Seq(
-      NORMALIZED_DISEASE(`fhir_id` = "O1", `participant_fhir_id` = "P1", `mondo_id` = Some("MONDO:0008608")),
-      NORMALIZED_DISEASE(`fhir_id` = "O2", `participant_fhir_id` = "P1", `mondo_id` = Some("MONDO:0008609")),
-      NORMALIZED_DISEASE(`fhir_id` = "O3", `participant_fhir_id` = "P2", `mondo_id` = Some("MONDO:0008609")),
-      NORMALIZED_DISEASE(`fhir_id` = "O4", `participant_fhir_id` = "P2", `mondo_id` = Some("MONDO:0000000")),
-      NORMALIZED_DISEASE(`fhir_id` = "O5", `participant_fhir_id` = "P3", `mondo_id` = Some("MONDO:0000000"))
+      NORMALIZED_DISEASE(`fhir_id` = "O1", `participant_fhir_id` = "P1", `mondo_code` = Some("MONDO:0008608")),
+      NORMALIZED_DISEASE(`fhir_id` = "O2", `participant_fhir_id` = "P1", `mondo_code` = Some("MONDO:0008609")),
+      NORMALIZED_DISEASE(`fhir_id` = "O3", `participant_fhir_id` = "P2", `mondo_code` = Some("MONDO:0008609")),
+      NORMALIZED_DISEASE(`fhir_id` = "O4", `participant_fhir_id` = "P2", `mondo_code` = Some("MONDO:0000000")),
+      NORMALIZED_DISEASE(`fhir_id` = "O5", `participant_fhir_id` = "P3", `mondo_code` = Some("MONDO:0000000"))
     ).toDF()
 
     val output = inputPatients.addDownSyndromeDiagnosis(inputDiseases, mondoTerms)
@@ -562,7 +562,7 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithTestSimpleConfigurati
         diagnosis_id = "diag1",
         participant_fhir_id = "A",
         condition_coding = Seq(CONDITION_CODING(`category` = "MONDO", `code` = "MONDO_0002051")),
-        mondo_id = Some("MONDO:0002051"),
+        mondo_code = Some("MONDO:0002051"),
         age_at_event = AGE_AT_EVENT(5),
       ),
       NORMALIZED_DISEASE(
@@ -570,7 +570,7 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithTestSimpleConfigurati
         diagnosis_id = "diag2",
         participant_fhir_id = "A",
         condition_coding = Seq(CONDITION_CODING(`category` = "MONDO", `code` = "MONDO_0024458")),
-        mondo_id = Some("MONDO:0024458"),
+        mondo_code = Some("MONDO:0024458"),
         age_at_event = AGE_AT_EVENT(10),
       ),
       NORMALIZED_DISEASE(fhir_id = "3d", diagnosis_id = "diag3", participant_fhir_id = "A")

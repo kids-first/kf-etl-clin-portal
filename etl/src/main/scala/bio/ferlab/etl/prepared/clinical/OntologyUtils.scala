@@ -1,6 +1,6 @@
 package bio.ferlab.etl.prepared.clinical
 
-import bio.ferlab.etl.prepared.clinical.Utils.observableTitleStandard
+import bio.ferlab.etl.Utils.{firstCategory, observableTitleStandard}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Column, DataFrame}
 
@@ -26,20 +26,24 @@ object OntologyUtils {
       age as "age_at_event_days"
     )
 
-  val firstCategory: (String, Column) => Column = (category, codes) => filter(codes, code => code("category") === lit(category))(0)("code")
-
   def addDiseases(diseases: DataFrame, mondoTerms: DataFrame): DataFrame = {
     val mondoTermsIdName = mondoTerms.select(col("id") as "mondo_term_id", col("name") as "mondo_name")
     diseases
       //filter out disease with empty code
       .where(size(col("condition_coding")) > 0)
       .withColumn("icd_id_diagnosis", firstCategory("ICD", col("condition_coding")))
+      //**Duplication** needed to rename this fields without breaking other services such as the portal.
+      .withColumn("icd_display_term", lit(null).cast("string"))
       .withColumn("ncit_id_diagnosis", firstCategory("NCIT", col("condition_coding")))
+      //**Duplication** needed to rename this fields without breaking other services such as the portal.
+      .withColumn("ncit_display_term",lit(null).cast("string"))
       //Assumption -> age_at_event is in days from birth
       .withColumn("age_at_event_days", col("age_at_event.value"))
       .drop("condition_coding", "release_id")
-      .join(mondoTermsIdName, col("mondo_id") === mondoTermsIdName("mondo_term_id"), "left_outer")
-      .withColumn("mondo_id_diagnosis", displayTerm(col("mondo_id"), col("mondo_name")))
+      .join(mondoTermsIdName, col("mondo_code") === mondoTermsIdName("mondo_term_id"), "left_outer")
+      .withColumn("mondo_id_diagnosis", displayTerm(col("mondo_code"), col("mondo_name")))
+      //**Duplication** needed to rename this fields without breaking other services such as the portal.
+      .withColumn("mondo_display_term", displayTerm(col("mondo_code"), col("mondo_name")))
       .drop("mondo_term_id","mondo_name")
   }
 

@@ -38,7 +38,7 @@ class SimpleParticipantSpec extends AnyFlatSpec with Matchers with WithSparkSess
       "normalized_disease" -> Seq(
         NORMALIZED_DISEASE(fhir_id = "CD1", participant_fhir_id = "P1", condition_coding = Seq(CONDITION_CODING(category = "ICD", code = "Q90.9"))),
         NORMALIZED_DISEASE(fhir_id = "CD2", participant_fhir_id = "P2", condition_coding = Seq(CONDITION_CODING(category = "ICD", code = "Q90.9"))),
-        NORMALIZED_DISEASE(fhir_id = "CD3", participant_fhir_id = "P1", condition_coding = Seq(CONDITION_CODING(category = "MONDO", code = "MONDO_0002028"))),
+        NORMALIZED_DISEASE(fhir_id = "CD3", participant_fhir_id = "P1", `mondo_code` = Some("MONDO:0002028"), condition_coding = Seq(CONDITION_CODING(category = "MONDO", code = "MONDO_0002028"))),
       ).toDF(),
       "normalized_group" -> Seq(
         NORMALIZED_GROUP(fhir_id = "G1", family_id = "G1", family_members = Seq(("P1", false), ("P2", false), ("P3", false)), family_members_id = Seq("P1", "P2", "P3")),
