@@ -4,9 +4,18 @@ import bio.ferlab.datalake.spark3.transformation.{Custom, Drop, Transformation}
 import bio.ferlab.etl.normalized.clinical.Utils._
 import bio.ferlab.etl.normalized.clinical.clinical._
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{Column, DataFrame}
 
 object SpecimensTransformations {
+
+
+  private def extractSecondaryIdentifier(xs: Column, systemParam: String): Column =
+    filter(xs, x => x("use") === "secondary" && x("system").contains(systemParam))(0)("value")
+
+  private def extractNcitAnatomySiteId(xs: Column): Column = filter(xs, x => x("code").startsWith("NCIT:"))(0)("code")
+
+  private def extractConsentType(keyword: String): Column = filter(col("meta")("security"), x => x("system").contains(keyword))(0)("code")
+
   private def addParentsToSpecimen(specimen: DataFrame): DataFrame = {
     val parentRange = 1 to 10
     val samplesWithParent = parentRange.foldLeft(specimen) { case (s, i) =>
@@ -44,14 +53,15 @@ object SpecimensTransformations {
         .withColumn("parent", col("parent")(0))
         .withColumn("parent_id", extractReferenceId(col("parent.reference")))
         .withColumn("parent_0", struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(0) as "level"))
-        .withColumn("external_collection_sample_id", extractSpecimenSecondaryIdentifier(col("identifier"), "external_sample_id"))
-        .withColumn("external_sample_id", extractSpecimenSecondaryIdentifier(col("identifier"), "/specimen"))
+        .withColumn("external_collection_sample_id", extractSecondaryIdentifier(col("identifier"), "external_sample_id"))
+        .withColumn("external_sample_id", extractSecondaryIdentifier(col("identifier"), "/specimen"))
         .withColumn("method_of_sample_procurement", col("collection.method.text"))
-        .withColumn("ncit_anatomy_site_id", extractSpecimenNcitAnatomySiteId(col("collection.bodySite.coding")))
+        .withColumn("ncit_anatomy_site_id", extractNcitAnatomySiteId(col("collection.bodySite.coding")))
         .withColumn("anatomy_site", col("collection.bodySite.text"))
         .withColumn("tissue_type_source_text", col("type")("text"))
-        .withColumn("ncit_id_tissue_type", extractSpecimenNcitAnatomySiteId(col("type")("coding")))
-        .withColumn("consent_type", extractSpecimenConsentType(col("meta")("security")))
+        .withColumn("ncit_id_tissue_type", extractNcitAnatomySiteId(col("type")("coding")))
+        .withColumn("consent_type", extractConsentType("consent_type"))
+        .withColumn("dbgap_consent_code", extractConsentType("dbgap_consent_code"))
 
       val grouped = addParentsToSpecimen(specimen)
         .groupBy("specimen.fhir_id", "specimen.container_id")
