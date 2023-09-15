@@ -119,7 +119,7 @@ object KFVCFUtils {
 
   case object V1 extends VCFVersion {
     override def loadVersion(df: DataFrame): DataFrame = {
-      df.drop("annotation", "INFO_ANN")
+      df
         .withColumn("INFO_DS", lit(null).cast("boolean"))
         .withColumn("INFO_HaplotypeScore", lit(null).cast("double"))
         .withColumn("genotype", explode(col("genotypes")))
