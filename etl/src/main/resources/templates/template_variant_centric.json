@@ -21,8 +21,8 @@
           "type": "keyword"
         },
         "dna_change": {
-            "type": "keyword",
-            "index": false
+          "type": "keyword",
+          "index": false
         },
         "clinvar": {
           "properties": {
@@ -56,38 +56,38 @@
           "type": "long"
         },
         "internal_frequencies": {
-            "properties": {
-                "total": {
-                  "properties": {
-                    "ac": {
-                      "type": "long",
-                      "index": false
-                    },
-                    "af": {
-                      "type": "float"
-                    },
-                    "an": {
-                      "type": "long",
-                      "index": false
-                    },
-                    "hom": {
-                      "type": "long",
-                      "index": false
-                    },
-                    "pc": {
-                        "type": "long",
-                        "index": false
-                    },
-                    "pn": {
-                        "type": "long",
-                        "index": false
-                    },
-                    "pf": {
-                        "type": "float"
-                    }                                        
-                  }
+          "properties": {
+            "total": {
+              "properties": {
+                "ac": {
+                  "type": "long",
+                  "index": false
+                },
+                "af": {
+                  "type": "float"
+                },
+                "an": {
+                  "type": "long",
+                  "index": false
+                },
+                "hom": {
+                  "type": "long",
+                  "index": false
+                },
+                "pc": {
+                  "type": "long",
+                  "index": false
+                },
+                "pn": {
+                  "type": "long",
+                  "index": false
+                },
+                "pf": {
+                  "type": "float"
                 }
+              }
             }
+          }
         },
         "external_frequencies": {
           "properties": {
@@ -295,194 +295,194 @@
               }
             },
             "spliceai": {
-                "properties": {
-                  "ds": {
-                    "type": "float"
-                  },
-                  "type": {
-                    "type": "keyword"
-                  }
+              "properties": {
+                "ds": {
+                  "type": "float"
+                },
+                "type": {
+                  "type": "keyword"
                 }
+              }
             },
             "consequences": {
-                "type": "nested",
-                "properties": {
-                  "aa_change": {
-                    "type": "keyword",
-                    "index": false
-                  },
-                  "amino_acids": {
-                    "properties": {
-                      "reference": {
-                        "type": "keyword",
-                        "index": false
-                      },
-                      "variant": {
-                        "type": "keyword",
-                        "index": false
-                      }
-                    }
-                  },
-                  "canonical": {
-                    "type": "boolean"
-                  },
-                  "cdna_position": {
-                    "type": "keyword",
-                    "index": false
-                  },
-                  "cds_position": {
-                    "type": "keyword",
-                    "index": false
-                  },
-                  "coding_dna_change": {
-                    "type": "keyword",
-                    "index": false
-                  },
-                  "codons": {
-                    "properties": {
-                      "reference": {
-                        "type": "keyword",
-                        "index": false
-                      },
-                      "variant": {
-                        "type": "keyword",
-                        "index": false
-                      }
-                    }
-                  },
-                  "consequence": {
-                    "type": "keyword"
-                  },
-                  "conservations": {
-                    "properties": {
-                      "phyloP17way_primate": {
-                        "type": "float"
-                      },
-                      "phyloP100way_vertebrate": {
-                          "type": "float"
-                      }
-                    }
-                  },        
-                  "ensembl_transcript_id": {
-                    "type": "keyword",
-                    "index": false
-                  },
-                  "ensembl_feature_id": {
+              "type": "nested",
+              "properties": {
+                "aa_change": {
+                  "type": "keyword",
+                  "index": false
+                },
+                "amino_acids": {
+                  "properties": {
+                    "reference": {
                       "type": "keyword",
                       "index": false
-                    },            
-                  "exon": {
-                    "properties": {
-                      "rank": {
-                        "type": "keyword",
-                        "index": false
-                      },
-                      "total": {
-                        "type": "long",
-                        "index": false
-                      }
-                    }
-                  },
-                  "feature_type": {
-                    "type": "keyword",
-                    "index": false
-                  },
-                  "hgvsc": {
-                    "type": "keyword",
-                    "index": false
-                  },
-                  "hgvsp": {
-                    "type": "keyword",
-                    "index": false
-                  },
-                  "impact_score": {
-                    "type": "long"
-                  },
-                  "intron": {
-                    "properties": {
-                      "rank": {
-                        "type": "keyword",
-                        "index": false
-                      },
-                      "total": {
-                        "type": "long",
-                        "index": false
-                      }
-                    }
-                  },
-                  "mane_plus": {
-                    "type": "boolean"
-                  },
-                  "mane_select": {
-                    "type": "boolean"
-                  },
-                  "predictions": {
-                    "properties": {
-                      "cadd_score": {
-                        "type": "float"
-                      },
-                      "cadd_phred": {
-                        "type": "float"
-                      },
-                      "dann_score": {
-                        "type": "float"
-                      },
-                      "fathmm_score": {
-                        "type": "float"
-                      },
-                      "fathmm_pred": {
-                        "type": "keyword"
-                      },
-                      "lrt_score": {
-                        "type": "float"
-                      },
-                      "lrt_pred": {
-                        "type": "keyword"
-                      },
-                      "polyphen2_hvar_pred": {
-                        "type": "keyword"
-                      },
-                      "polyphen2_hvar_score": {
-                        "type": "float"
-                      },
-                      "revel_score": {
-                        "type": "float"
-                      },
-                      "sift_score": {
-                        "type": "float"
-                      },
-                      "sift_pred": {
-                        "type": "keyword"
-                      }
-                    }
-                  },
-                  "protein_position": {
-                    "type": "keyword",
-                    "index": false
-                  },
-                  "refseq_mrna_id": {
-                    "type": "keyword",
-                    "index": false
-                  },
-                  "refseq_protein_id": {
-                    "type": "keyword",
-                    "index": false
-                  },
-                  "strand": {
-                    "type": "keyword"
-                  },
-                  "uniprot_id": {
+                    },
+                    "variant": {
                       "type": "keyword",
                       "index": false
-                  },            
-                  "vep_impact": {
-                    "type": "keyword"
-                  },
-                  "picked": {
-                    "type": "boolean"
+                    }
                   }
+                },
+                "canonical": {
+                  "type": "boolean"
+                },
+                "cdna_position": {
+                  "type": "keyword",
+                  "index": false
+                },
+                "cds_position": {
+                  "type": "keyword",
+                  "index": false
+                },
+                "coding_dna_change": {
+                  "type": "keyword",
+                  "index": false
+                },
+                "codons": {
+                  "properties": {
+                    "reference": {
+                      "type": "keyword",
+                      "index": false
+                    },
+                    "variant": {
+                      "type": "keyword",
+                      "index": false
+                    }
+                  }
+                },
+                "consequence": {
+                  "type": "keyword"
+                },
+                "conservations": {
+                  "properties": {
+                    "phyloP17way_primate": {
+                      "type": "float"
+                    },
+                    "phyloP100way_vertebrate": {
+                      "type": "float"
+                    }
+                  }
+                },
+                "ensembl_transcript_id": {
+                  "type": "keyword",
+                  "index": false
+                },
+                "ensembl_feature_id": {
+                  "type": "keyword",
+                  "index": false
+                },
+                "exon": {
+                  "properties": {
+                    "rank": {
+                      "type": "keyword",
+                      "index": false
+                    },
+                    "total": {
+                      "type": "long",
+                      "index": false
+                    }
+                  }
+                },
+                "feature_type": {
+                  "type": "keyword",
+                  "index": false
+                },
+                "hgvsc": {
+                  "type": "keyword",
+                  "index": false
+                },
+                "hgvsp": {
+                  "type": "keyword",
+                  "index": false
+                },
+                "impact_score": {
+                  "type": "long"
+                },
+                "intron": {
+                  "properties": {
+                    "rank": {
+                      "type": "keyword",
+                      "index": false
+                    },
+                    "total": {
+                      "type": "long",
+                      "index": false
+                    }
+                  }
+                },
+                "mane_plus": {
+                  "type": "boolean"
+                },
+                "mane_select": {
+                  "type": "boolean"
+                },
+                "predictions": {
+                  "properties": {
+                    "cadd_score": {
+                      "type": "float"
+                    },
+                    "cadd_phred": {
+                      "type": "float"
+                    },
+                    "dann_score": {
+                      "type": "float"
+                    },
+                    "fathmm_score": {
+                      "type": "float"
+                    },
+                    "fathmm_pred": {
+                      "type": "keyword"
+                    },
+                    "lrt_score": {
+                      "type": "float"
+                    },
+                    "lrt_pred": {
+                      "type": "keyword"
+                    },
+                    "polyphen2_hvar_pred": {
+                      "type": "keyword"
+                    },
+                    "polyphen2_hvar_score": {
+                      "type": "float"
+                    },
+                    "revel_score": {
+                      "type": "float"
+                    },
+                    "sift_score": {
+                      "type": "float"
+                    },
+                    "sift_pred": {
+                      "type": "keyword"
+                    }
+                  }
+                },
+                "protein_position": {
+                  "type": "keyword",
+                  "index": false
+                },
+                "refseq_mrna_id": {
+                  "type": "keyword",
+                  "index": false
+                },
+                "refseq_protein_id": {
+                  "type": "keyword",
+                  "index": false
+                },
+                "strand": {
+                  "type": "keyword"
+                },
+                "uniprot_id": {
+                  "type": "keyword",
+                  "index": false
+                },
+                "vep_impact": {
+                  "type": "keyword"
+                },
+                "picked": {
+                  "type": "boolean"
                 }
-              }                        
+              }
+            }
           }
         },
         "hash": {
@@ -519,31 +519,31 @@
             "total": {
               "properties": {
                 "ac": {
-                    "type": "long",
-                    "index": false
+                  "type": "long",
+                  "index": false
                 },
                 "af": {
-                    "type": "float"
+                  "type": "float"
                 },
                 "an": {
-                    "type": "long",
-                    "index": false
+                  "type": "long",
+                  "index": false
                 },
                 "pc": {
-                    "type": "long",
-                    "index": false
+                  "type": "long",
+                  "index": false
                 },
                 "pf": {
-                    "type": "float"
+                  "type": "float"
                 },
                 "pn": {
-                    "type": "long",
-                    "index": false
+                  "type": "long",
+                  "index": false
                 },
                 "hom": {
-                    "type": "long",
-                    "index": false
-                }               
+                  "type": "long",
+                  "index": false
+                }
               }
             },
             "participant_ids": {
@@ -557,12 +557,41 @@
               "type": "keyword"
             },
             "zygosity": {
-                "type": "keyword"
-            }            
+              "type": "keyword"
+            }
           }
         },
         "variant_class": {
           "type": "keyword"
+        },
+        "cmc": {
+          "properties": {
+            "mutation_url": {
+              "type": "keyword",
+              "index": false
+            },
+            "shared_aa": {
+              "type": "integer",
+              "index": false
+            },
+            "cosmic_id": {
+              "type": "keyword",
+              "index": false
+            },
+            "sample_mutated": {
+              "type": "integer"
+            },
+            "sample_tested": {
+              "type": "integer",
+              "index": false
+            },
+            "tier": {
+              "type": "keyword"
+            },
+            "sample_ratio": {
+              "type": "double"
+            }
+          }
         }
       }
     }
