@@ -10,6 +10,8 @@ instance_count_map = {
     'xlarge': 30
 }
 
+IDLE_TIMEOUT_SECONDS = 10800  # 3 hrs
+
 
 def generate_emr_name(env: str, release_id: str, studies: list) -> str:
     """
@@ -82,7 +84,7 @@ class PortalEtlEmrCreator(ABC):
             Configurations=spark_config,
             StepConcurrencyLevel=step_concurrency,
             AutoTerminationPolicy={
-                'IdleTimeout': 600
+                'IdleTimeout': IDLE_TIMEOUT_SECONDS
             }
         )
 
