@@ -156,7 +156,6 @@ def generate_normalize_snv_portal_etl_step(study_id: str, job: str, etl_config: 
                 "--steps", "default",
                 "--study-id", f"{study_id}",
                 "--release-id", f"{release_id}",
-                "--vcf-pattern", ".CGP.filtered.deNovo.vep.vcf.gz",
                 "--reference-genome-path", "/mnt/GRCh38_full_analysis_set_plus_decoy_hla.fa"
             ],
             "Jar": "command-runner.jar"
@@ -184,7 +183,6 @@ def generate_normalize_consequences_portal_etl_step(study_id: str, job: str, etl
                 "--config", f"config/{env}-{account}.conf",
                 "--steps", "default",
                 "--study-id", f"{study_id}",
-                "--vcf-pattern", ".CGP.filtered.deNovo.vep.vcf.gz",
                 "--reference-genome-path", "/mnt/GRCh38_full_analysis_set_plus_decoy_hla.fa"
             ],
             "Jar": "command-runner.jar"
