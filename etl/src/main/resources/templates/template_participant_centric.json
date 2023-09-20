@@ -585,6 +585,9 @@
             "hpo_phenotype_observed_text": {
               "type": "keyword"
             },
+            "is_observed": {
+              "type": "boolean"
+            },
             "observed": {
               "type": "boolean"
             },
