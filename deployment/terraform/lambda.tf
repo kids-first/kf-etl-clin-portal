@@ -14,7 +14,7 @@ data "aws_iam_policy_document" "lambda_assume_role" {
 }
 
 resource "aws_iam_role" "lambda_service_role" {
-  name_prefix        = "lambdaPortalEtlServiceRole-"
+  name        = "kf-lambda-portal-etl-${var.environment}-role"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
 
@@ -59,11 +59,6 @@ data "aws_iam_policy_document" "describe_sg_role_policy" {
     resources = ["*"]
   }
 
-  statement {
-    effect    = "Allow"
-    actions   = ["secretsmanager:GetSecretValue"]
-    resources = [aws_secretsmanager_secret.portal_etl_secret.arn]
-  }
 }
 
 resource "aws_iam_role_policy" "describe_sg_role_policy" {
@@ -72,6 +67,19 @@ resource "aws_iam_role_policy" "describe_sg_role_policy" {
   role        = aws_iam_role.lambda_service_role.name
 }
 
+data "aws_iam_policy_document" "get_secret_policy" {
+  statement {
+    effect    = "Allow"
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = [aws_secretsmanager_secret.portal_etl_secret.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "get_secret_role_policy" {
+  name_prefix = "lambdaPortalEtlGetSecretPolicy-${var.environment}"
+  policy      = data.aws_iam_policy_document.get_secret_policy.json
+  role        = aws_iam_role.lambda_service_role.name
+}
 
 resource "aws_iam_role_policy_attachment" "github_actions_managed_role_policies" {
   role       = aws_iam_role.lambda_service_role.name
