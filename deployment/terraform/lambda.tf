@@ -14,7 +14,7 @@ data "aws_iam_policy_document" "lambda_assume_role" {
 }
 
 resource "aws_iam_role" "lambda_service_role" {
-  name        = "kf-lambda-portal-etl-${var.environment}-role"
+  name               = "kf-lambda-portal-etl-${var.environment}-role"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
 
