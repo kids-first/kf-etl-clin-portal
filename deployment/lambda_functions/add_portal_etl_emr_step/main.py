@@ -1,5 +1,6 @@
-import add_portal_etl_emr_step_clinical
-import add_portal_etl_emr_step_genomic
+from add_portal_etl_emr_step_clinical import ClinicalPortalEtlEmrStepService
+from add_portal_etl_emr_step_genomic import GenomicPortalEtlEmrStepService
+
 
 def add_portal_etl_emr_step(etl_args, context):
     """
@@ -17,9 +18,8 @@ def add_portal_etl_emr_step(etl_args, context):
     user_input = etl_args['input']
     run_genomic_etl = user_input.get('runGenomicEtl', False)
 
-    if run_genomic_etl:
-        etl_args = add_portal_etl_emr_step_genomic.add_portal_etl_emr_step(etl_args=etl_args)
-    else:
-        etl_args = add_portal_etl_emr_step_clinical.add_portal_etl_emr_step(etl_args=etl_args)
+    portal_etl_step_service = GenomicPortalEtlEmrStepService(
+        etl_args) if run_genomic_etl else ClinicalPortalEtlEmrStepService(etl_args)
 
-    return etl_args
+    updated_args = portal_etl_step_service.submit_next_portal_etl_step()
+    return updated_args

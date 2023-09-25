@@ -1,268 +1,163 @@
-import boto3
-import sys
+from typing import List, Any
+
+from portal_emr_step_builder import EmrStepBuilder, EmrStepArgumentBuilder
+from add_portal_etl_emr_step import PortalEtlEmrStepService
 
 # Default list of Portal ETL Steps
 DEFAULT_PORTAL_ETL_STEPS = ['normalize-snv', 'normalize-consequences', 'enrich-variant', 'enrich-consequences',
-                            'prepare-variant-centric',
-                            'prepare-variant-suggestion', 'prepare-gene-centric', 'prepare-gene-suggestion']
+                            'prepare-variant_centric',
+                            'prepare-variant_suggestions', 'prepare-gene_centric', 'prepare-gene_suggestions']
 
 
-def add_portal_etl_emr_step(etl_args):
-    """
-    Adds a new ETL step to the EMR cluster for portal ETL.
+class GenomicPortalEtlEmrStepService(PortalEtlEmrStepService):
+    def __int__(self, etl_args: dict):
+        super(GenomicPortalEtlEmrStepService, self).__init__(etl_args)
 
-    Args:
-        etl_args (dict): ETL configuration arguments.
-        context: Context information.
+    def get_default_etl_steps_to_execute(self) -> list:
+        return DEFAULT_PORTAL_ETL_STEPS
 
-    Returns:
-        dict: Updated ETL arguments.
-    """
-    print(f'Add Step to Variant ETL {etl_args}')
+    def get_next_steps(self, portal_etl_steps_to_execute: list, current_etl_steps: list, study_ids: list):
+        """
+         Gets the next ETL step in the process.
+         Returns:
+             str: The next ETL step.
+             :param portal_etl_steps_to_execute:
+             :param current_etl_steps:
+             :param study_ids:
+         """
+        etl_step_name = ""
+        next_steps_to_execute = []
+        if not current_etl_steps:
+            etl_step_name = portal_etl_steps_to_execute[0]
+        else:
+            try:
+                index = next(
+                    (i for i, prefix in enumerate(portal_etl_steps_to_execute) if
+                     current_etl_steps[-1].startswith(prefix)),
+                    None)
 
-    etl_portal_steps_to_execute = grab_etl_steps_to_execute(etl_args=etl_args)
-    current_etl_steps = etl_args.get('currentEtlSteps')
-    study_ids = etl_args['input'].get('studyIds')
+                if index is not None and index < len(portal_etl_steps_to_execute) - 1:
+                    etl_step_name = portal_etl_steps_to_execute[index + 1]
+                else:
+                    return []  # No next step
+            except ValueError:
+                return []  # Current step not found in the list
 
-    print(
-        f'Attempting to get Next Step in ETL currentStep={current_etl_steps}, list of steps {etl_portal_steps_to_execute}')
-    next_etl_steps = get_next_step(etl_portal_steps_to_execute, current_etl_steps, study_ids)
+        if etl_step_name in ['normalize-snv', 'normalize-consequences']:
+            next_steps_to_execute = [(etl_step_name, study_id) for study_id in study_ids]
+        elif etl_step_name.startswith('enrich') or etl_step_name.startswith('prepare'):
+            prefix = etl_step_name.split('-')[0]
+            next_steps_to_execute = [(etl_step, None) for etl_step in portal_etl_steps_to_execute if
+                                     etl_step.startswith(prefix)]
+        return next_steps_to_execute
 
-    # Extract Data From Input
-    variant_etl_cluster_id = etl_args['portalEtlClusterId']
+    def get_etl_step_description(self, next_etl_steps: list) -> list[Any]:
+        return [PORTAL_ETL_STEP_DESCRIPTION_MAP[portal_etl_step_name](etl_config=self.etl_args, study_id=study_id)
+                for
+                (portal_etl_step_name, study_id) in
+                next_etl_steps]
 
-    if next_etl_steps is None or len(next_etl_steps) < 1:
-        print('Next Step Could not be defined.... Exiting ETL')
-        sys.exit()
-
-    print(f'Next Step to submit to ETL: ID: {variant_etl_cluster_id}, Next Steps: {next_etl_steps}')
-    client = boto3.client('emr', region_name='us-east-1')
-    response = client.add_job_flow_steps(
-        JobFlowId=variant_etl_cluster_id,
-        Steps=[variant_etl_map[next_etl_step[0]](etl_config=etl_args, study_id=next_etl_step[1]) for next_etl_step in
-               next_etl_steps]
-    )
-
-    print(f'Submitted Next Steps: StepIds={response["StepIds"]}')
-
-    etl_args['currentEtlStepIds'] = response["StepIds"]
-    etl_args['currentEtlSteps'] = [etl_step[0] if etl_step[1] is None else f'{etl_step[0]}-{etl_step[1]}' for etl_step
-                                   in next_etl_steps]
-    return etl_args
-
-
-def grab_etl_steps_to_execute(etl_args: dict) -> list:
-    """
-    Retrieves the current ETL step and list of steps to execute.
-
-    Args:
-        etl_args (dict): ETL configuration arguments.
-
-    Returns:
-        tuple: A tuple containing the list of steps and the current step.
-    """
-    # Grab Current ETL Step and List of Steps to execute
-    user_input = etl_args['input']
-    etl_portal_steps_to_execute = user_input.get('etlStepsToExecute')
-    current_step = etl_args.get('currentEtlStep')
-
-    if etl_portal_steps_to_execute is None:
-        etl_portal_steps_to_execute = DEFAULT_PORTAL_ETL_STEPS
-        etl_args['input']['etlStepsToExecute'] = etl_portal_steps_to_execute
-    # Validate User's Custom ETL Portal Steps before submitting first step (currentEtlStep is None)
-    elif current_step is None:
-        validate_custom_etl_portal_steps_to_execute(etl_portal_steps_to_execute)
-
-    return (etl_portal_steps_to_execute)
+    def get_etl_current_step_names(self, current_etl_steps) -> list:
+        return [portal_etl_step_name if study_id is None else f'{portal_etl_step_name}-{study_id}' for
+                (portal_etl_step_name, study_id)
+                in current_etl_steps]
 
 
-def validate_custom_etl_portal_steps_to_execute(etl_portal_steps_to_execute: list):
-    """
-    Validates user's custom ETL portal steps to execute.
+PORTAL_ETL_STEP_DESCRIPTION_MAP = {
+    'normalize-snv': lambda etl_config, study_id:
+    EmrStepBuilder(job_name=f"Normalize-snv-{study_id}",
+                   step_args=EmrStepArgumentBuilder()
+                   .with_spark_job(
+                             "bio.ferlab.etl.normalized.genomic.RunNormalizeGenomic", etl_config['etlPortalBucket'])
+                   .with_custom_arg("snv")
+                   .with_config(etl_config['environment'], etl_config['account'], include_flag=True)
+                   .with_steps()
+                   .with_custom_args(["--study-id", f"{study_id}"])
+                   .with_release_id(etl_config['input']['releaseId'], include_flag=True)
+                   .with_custom_args(
+                             ["--reference-genome-path", "/mnt/GRCh38_full_analysis_set_plus_decoy_hla.fa"])
+                   .build()
+                   ).build(),
 
-    Args:
-        etl_portal_steps_to_execute (list): List of ETL steps to execute.
+    'normalize-consequences': lambda etl_config, study_id:
+    EmrStepBuilder(job_name=f"Normalize-consequences-{study_id}",
+                   step_args=EmrStepArgumentBuilder()
+                   .with_spark_job("bio.ferlab.etl.normalized.genomic.RunNormalizeGenomic",
+                                         etl_config['etlPortalBucket'])
+                   .with_custom_arg("consequences")
+                   .with_config(etl_config['environment'], etl_config['account'], include_flag=True)
+                   .with_steps()
+                   .with_custom_args(["--study-id", f"{study_id}"])
+                   .with_custom_args(
+                             ["--reference-genome-path", "/mnt/GRCh38_full_analysis_set_plus_decoy_hla.fa"])
+                   .build()
+                   ).build(),
 
-    Returns:
-        bool: True if custom ETL steps are valid, False otherwise.
-    """
-    custom_etl_steps_valid = all(
-        etl_step.lower() in DEFAULT_PORTAL_ETL_STEPS for etl_step in etl_portal_steps_to_execute)
-    if not custom_etl_steps_valid or len(etl_portal_steps_to_execute) > len(DEFAULT_PORTAL_ETL_STEPS):
-        print(f'Custom Portal ETL Steps not valid: steps input: ${etl_portal_steps_to_execute}')
-        sys.exit('Invalid Custom ETL Steps')
-    return
+    'enrich-variant': lambda etl_config, study_id:
+    EmrStepBuilder(job_name="Enrich-snv",
+                   step_args=EmrStepArgumentBuilder()
+                   .with_spark_job("bio.ferlab.etl.enriched.genomic.RunEnrichGenomic",
+                                         etl_config['etlPortalBucket'])
+                   .with_custom_arg("snv")
+                   .with_config(etl_config['environment'], etl_config['account'], include_flag=True)
+                   .with_steps()
+                   .build()
+                   ).build(),
 
+    'enrich-consequences': lambda etl_config, study_id:
+    EmrStepBuilder(job_name="Enrich-consequences",
+                   step_args=EmrStepArgumentBuilder()
+                   .with_spark_job("bio.ferlab.etl.enriched.genomic.RunEnrichGenomic",
+                                         etl_config['etlPortalBucket'])
+                   .with_custom_arg("consequences")
+                   .with_config(etl_config['environment'], etl_config['account'], include_flag=True)
+                   .with_steps()
+                   .build()
+                   ).build(),
 
-def get_next_step(etl_variant_steps_to_execute: list, current_steps: list, study_ids: list) -> list:
-    """
-    Gets the next ETL step in the process.
+    'prepare-variant_centric': lambda etl_config, study_id:
+    EmrStepBuilder(job_name="Prepare-variant_centric",
+                   step_args=EmrStepArgumentBuilder()
+                   .with_spark_job("bio.ferlab.etl.prepared.genomic.RunPrepareGenomic",
+                                         etl_config['etlPortalBucket'])
+                   .with_custom_arg("variant_centric")
+                   .with_config(etl_config['environment'], etl_config['account'], include_flag=True)
+                   .with_steps()
+                   .build()
+                   ).build(),
 
-    Args:
-        etl_variant_steps_to_execute (list): List of ETL steps to execute.
-        current_step (str): Current ETL step.
+    'prepare-variant_suggestions': lambda etl_config, study_id:
+    EmrStepBuilder(job_name="Prepare-variant_suggestions",
+                   step_args=EmrStepArgumentBuilder()
+                   .with_spark_job("bio.ferlab.etl.prepared.genomic.RunPrepareGenomic",
+                                         etl_config['etlPortalBucket'])
+                   .with_custom_arg("variant_suggestions")
+                   .with_config(etl_config['environment'], etl_config['account'], include_flag=True)
+                   .with_steps()
+                   .build()
+                   ).build(),
 
-    Returns:
-        str: The next ETL step.
-    """
-    etl_step_prefix = ""
-    next_steps_to_execute = []
-    if current_steps is None or len(current_steps) < 1:
-        etl_step_prefix = etl_variant_steps_to_execute[0]
-    else:
-        try:
-            index = next(
-                (i for i, prefix in enumerate(etl_variant_steps_to_execute) if current_steps[-1].startswith(prefix)),
-                None)
+    'prepare-gene_centric': lambda etl_config, study_id:
+    EmrStepBuilder(job_name="Prepare-gene_centric",
+                   step_args=EmrStepArgumentBuilder()
+                   .with_spark_job("bio.ferlab.etl.prepared.genomic.RunPrepareGenomic",
+                                         etl_config['etlPortalBucket'])
+                   .with_custom_arg("gene_centric")
+                   .with_config(etl_config['environment'], etl_config['account'], include_flag=True)
+                   .with_steps()
+                   .build()
+                   ).build(),
 
-            if index is not None and index < len(etl_variant_steps_to_execute) - 1:
-                etl_step_prefix = etl_variant_steps_to_execute[index + 1]
-            else:
-                return None  # No next step
-        except ValueError:
-            return None  # Current step not found in the list
-
-    if etl_step_prefix in ['normalize-snv', 'normalize-consequences']:
-        next_steps_to_execute = [(etl_step_prefix, study_id) for study_id in study_ids]
-    elif etl_step_prefix.startswith('enrich'):
-        next_steps_to_execute = [(etl_step, None) for etl_step in etl_variant_steps_to_execute if
-                                 etl_step.startswith('enrich')]
-    elif etl_step_prefix.startswith('prepare'):
-        next_steps_to_execute = [(etl_step, None) for etl_step in etl_variant_steps_to_execute if
-                                 etl_step.startswith('prepare')]
-    return next_steps_to_execute
-
-
-###
-# Helper Functions to generate Variant ETL Steps
-###
-def generate_normalize_snv_portal_etl_step(study_id: str, job: str, etl_config: dict):
-    etl_portal_bucket = etl_config['etlPortalBucket']
-    env = etl_config['environment']
-    account = etl_config['account']
-    release_id = etl_config['input']['releaseId']
-
-    return {
-        "HadoopJarStep": {
-            "Args": [
-                "spark-submit",
-                "--deploy-mode",
-                "client",
-                "--class",
-                "bio.ferlab.etl.normalized.genomic.RunNormalizeGenomic",
-                f"s3a://{etl_portal_bucket}/jobs/etl.jar",
-                f"{job}",
-                "--config", f"config/{env}-{account}.conf",
-                "--steps", "default",
-                "--study-id", f"{study_id}",
-                "--release-id", f"{release_id}",
-                "--reference-genome-path", "/mnt/GRCh38_full_analysis_set_plus_decoy_hla.fa"
-            ],
-            "Jar": "command-runner.jar"
-        },
-        "Name": f"Normalize-{job}-{study_id}",
-        "ActionOnFailure": "CONTINUE"
-    }
-
-
-def generate_normalize_consequences_portal_etl_step(study_id: str, job: str, etl_config: dict):
-    etl_portal_bucket = etl_config['etlPortalBucket']
-    env = etl_config['environment']
-    account = etl_config['account']
-
-    return {
-        "HadoopJarStep": {
-            "Args": [
-                "spark-submit",
-                "--deploy-mode",
-                "client",
-                "--class",
-                "bio.ferlab.etl.normalized.genomic.RunNormalizeGenomic",
-                f"s3a://{etl_portal_bucket}/jobs/etl.jar",
-                f"{job}",
-                "--config", f"config/{env}-{account}.conf",
-                "--steps", "default",
-                "--study-id", f"{study_id}",
-                "--reference-genome-path", "/mnt/GRCh38_full_analysis_set_plus_decoy_hla.fa"
-            ],
-            "Jar": "command-runner.jar"
-        },
-        "Name": f"Normalize-{job}-{study_id}",
-        "ActionOnFailure": "CONTINUE"
-    }
-
-
-def generate_enrich_portal_etl_step(job: str, etl_config: dict):
-    etl_portal_bucket = etl_config['etlPortalBucket']
-    env = etl_config['environment']
-    account = etl_config['account']
-    return {
-        "HadoopJarStep": {
-            "Args": [
-                "spark-submit",
-                "--deploy-mode",
-                "client",
-                "--class",
-                "bio.ferlab.etl.enriched.genomic.RunEnrichGenomic",
-                f"s3a://{etl_portal_bucket}/jobs/etl.jar",
-                f"{job}",
-                "--config", f"config/{env}-{account}.conf",
-                "--steps", "default"
-            ],
-            "Jar": "command-runner.jar"
-        },
-        "Name": f"Enrich-{job}",
-        "ActionOnFailure": "CONTINUE"
-    }
-
-
-def generate_prepare_portal_etl_step(job: str, etl_config: dict):
-    etl_portal_bucket = etl_config['etlPortalBucket']
-    env = etl_config['environment']
-    account = etl_config['account']
-    return {
-        "HadoopJarStep": {
-            "Args": [
-                "spark-submit",
-                "--deploy-mode",
-                "client",
-                "--class",
-                "bio.ferlab.etl.prepared.genomic.RunPrepareGenomic",
-                f"s3a://{etl_portal_bucket}/jobs/etl.jar",
-                "--config", f"config/{env}-{account}.conf",
-                "default",
-                f"{job}"
-            ],
-            "Jar": "command-runner.jar"
-        },
-        "Name": f"Prepare-{job}",
-        "ActionOnFailure": "CONTINUE"
-    }
-
-
-variant_etl_map = {
-    'normalize-snv': lambda etl_config, study_id: generate_normalize_snv_portal_etl_step(
-        study_id=study_id, job="snv", etl_config=etl_config),
-
-    'normalize-consequences': lambda etl_config, study_id: generate_normalize_consequences_portal_etl_step(
-        study_id=study_id, job="consequences", etl_config=etl_config),
-
-    'enrich-variant': lambda etl_config, study_id: generate_enrich_portal_etl_step("snv", etl_config=etl_config),
-
-    'enrich-consequences': lambda etl_config, study_id: generate_enrich_portal_etl_step("consequences",
-                                                                                        etl_config=etl_config),
-
-    'prepare-variant-centric': lambda etl_config, study_id: generate_prepare_portal_etl_step("variant-centric",
-                                                                                             etl_config=etl_config),
-
-    'prepare-variant-suggestion': lambda etl_config, study_id: generate_prepare_portal_etl_step("variant-suggestion",
-                                                                                                etl_config=etl_config),
-
-    'prepare-gene-centric': lambda etl_config, study_id: generate_prepare_portal_etl_step("gene-centric",
-                                                                                          etl_config=etl_config),
-
-    'prepare-gene-suggestion': lambda etl_config, study_id: generate_prepare_portal_etl_step("gene-suggestion",
-                                                                                             etl_config=etl_config),
+    'prepare-gene_suggestions': lambda etl_config, study_id:
+    EmrStepBuilder(job_name="Prepare-gene_suggestions",
+                   step_args=EmrStepArgumentBuilder()
+                   .with_spark_job("bio.ferlab.etl.prepared.genomic.RunPrepareGenomic",
+                                         etl_config['etlPortalBucket'])
+                   .with_custom_arg("gene_centric")
+                   .with_config(etl_config['environment'], etl_config['account'], include_flag=True)
+                   .with_steps()
+                   .build()
+                   ).build(),
 }
 
 if __name__ == '__main__':
@@ -281,20 +176,13 @@ if __name__ == '__main__':
         'account': 'kf-strides',
         'input': {
             'test': 'test',
-            'studyIds': ['SDTest1', 'SDTest2']
+            'studyIds': ['SDTest1', 'SDTest2'],
+            'releaseId': 're_1'
         },
-        'portalEtlClusterId': '1234',
+        'portalEtlClusterId': '1234'
     }
 
-    etl_args = add_portal_etl_emr_step(test_etl_config, None)
-    print("*****************1*********8")
-    print(etl_args)
-    etl_args = add_portal_etl_emr_step(test_etl_config, None)
-    print("*****************2*********8")
-    print(etl_args)
-    etl_args = add_portal_etl_emr_step(test_etl_config, None)
-    print("*****************3*********8")
-    print(etl_args)
-    etl_args = add_portal_etl_emr_step(test_etl_config, None)
-    print("*****************4*********8")
-    print(etl_args)
+    genomic_step_service = GenomicPortalEtlEmrStepService(test_etl_config)
+    args = genomic_step_service.submit_next_portal_etl_step()
+    print(args)
+    print(GenomicPortalEtlEmrStepService(args).submit_next_portal_etl_step())

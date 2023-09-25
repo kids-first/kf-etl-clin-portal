@@ -1,267 +1,163 @@
-import boto3
-import sys
+from typing import Any
+
+from add_portal_etl_emr_step import PortalEtlEmrStepService
+from portal_emr_step_builder import EmrStepBuilder, EmrStepArgumentBuilder
 
 # Default list of Portal ETL Steps
-DEFAULT_PORTAL_ETL_STEPS = ['cleanup jars', 'download and run fhavro-export', 'normalize dataservice', 'normalize clinical',
-                            'enrich all', 'prepare index', 'index study', 'index participant', 'index file', 'index biospecimen']
+DEFAULT_PORTAL_ETL_STEPS = ['cleanup jars', 'download and run fhavro-export', 'normalize dataservice',
+                            'normalize clinical',
+                            'enrich all', 'prepare index', 'index study', 'index participant', 'index file',
+                            'index biospecimen']
 
-def add_portal_etl_emr_step(etl_args):
-    """
-    Adds a new ETL step to the EMR cluster for portal ETL.
 
-    Args:
-        etl_args (dict): ETL configuration arguments.
-        context: Context information.
+class ClinicalPortalEtlEmrStepService(PortalEtlEmrStepService):
+    def __init__(self, etl_args: dict):
+        super(ClinicalPortalEtlEmrStepService, self).__init__(etl_args=etl_args)
 
-    Returns:
-        dict: Updated ETL arguments.
-    """
-    print(f'Add Step to Variant ETL {etl_args}')
+    def get_default_etl_steps_to_execute(self) -> list:
+        default_etl_steps_to_execute = DEFAULT_PORTAL_ETL_STEPS
+        if self.etl_args['account'] == 'include':
+            default_etl_steps_to_execute.remove('normalize dataservice')
+        return default_etl_steps_to_execute
 
-    (etl_portal_steps_to_execute, current_step) = grab_etl_step_and_list_of_steps(etl_args=etl_args)
+    def get_next_steps(self, portal_etl_steps_to_execute: list, current_etl_steps: list, study_ids: list) -> list:
+        """
+         Gets the next ETL step in the process.
 
-    print(f'Attempting to get Next Step in ETL currentStep={current_step}, list of steps {etl_portal_steps_to_execute}')
-    next_etl_step = get_next_step(etl_portal_steps_to_execute, current_step)
+         Returns:
+             str: The next ETL step.
+             :param study_ids:
+             :param current_etl_steps:
+             :param portal_etl_steps_to_execute:
+         """
+        if current_etl_steps is None or len(current_etl_steps) < 0:
+            return [portal_etl_steps_to_execute[0]]
+        try:
+            index = portal_etl_steps_to_execute.index(current_etl_steps[-1])
+            if index < len(portal_etl_steps_to_execute) - 1:
+                return [portal_etl_steps_to_execute[index + 1]]
+            else:
+                return []  # No next step
+        except ValueError:
+            return []  # Current step not found in the list
 
-    # Extract Data From Input
-    variant_etl_cluster_id = etl_args['portalEtlClusterId']
-    elastic_search_endpoint = etl_args['esEndpoint']
+    def get_etl_step_description(self, next_etl_steps: list) -> list[Any]:
+        elastic_search_endpoint = self.etl_args['esEndpoint']
+        return [PORTAL_ETL_STEP_DESCRIPTION_MAP[next_etl_steps[0]](etl_config=self.etl_args,
+                                                                   elastic_search_endpoint=elastic_search_endpoint)]
 
-    if next_etl_step is None:
-        print('Next Step Could not be defined.... Exiting ETL')
-        sys.exit()
+    def get_etl_current_step_names(self, current_etl_steps) -> list:
+        return current_etl_steps
 
-    print(f'Next Step to submit to ETL: ID: {variant_etl_cluster_id}, Next Step: {next_etl_step}')
-    client = boto3.client('emr', region_name='us-east-1')
-    response = client.add_job_flow_steps(
-        JobFlowId=variant_etl_cluster_id,
-        Steps=[variant_etl_map[next_etl_step](etl_config=etl_args, elastic_search_endpoint=elastic_search_endpoint)]
-    )
 
-    print(f'Submitted Next Step: StepId={response["StepIds"][0]}')
+PORTAL_ETL_STEP_DESCRIPTION_MAP = {
+    'cleanup jars': lambda etl_config, elastic_search_endpoint:
+    EmrStepBuilder("Cleanup jars", EmrStepArgumentBuilder()
+                   .with_custom_args(["bash", "-c",
+                                      "sudo rm -f /usr/lib/spark/jars/spark-avro.jar"])
+                   .build()).build(),
 
-    etl_args['currentEtlStepIds'] = [response["StepIds"][0]]
-    etl_args['currentEtlSteps'] = [next_etl_step]
-    return etl_args
+    'download and run fhavro-export': lambda etl_config, elastic_search_endpoint:
+    EmrStepBuilder("Download and Run Fhavro-export", EmrStepArgumentBuilder()
+                   .with_fhir_custom_job(etl_config['etlPortalBucket'], etl_config['input']['releaseId'],
+                                         etl_config['input']['studyIds'], etl_config['input']['fhirUrl'])
+                   .build()).build(),
 
-def grab_etl_step_and_list_of_steps(etl_args: dict) -> tuple:
-    """
-    Retrieves the current ETL step and list of steps to execute.
+    'normalize dataservice': lambda etl_config, elastic_search_endpoint:
+    EmrStepBuilder("Normalize Dataservice", EmrStepArgumentBuilder()
+                   .with_spark_job("bio.ferlab.etl.normalized.dataservice.RunNormalizeDataservice",
+                                   etl_config['etlPortalBucket'])
+                   .with_packages(["com.typesafe.play:play-ahc-ws-standalone_2.12:2.0.3"])
+                   .with_config(etl_config['environment'], etl_config['account'], include_flag=True)
+                   .with_steps()
+                   .with_release_id(etl_config['input']['releaseId'], include_flag=True)
+                   .with_studies(etl_config['input']['studyIds'], include_flag=True)
+                   .build()).build(),
 
-    Args:
-        etl_args (dict): ETL configuration arguments.
+    'normalize clinical': lambda etl_config, elastic_search_endpoint:
+    EmrStepBuilder("Normalize Clinical", EmrStepArgumentBuilder()
+                   .with_spark_job("bio.ferlab.etl.normalized.clinical.RunNormalizeClinical",
+                                   etl_config['etlPortalBucket'])
+                   .with_packages(["com.typesafe.play:play-ahc-ws-standalone_2.12:2.0.3"])
+                   .with_config(etl_config['environment'], etl_config['account'], include_flag=True)
+                   .with_steps()
+                   .with_release_id(etl_config['input']['releaseId'], include_flag=True)
+                   .with_studies(etl_config['input']['studyIds'], include_flag=True)
+                   .build()).build(),
 
-    Returns:
-        tuple: A tuple containing the list of steps and the current step.
-    """
-    # Grab Current ETL Step and List of Steps to execute
-    user_input = etl_args['input']
-    etl_portal_steps_to_execute = user_input.get('etlStepsToExecute')
-    current_step = etl_args.get('currentEtlSteps')
+    'enrich all': lambda etl_config, elastic_search_endpoint:
+    EmrStepBuilder("Enrich All", EmrStepArgumentBuilder()
+                   .with_spark_job("bio.ferlab.etl.enriched.clinical.RunEnrichClinical",
+                                   etl_config['etlPortalBucket'])
+                   .with_packages(["com.typesafe.play:play-ahc-ws-standalone_2.12:2.0.3"])
+                   .with_custom_arg("all")
+                   .with_config(etl_config['environment'], etl_config['account'], include_flag=True)
+                   .with_steps()
+                   .with_studies(etl_config['input']['studyIds'], include_flag=True)
+                   .build()).build(),
 
-    if etl_portal_steps_to_execute is None:
-        etl_portal_steps_to_execute = DEFAULT_PORTAL_ETL_STEPS
-        # Hack to remove normalize dataservice step when in INCLUDE account
-        if etl_args['account'] == 'include':
-            etl_portal_steps_to_execute.remove('normalize dataservice')
-        etl_args['input']['etlStepsToExecute'] = etl_portal_steps_to_execute
-    # Validate User's Custom ETL Portal Steps before submitting first step (currentEtlStep is None)
-    elif current_step is None:
-        validate_custom_etl_portal_steps_to_execute(etl_portal_steps_to_execute)
+    'prepare index': lambda etl_config, elastic_search_endpoint:
+    EmrStepBuilder("Prepare Index", EmrStepArgumentBuilder()
+                   .with_spark_job("bio.ferlab.etl.prepared.clinical.RunPrepareClinical",
+                                   etl_config['etlPortalBucket'])
+                   .with_packages(["com.typesafe.play:play-ahc-ws-standalone_2.12:2.0.3"])
+                   .with_custom_arg("all")
+                   .with_config(etl_config['environment'], etl_config['account'], include_flag=True)
+                   .with_steps()
+                   .with_studies(etl_config['input']['studyIds'], include_flag=True)
+                   .build()).build(),
 
-    return (etl_portal_steps_to_execute, current_step)
+    'index study': lambda etl_config, elastic_search_endpoint:
+    EmrStepBuilder("Index Study", EmrStepArgumentBuilder()
+                   .with_spark_job("bio.ferlab.etl.indexed.clinical.RunIndexClinical",
+                                   etl_config['etlPortalBucket'])
+                   .with_packages(["org.elasticsearch:elasticsearch-spark-30_2.12:7.17.12"])
+                   .with_custom_arg(elastic_search_endpoint)
+                   .with_custom_arg("443")
+                   .with_release_id(etl_config['input']['releaseId'], include_flag=False)
+                   .with_studies(etl_config['input']['studyIds'], include_flag=False)
+                   .with_custom_arg("study_centric")
+                   .with_config(etl_config['environment'], etl_config['account'], include_flag=False)
+                   .build()).build(),
 
-def validate_custom_etl_portal_steps_to_execute(etl_portal_steps_to_execute : list):
-    """
-    Validates user's custom ETL portal steps to execute.
+    'index participant': lambda etl_config, elastic_search_endpoint:
+    EmrStepBuilder("Index Participant", EmrStepArgumentBuilder()
+                   .with_spark_job("bio.ferlab.etl.indexed.clinical.RunIndexClinical",
+                                   etl_config['etlPortalBucket'])
+                   .with_packages(["org.elasticsearch:elasticsearch-spark-30_2.12:7.17.12"])
+                   .with_custom_arg(elastic_search_endpoint)
+                   .with_custom_arg("443")
+                   .with_release_id(etl_config['input']['releaseId'], include_flag=False)
+                   .with_studies(etl_config['input']['studyIds'], include_flag=False)
+                   .with_custom_arg("participant_centric")
+                   .with_config(etl_config['environment'], etl_config['account'], include_flag=False)
+                   .build()).build(),
 
-    Args:
-        etl_portal_steps_to_execute (list): List of ETL steps to execute.
+    'index file': lambda etl_config, elastic_search_endpoint:
+    EmrStepBuilder("Index File", EmrStepArgumentBuilder()
+                   .with_spark_job("bio.ferlab.etl.indexed.clinical.RunIndexClinical",
+                                   etl_config['etlPortalBucket'])
+                   .with_packages(["org.elasticsearch:elasticsearch-spark-30_2.12:7.17.12"])
+                   .with_custom_arg(elastic_search_endpoint)
+                   .with_custom_arg("443")
+                   .with_release_id(etl_config['input']['releaseId'], include_flag=False)
+                   .with_studies(etl_config['input']['studyIds'], include_flag=False)
+                   .with_custom_arg("file_centric")
+                   .with_config(etl_config['environment'], etl_config['account'], include_flag=False)
+                   .build()).build(),
 
-    Returns:
-        bool: True if custom ETL steps are valid, False otherwise.
-    """
-    custom_etl_steps_valid = all(etl_step.lower() in DEFAULT_PORTAL_ETL_STEPS for etl_step in etl_portal_steps_to_execute)
-    if not custom_etl_steps_valid or len(etl_portal_steps_to_execute) > len(DEFAULT_PORTAL_ETL_STEPS):
-        print(f'Custom Portal ETL Steps not valid: steps input: ${etl_portal_steps_to_execute}')
-        sys.exit('Invalid Custom ETL Steps')
-    return
-
-def get_next_step(etl_variant_steps_to_execute : list, current_step : list):
-    """
-    Gets the next ETL step in the process.
-
-    Args:
-        etl_variant_steps_to_execute (list): List of ETL steps to execute.
-        current_step (str): Current ETL step.
-
-    Returns:
-        str: The next ETL step.
-    """
-    if current_step is None or len(current_step) < 0:
-        return etl_variant_steps_to_execute[0]
-    try:
-        index = etl_variant_steps_to_execute.index(current_step[-1])
-        if index < len(etl_variant_steps_to_execute) - 1:
-            return etl_variant_steps_to_execute[index + 1]
-        else:
-            return None  # No next step
-    except ValueError:
-        return None  # Current step not found in the list
-
-###
-# Helper Functions to generate Variant ETL Steps
-###
-def generate_cleanup_jars_step():
-    return {
-        "HadoopJarStep" : {
-            "Args": [
-                "bash", "-c",
-                "sudo rm -f /usr/lib/spark/jars/spark-avro.jar"
-            ],
-            "Jar": "command-runner.jar"
-        },
-        "Name": "Cleanup jars",
-        "ActionOnFailure": "CONTINUE"
-    }
-
-def generate_download_and_run_fhavro_export_step(etl_config : dict):
-    etl_portal_bucket = etl_config['etlPortalBucket']
-    fhir_url = etl_config['input']['fhirUrl']
-    release_id = etl_config['input']['releaseId']
-    study_ids = ','.join(etl_config['input']['studyIds'])
-
-    fhavro_export_args = [
-        "aws", "s3", "cp",
-        f"s3://{etl_portal_bucket}/jobs/fhavro-export.jar", "/home/hadoop;",
-        f"export FHIR_URL='{fhir_url}'; export BUCKET='{etl_portal_bucket}';",
-        "cd /home/hadoop;","/usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar",
-        f"fhavro-export.jar {release_id} {study_ids} default y"
-    ]
-
-    return {
-        "HadoopJarStep": {
-            "Args": ["bash", "-c", " ".join(fhavro_export_args)],
-            "Jar": "command-runner.jar"
-        },
-        "Name": "Download and Run Fhavro-export",
-        "ActionOnFailure": "CONTINUE"
-    }
-
-def generate_normalize_portal_etl_step(class_name : str, step_name : str, etl_config : dict):
-    etl_portal_bucket = etl_config['etlPortalBucket']
-    env = etl_config['environment']
-    account = etl_config['account']
-    release_id = etl_config['input']['releaseId']
-    study_ids = ','.join(etl_config['input']['studyIds'])
-    return {
-        "HadoopJarStep": {
-            "Args": [
-                "spark-submit",
-                "--packages",
-                "com.typesafe.play:play-ahc-ws-standalone_2.12:2.0.3",
-                "--deploy-mode",
-                "client",
-                "--class",
-                f"{class_name}",
-                f"s3a://{etl_portal_bucket}/jobs/etl.jar",
-                "--config", f"config/{env}-{account}.conf",
-                "--steps", "default",
-                "--release-id", f"{release_id}",
-                "--study-id", f"{study_ids}"
-            ],
-            "Jar": "command-runner.jar"
-        },
-        "Name": f"{step_name}",
-        "ActionOnFailure": "CONTINUE"
-    }
-
-def generate_portal_etl_step(class_name : str, step_name : str, etl_config : dict):
-    etl_portal_bucket = etl_config['etlPortalBucket']
-    env = etl_config['environment']
-    account = etl_config['account']
-    study_ids = ','.join(etl_config['input']['studyIds'])
-    return {
-        "HadoopJarStep": {
-            "Args": [
-                "spark-submit",
-                "--packages",
-                "com.typesafe.play:play-ahc-ws-standalone_2.12:2.0.3",
-                "--deploy-mode",
-                "client",
-                "--class",
-                f"{class_name}",
-                f"s3a://{etl_portal_bucket}/jobs/etl.jar",
-                f"all",
-                "--config", f"config/{env}-{account}.conf",
-                "--steps", "default",
-                "--study-id", f"{study_ids}"
-            ],
-            "Jar": "command-runner.jar"
-        },
-        "Name": f"{step_name}",
-        "ActionOnFailure": "CONTINUE"
-    }
-
-def generate_indexing_step(index_centric : str, step_name : str, etl_config : dict, elastic_search_endpoint : str):
-    etl_portal_bucket = etl_config['etlPortalBucket']
-    env = etl_config['environment']
-    account = etl_config['account']
-    release_id = etl_config['input']['releaseId']
-    study_ids = ','.join(etl_config['input']['studyIds'])
-    return {
-        "HadoopJarStep": {
-            "Args": [
-                "spark-submit",
-                "--deploy-mode",
-                "client",
-                "--packages",
-                "org.elasticsearch:elasticsearch-spark-30_2.12:7.17.12",
-                "--class",
-                "bio.ferlab.etl.indexed.clinical.RunIndexClinical",
-                f"s3a://{etl_portal_bucket}/jobs/etl.jar",
-                f"{elastic_search_endpoint}",
-                "443",
-                f"{release_id}",
-                f"{study_ids}",
-                f"{index_centric}",
-                f"config/{env}-{account}.conf"
-            ],
-            "Jar": "command-runner.jar"
-        },
-        "Name": f"{step_name}",
-        "ActionOnFailure": "CONTINUE"
-    }
-
-variant_etl_map = {
-    'cleanup jars' : lambda etl_config , elastic_search_endpoint : generate_cleanup_jars_step(),
-
-    'download and run fhavro-export' : lambda etl_config , elastic_search_endpoint:
-        generate_download_and_run_fhavro_export_step(etl_config=etl_config),
-
-    'normalize dataservice' : lambda etl_config , elastic_search_endpoint : generate_normalize_portal_etl_step(
-        "bio.ferlab.etl.normalized.dataservice.RunNormalizeDataservice", "Normalize Dataservice", etl_config=etl_config),
-
-    'normalize clinical' : lambda etl_config , elastic_search_endpoint : generate_normalize_portal_etl_step(
-        "bio.ferlab.etl.normalized.clinical.RunNormalizeClinical", "Normalize Clinical", etl_config=etl_config),
-
-    'enrich all' : lambda etl_config , elastic_search_endpoint : generate_portal_etl_step(
-        "bio.ferlab.etl.enriched.clinical.RunEnrichClinical", "Enrich All", etl_config=etl_config),
-
-    'prepare index' : lambda etl_config , elastic_search_endpoint : generate_portal_etl_step(
-        "bio.ferlab.etl.prepared.clinical.RunPrepareClinical", "Prepare Index", etl_config=etl_config),
-
-    'index study' : lambda etl_config , elastic_search_endpoint : generate_indexing_step(
-        "study_centric", "Index Study", etl_config=etl_config, elastic_search_endpoint=elastic_search_endpoint),
-
-    'index participant' : lambda etl_config , elastic_search_endpoint : generate_indexing_step(
-        "participant_centric", "Index Participant", etl_config=etl_config, elastic_search_endpoint=elastic_search_endpoint),
-
-    'index file' : lambda etl_config , elastic_search_endpoint : generate_indexing_step(
-        "file_centric", "Index File'", etl_config=etl_config, elastic_search_endpoint=elastic_search_endpoint),
-
-    'index biospecimen' : lambda etl_config , elastic_search_endpoint : generate_indexing_step(
-        "biospecimen_centric", "Index Biospecimen", etl_config=etl_config, elastic_search_endpoint=elastic_search_endpoint),
+    'index biospecimen': lambda etl_config, elastic_search_endpoint:
+    EmrStepBuilder("Index Biospecimen", EmrStepArgumentBuilder()
+                   .with_spark_job("bio.ferlab.etl.indexed.clinical.RunIndexClinical",
+                                   etl_config['etlPortalBucket'])
+                   .with_packages(["org.elasticsearch:elasticsearch-spark-30_2.12:7.17.12"])
+                   .with_custom_arg(elastic_search_endpoint)
+                   .with_custom_arg("443")
+                   .with_release_id(etl_config['input']['releaseId'], include_flag=False)
+                   .with_studies(etl_config['input']['studyIds'], include_flag=False)
+                   .with_custom_arg("biospecimen_centric")
+                   .with_config(etl_config['environment'], etl_config['account'], include_flag=False)
+                   .build()).build(),
 }
 
 if __name__ == '__main__':
@@ -271,21 +167,29 @@ if __name__ == '__main__':
     test4 = 'Index Biospecimen'
 
     test_etl_config = {
-        'env': 'qa',
+        'environment': 'qa',
         'releaseId': 're_004',
-        'studyIds': ['SD_65064P2Z', 'StudyB'],
         'etlVariantBucket': 'kf-strides-232196027141-datalake-qa',
         'instanceCount': 1,
-        'instanceProfile': 'my-instance-profile',
         'clusterSize': 'large',
-        'instanceProfile': 'kf-variant-emr-ec2-qa-profile',
-        'serviceRole' : 'kf-variant-emr-qa-role',
-        'project': 'kf-strides',
-        'fhirUrl': 'http://test'
+        'etlPortalBucket': 'bucket',
+        'account': 'kf-strides',
+        'esEndpoint': 'test',
+        'input': {
+            'test': 'test',
+            'studyIds': ['SDTest1', 'SDTest2'],
+            'releaseId': 're_1',
+            "fhirUrl": "https://kf-api-fhir-service.kidsfirstdrc.org"
+        },
+        'portalEtlClusterId': '1234'
     }
     elastic_search_endpoint = 'test'
-
-    print(variant_etl_map.get(test1)(test_etl_config, elastic_search_endpoint))
-    print(variant_etl_map.get(test2)(test_etl_config, elastic_search_endpoint))
-    print(variant_etl_map.get(test3)(test_etl_config, elastic_search_endpoint))
-    print(variant_etl_map.get(test4)(test_etl_config, elastic_search_endpoint))
+    clinical_step_service = ClinicalPortalEtlEmrStepService(test_etl_config)
+    args = clinical_step_service.submit_next_portal_etl_step()
+    print(args)
+    args = clinical_step_service.submit_next_portal_etl_step()
+    print(args)
+    args = clinical_step_service.submit_next_portal_etl_step()
+    print(args)
+    args = clinical_step_service.submit_next_portal_etl_step()
+    print(args)
