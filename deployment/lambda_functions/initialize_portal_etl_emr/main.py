@@ -1,5 +1,6 @@
 from genomic_portal_etl_emr_creator import GenomicPortalEtlEmrCreator
 from clinical_portal_etl_emr_creator import ClinicalPortalEtlEmrCreator
+from genomic_index_etl_emr_creator import GenomicIndexPortalEtlEmrCreator
 
 
 def initialize_portal_etl_emr(etl_args, context):
@@ -15,11 +16,16 @@ def initialize_portal_etl_emr(etl_args, context):
     """
     print('Initiate Portal ETL EMR')
     print(f'Inputs: ${etl_args}')
+    run_genomic_index_etl = etl_args.get('genomicIndexEtl', False)
+
     etl_user_input = etl_args['input']
     run_genomic_etl = etl_user_input.get('runGenomicEtl', False)
-
-    portal_etl_emr_creator = GenomicPortalEtlEmrCreator(etl_args) if run_genomic_etl else ClinicalPortalEtlEmrCreator(
-        etl_args)
+    if run_genomic_index_etl:
+        portal_etl_emr_creator = GenomicIndexPortalEtlEmrCreator(etl_args)
+    else:
+        portal_etl_emr_creator = GenomicPortalEtlEmrCreator(
+            etl_args) if run_genomic_etl else ClinicalPortalEtlEmrCreator(
+            etl_args)
     etl_args['portalEtlClusterId'] = portal_etl_emr_creator.create_emr()
     return etl_args
 
@@ -30,12 +36,12 @@ if __name__ == '__main__':
         'releaseId': 're_004',
         'input': {
 
-                "releaseId": "re_TEST",
-                "studyIds": ["SD_Y6VRG6MD"],
-                "clusterSize": "medium",
-                "portalEtlName": "TEST_GENOMIC",
-                "fhirUrl": "http://app.sd-kf-api-fhir-service-qa.kf-strides.org:8000",
-                "runGenomicEtl": 'true'
+            "releaseId": "re_TEST",
+            "studyIds": ["SD_Y6VRG6MD"],
+            "clusterSize": "medium",
+            "portalEtlName": "TEST_GENOMIC",
+            "fhirUrl": "http://app.sd-kf-api-fhir-service-qa.kf-strides.org:8000",
+            "runGenomicEtl": 'true'
 
         },
         'etlPortalBucket': 'kf-strides-232196027141-datalake-qa',

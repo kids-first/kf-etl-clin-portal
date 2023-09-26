@@ -46,7 +46,7 @@ class PortalEtlEmrCreator(ABC):
         # User Input
         self.__etl_user_input = etl_args['input']
         self.release_id = self.__etl_user_input['releaseId']
-        self.studies = self.__etl_user_input['studyIds']
+        self.studies = self.__etl_user_input.get('studyIds')
         self.run_genomic_etl = self.__etl_user_input.get('runGenomicEtl', False)
         self.cluster_size = self.__etl_user_input.get('clusterSize', 'medium')
         self.custom_emr_name = self.__etl_user_input.get('portalEtlName')
