@@ -22,8 +22,8 @@ resource "aws_sfn_state_machine" "default" {
     emr_service_role                 = var.emr_service_role,
     elastic_search_endpoint          = var.elastic_search_endpoint,
     account                          = var.account,
-    run_genomic_index_etl             = false,
-    genomic_index_etl_step_arn        = aws_sfn_state_machine.genomic_index_etl.arn
+    run_genomic_index_etl            = false,
+    genomic_index_etl_step_arn       = aws_sfn_state_machine.genomic_index_etl.arn
   })
 }
 
@@ -83,8 +83,8 @@ data "aws_iam_policy_document" "step_functions_service_role_policy" {
     resources = ["*"]
   }
   statement {
-    effect = "Allow"
-    actions = ["states:StartExecution"]
+    effect    = "Allow"
+    actions   = ["states:StartExecution"]
     resources = [aws_sfn_state_machine.genomic_index_etl.arn]
   }
 }
