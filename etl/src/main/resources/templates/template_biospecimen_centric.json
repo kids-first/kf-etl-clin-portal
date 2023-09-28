@@ -380,6 +380,9 @@
                 },
                 "uberon_id_tumor_location": {
                   "type": "keyword"
+                },
+                "down_syndrome_diagnosis": {
+                  "type": "keyword"
                 }
               }
             },
@@ -636,6 +639,9 @@
                   "type": "keyword"
                 },
                 "website": {
+                  "type": "keyword"
+                },
+                "investigator_id": {
                   "type": "keyword"
                 }
               }
