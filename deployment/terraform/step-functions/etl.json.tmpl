@@ -13,7 +13,8 @@
         "etlPortalBucket": "${portal_etl_bucket}",
         "emrInstanceProfile": "${emr_instance_profile}",
         "emrServiceRole": "${emr_service_role}",
-        "esEndpoint":     "${elastic_search_endpoint}"
+        "esEndpoint":     "${elastic_search_endpoint}",
+        "genomicIndexEtl": ${run_genomic_index_etl}
       },
       "Next": "Wait For EMR Cluster to Spin Up",
       "Catch": [
@@ -93,8 +94,43 @@
     "Notify ETL Success": {
       "Type": "Task",
       "Resource": "${portal_etl_notify_emr_status_arn}",
+%{ if run_genomic_index_etl == true }
       "Next": "Terminate EMR Cluster"
     },
+%{ endif }
+%{ if run_genomic_index_etl == false }
+       "Next": "Is Genomic ETL"
+    },
+   "Is Genomic ETL": {
+     "Type": "Choice",
+     "Choices": [
+       {
+         "Variable": "$.input.runGenomicEtl",
+         "BooleanEquals": true,
+         "Next": "Start Genomic Index ETL"
+       }
+     ],
+     "Default": "Terminate EMR Cluster"
+   },
+   "Start Genomic Index ETL": {
+     "Type": "Task",
+     "Resource": "arn:aws:states:::states:startExecution",
+     "Parameters": {
+       "StateMachineArn": "${genomic_index_etl_step_arn}",
+       "Input": {
+         "releaseId.$": "$.input.releaseId",
+         "clusterSize": "small",
+         "portalEtlName": "Test Genomic Index",
+         "chromosomes": [
+           "all"
+         ],
+         "sample": "0.0001"
+       }
+     },
+     "Next": "Terminate EMR Cluster",
+     "ResultPath": null
+   },
+%{ endif }
     "Terminate EMR Cluster": {
       "Type": "Task",
       "Resource": "arn:aws:states:::elasticmapreduce:terminateCluster",

@@ -84,5 +84,6 @@ def validate_custom_etl_portal_steps_to_execute(custom_etl_portal_steps_to_execu
         etl_step.lower() in default_portal_steps for etl_step in custom_etl_portal_steps_to_execute)
     if not custom_etl_steps_valid or len(custom_etl_portal_steps_to_execute) > len(default_portal_steps):
         print(f'Custom Portal ETL Steps not valid: steps input: ${custom_etl_portal_steps_to_execute}')
+        print(f'Default Steps: {default_portal_steps}')
         sys.exit('Invalid Custom ETL Steps')
     return

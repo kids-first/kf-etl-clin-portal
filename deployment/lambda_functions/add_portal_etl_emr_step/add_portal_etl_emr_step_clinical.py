@@ -15,7 +15,7 @@ class ClinicalPortalEtlEmrStepService(PortalEtlEmrStepService):
         super(ClinicalPortalEtlEmrStepService, self).__init__(etl_args=etl_args)
 
     def get_default_etl_steps_to_execute(self) -> list:
-        default_etl_steps_to_execute = DEFAULT_PORTAL_ETL_STEPS
+        default_etl_steps_to_execute = list(DEFAULT_PORTAL_ETL_STEPS)
         if self.etl_args['account'] == 'include':
             default_etl_steps_to_execute.remove('normalize dataservice')
         return default_etl_steps_to_execute
