@@ -821,11 +821,22 @@
               "name": "recordedDateExt3",
               "fields": [
                 {
-                  "name": "event",
-                  "type": "bio.ferlab.fhir.CodeableConcept",
+                  "name": "target",
+                  "type": "bio.ferlab.fhir.Reference",
                   "default": {},
                   "aliases": [
-                    "ext:event"
+                    "ext:target"
+                  ]
+                },
+                {
+                  "name": "targetPath",
+                  "type": [
+                    "null",
+                    "string"
+                  ],
+                  "default": null,
+                  "aliases": [
+                    "ext:targetPath"
                   ]
                 },
                 {
@@ -906,7 +917,7 @@
               ]
             },
             "aliases": [
-              "ext:http://hl7.org/fhir/StructureDefinition/relative-date"
+              "ext:http://hl7.org/fhir/StructureDefinition/cqf-relativeDateTime"
             ],
             "default": {}
           }
