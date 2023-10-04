@@ -21,8 +21,4 @@ case class CONDITION_CODING(
                              `code`: String = "C91.0"
                            )
 
-case class AGE_AT_EVENT(
-                         `value`: Int = 0,
-                         `unit`: String = "day",
-                         `from_event`: String = "Birth"
-                       )
+case class AGE_AT_EVENT(`value`: Int = 0, `unit`: String = "day")

@@ -41,9 +41,7 @@ object Transformations {
       .withColumn("age_at_event_days", struct(
         col("_effectiveDateTime")("effectiveDateTime")("offset")("value") as "value",
         col("_effectiveDateTime")("effectiveDateTime")("offset")("unit") as "units",
-        extractFirstForSystem(col("_effectiveDateTime")("effectiveDateTime")("event")("coding"), Seq("http://snomed.info/sct"))("display") as "from"
       ))
-      // TODO external_id
     ),
     Drop("subject", "valueCodeableConcept", "identifier", "_effectiveDateTime", "parent_0")
   )
@@ -80,9 +78,7 @@ object Transformations {
       .withColumn("down_syndrome_diagnosis", col("verificationStatus")("text"))
       .withColumn("age_at_event", struct(
         col("_recordedDate")("recordedDate")("offset")("value") as "value",
-        col("_recordedDate")("recordedDate")("offset")("unit") as "units",
-        extractFirstForSystem(col("_recordedDate")("recordedDate")("event")("coding"), Seq("http://snomed.info/sct"))("display") as "from"
-      ))
+        col("_recordedDate")("recordedDate")("offset")("unit") as "units"))
       .withColumn("diagnosis_mondo", filter(col("condition_coding"), x => x("category") === "MONDO")(0)("code"))
       //**Duplication** needed to rename this fields without breaking other services such as the portal.
       .withColumn("mondo_code", extractThenReformatConditionCoding("MONDO"))
@@ -92,8 +88,6 @@ object Transformations {
       .withColumn("diagnosis_icd", filter(col("condition_coding"), x => x("category") === "ICD")(0)("code"))
       //**Duplication** needed to rename this fields without breaking other services such as the portal.
       .withColumn("icd_code", extractThenReformatConditionCoding("ICD"))
-      // TODO external_id
-      // TODO diagnosis_category
     ),
     Drop("identifier", "code", "subject", "verificationStatus", "_recordedDate", "bodySite", "category")
   )
@@ -119,11 +113,7 @@ object Transformations {
       .withColumn("age_at_event", struct(
         col("_recordedDate")("recordedDate")("offset")("value") as "value",
         col("_recordedDate")("recordedDate")("offset")("unit") as "units",
-        //todo same for include?
-        extractFirstForSystem(col("_recordedDate")("recordedDate")("event")("coding"), Seq("http://snomed.info/sct"))("display") as "from"
       ))
-      // TODO snomed_id_phenotype
-      // TODO external_id
     ),
     Drop("identifier", "code", "subject", "verificationStatus", "_recordedDate")
   )
