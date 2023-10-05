@@ -78,7 +78,6 @@ class GenomicIndexPortalEtlEmrStepService(PortalEtlEmrStepService):
 
 
 def generate_variant_etl_steps(etl_step_name: str, custom_chromosomes: list) -> list:
-    t = all(c in CHROMOSOMES for c in custom_chromosomes)
     if not custom_chromosomes:
         return [(etl_step_name, chromosome) for chromosome in CHROMOSOMES]
     if custom_chromosomes[0] == 'all':

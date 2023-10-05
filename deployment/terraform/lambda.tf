@@ -58,7 +58,6 @@ data "aws_iam_policy_document" "describe_sg_role_policy" {
     actions   = ["iam:PassRole"]
     resources = ["*"]
   }
-
 }
 
 resource "aws_iam_role_policy" "describe_sg_role_policy" {
@@ -79,6 +78,20 @@ resource "aws_iam_role_policy" "get_secret_role_policy" {
   name_prefix = "lambdaPortalEtlGetSecretPolicy-${var.environment}"
   policy      = data.aws_iam_policy_document.get_secret_policy.json
   role        = aws_iam_role.lambda_service_role.name
+}
+
+data "aws_iam_policy_document" "start_step_fn_role_policy" {
+  statement {
+    effect = "Allow"
+    actions = ["states:StartExecution"]
+    resources = [aws_sfn_state_machine.genomic_index_etl.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "start_step_fn_policy" {
+  name_prefix = "lambdaPortalEtlStartStepFnPolicy-${var.environment}"
+  policy = data.aws_iam_policy_document.start_step_fn_role_policy.json
+  role   = aws_iam_role.lambda_service_role.name
 }
 
 resource "aws_iam_role_policy_attachment" "github_actions_managed_role_policies" {
@@ -154,5 +167,25 @@ resource "aws_lambda_function" "notify-portal-etl-emr-status-lambda" {
   }
   runtime          = "python3.9"
   source_code_hash = data.archive_file.archive-notify-portal-etl-emr-status-lambda.output_base64sha256
+}
+
+data "archive_file" "archive-start-genomic-index-step-fn-lambda" {
+  type        = "zip"
+  output_path = "../lambda_functions/start_genomic_index_step_fn.zip"
+  source_dir  = "../lambda_functions/start_genomic_index_step_fn/"
+}
+
+resource "aws_lambda_function" "start-genomic-index-step-fn-lambda" {
+  function_name = "PortalEtl-Start-Genomic-Index-StepFn-${var.environment}"
+  filename      = "../lambda_functions/start_genomic_index_step_fn.zip"
+  role          = aws_iam_role.lambda_service_role.arn
+  handler       = "main.start_genomic_index_step_fn"
+  environment {
+    variables = {
+      GENOMIC_INDEX_STEP_FN_ARN = aws_sfn_state_machine.genomic_index_etl.arn
+    }
+  }
+  runtime          = "python3.9"
+  source_code_hash = data.archive_file.archive-start-genomic-index-step-fn-lambda.output_base64sha256
 }
 

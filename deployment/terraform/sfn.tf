@@ -23,7 +23,7 @@ resource "aws_sfn_state_machine" "default" {
     elastic_search_endpoint          = var.elastic_search_endpoint,
     account                          = var.account,
     run_genomic_index_etl             = false,
-    genomic_index_etl_step_arn        = aws_sfn_state_machine.genomic_index_etl.arn
+    start_genomic_index_step_fn_lambda_arn  = aws_lambda_function.start-genomic-index-step-fn-lambda.arn
   })
 }
 
@@ -44,7 +44,7 @@ resource "aws_sfn_state_machine" "genomic_index_etl" {
     elastic_search_endpoint          = var.elastic_search_endpoint,
     account                          = var.account,
     run_genomic_index_etl            = true,
-    genomic_index_etl_step_arn       = ""
+    start_genomic_index_step_fn_lambda_arn       = ""
   })
 }
 

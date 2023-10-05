@@ -1,6 +1,6 @@
 {
   "StartAt": "Initialize Portal ETL",
-  "TimeoutSeconds": 10800,
+  "TimeoutSeconds": 28800,
   "States": {
     "Initialize Portal ETL": {
       "Type": "Task",
@@ -114,21 +114,8 @@
    },
    "Start Genomic Index ETL": {
      "Type": "Task",
-     "Resource": "arn:aws:states:::states:startExecution",
-     "Parameters": {
-       "StateMachineArn": "${genomic_index_etl_step_arn}",
-       "Input": {
-         "releaseId.$": "$.input.releaseId",
-         "clusterSize": "small",
-         "portalEtlName": "Test Genomic Index",
-         "chromosomes": [
-           "all"
-         ],
-         "sample": "0.0001"
-       }
-     },
-     "Next": "Terminate EMR Cluster",
-     "ResultPath": null
+     "Resource": "${start_genomic_index_step_fn_lambda_arn}",
+     "Next": "Terminate EMR Cluster"
    },
 %{ endif }
     "Terminate EMR Cluster": {

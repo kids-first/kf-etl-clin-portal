@@ -18,12 +18,14 @@ class GenomicPortalEtlEmrCreator(PortalEtlEmrCreator):
 
     def get_instance_config(self, instance_count: int):
         instance_type = 'r5.4xlarge'
+        ec2_key_name = "flintrock_include" if self.etl_args['account'] == 'include' else "flintrock"
+
         return {
             'InstanceGroups': get_genomic_instance_group_config(instance_type, instance_count),
             'KeepJobFlowAliveWhenNoSteps': True,
             'TerminationProtected': False,
             'Ec2SubnetId': self.subnet,
-            'Ec2KeyName': 'flintrock'
+            'Ec2KeyName': ec2_key_name
         }
 
     def get_spark_config_file_path(self) -> str:
