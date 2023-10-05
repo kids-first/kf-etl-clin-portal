@@ -1,5 +1,5 @@
 import sbtassembly.AssemblyPlugin.autoImport.assembly
-val datalakeLibVersion = "10.4.3"
+val datalakeLibVersion = "10.5.0"
 
 lazy val fhavro_export = project in file("fhavro-export")
 
