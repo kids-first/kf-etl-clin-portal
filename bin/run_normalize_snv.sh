@@ -27,7 +27,6 @@ steps=$(
        "--steps", "default",
        "--study-id", "${study_id}",
        "--release-id", "${release_id}",
-       "--vcf-pattern", ".CGP.filtered.deNovo.vep.vcf.gz",
        "--reference-genome-path", "/mnt/GRCh38_full_analysis_set_plus_decoy_hla.fa"
      ],
      "Type": "CUSTOM_JAR",
@@ -51,7 +50,7 @@ aws emr create-cluster \
   --bootstrap-actions Path="s3://kf-strides-232196027141-datalake-${env}/jobs/bootstrap-actions/enable-ssm.sh" Path="s3://kf-strides-232196027141-datalake-${env}/jobs/bootstrap-actions/download_human_reference_genome.sh" \
   --steps "${steps}" \
   --log-uri "s3n://kf-strides-232196027141-datalake-${env}/jobs/elasticmapreduce/" \
-  --name "Portal ETL - Normalize ${job} - ${env} ${release_id} ${study_id}" \
+  --name "Portal ETL - Normalize SNV - ${env} ${release_id} ${study_id}" \
   --instance-groups "[{\"InstanceCount\":${instance_count},\"InstanceGroupType\":\"CORE\",\"EbsConfiguration\":{\"EbsBlockDeviceConfigs\":[{\"VolumeSpecification\":{\"SizeInGB\":150,\"VolumeType\":\"gp2\"},\"VolumesPerInstance\":8}]},\"InstanceType\":\"${instance_type}\",\"Name\":\"Core - 2\"},{\"InstanceCount\":1,\"EbsConfiguration\":{\"EbsBlockDeviceConfigs\":[{\"VolumeSpecification\":{\"SizeInGB\":128,\"VolumeType\":\"gp2\"},\"VolumesPerInstance\":2}]},\"InstanceGroupType\":\"MASTER\",\"InstanceType\":\"m5.4xlarge\",\"Name\":\"Master - 1\"}]" \
   --configurations file://./conf/spark-config-genomic.json \
   --region us-east-1 \

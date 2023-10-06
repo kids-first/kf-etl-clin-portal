@@ -2,6 +2,7 @@ package bio.ferlab.etl.normalized.genomic
 
 import bio.ferlab.datalake.spark3.implicits.GenomicImplicits._
 import bio.ferlab.datalake.spark3.implicits.SparkUtils.filename
+import bio.ferlab.fhir.etl.config.StudyConfiguration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{ArrayType, IntegerType}
@@ -16,13 +17,12 @@ object KFVCFUtils {
    *
    * @param files               The dataframe containing the S3 path to the vcf files.
    * @param studyId             the study id used to filter the files.
-   * @param vcfPattern          the pattern used to filter the files.
    * @param referenceGenomePath a path to reference genome file used to align variants.
    * @param spark
    * @return
    */
-  def loadVCFs(files: DataFrame, studyId: String, vcfPattern: String, referenceGenomePath: Option[String] = None)(implicit spark: SparkSession): DataFrame = {
-    val vcfFiles: Seq[VCFFiles] = getVCFFiles(files, studyId, vcfPattern)
+  def loadVCFs(files: DataFrame, studyConfiguration: StudyConfiguration, studyId: String, referenceGenomePath: Option[String] = None)(implicit spark: SparkSession): DataFrame = {
+    val vcfFiles: Seq[VCFFiles] = getVCFFiles(files, studyConfiguration, studyId)
 
     vcfFiles.map(_.load(referenceGenomePath))
       .reduce { (df1, df2) => df1.unionByName(df2) }
@@ -45,19 +45,22 @@ object KFVCFUtils {
   /**
    * Get the versions of the vcf files. The version is inferred from the first line of each vcf file.
    *
-   * @param files    a dataframe containing the s3 urls of the vcf files.
-   * @param studyId  id of the study used to filter the files.
-   * @param endsWith the pattern to filter the files.
+   * @param files         a dataframe containing the s3 urls of the vcf files.
+   * @param studyId       id of the study used to filter the files.
+   * @param studyConfiguration configuration of the study.
    * @param spark
    * @return a list of VCFFiles containing the version and the list of files.
    */
-  private def getVCFFiles(files: DataFrame, studyId: String, endsWith: String)(implicit spark: SparkSession): Seq[VCFFiles] = {
+  private def getVCFFiles(files: DataFrame, studyConfiguration: StudyConfiguration, studyId: String)(implicit spark: SparkSession): Seq[VCFFiles] = {
     import spark.implicits._
-    val filesUrl = files.select("s3_url")
-      .where(col("study_id") === studyId and col("s3_url").isNotNull)
+
+
+    val filesUrl = files
+      .where(col("study_id") === studyId and col("s3_url").rlike(studyConfiguration.snvVCFPattern))
+      .select("s3_url")
       .distinct()
       .as[String].collect()
-      .collect { case s if s != null && s.endsWith(endsWith) => s.replace("s3://", "s3a://") }
+      .collect { case s if s != null => s.replace("s3://", "s3a://") }
 
     val filesUrlWithBucket = extractBucketNames(filesUrl)
     val buckets = filesUrlWithBucket.map { case (_, bucket) => bucket }.toSet
@@ -116,7 +119,7 @@ object KFVCFUtils {
 
   case object V1 extends VCFVersion {
     override def loadVersion(df: DataFrame): DataFrame = {
-      df.drop("annotation", "INFO_ANN")
+      df
         .withColumn("INFO_DS", lit(null).cast("boolean"))
         .withColumn("INFO_HaplotypeScore", lit(null).cast("double"))
         .withColumn("genotype", explode(col("genotypes")))

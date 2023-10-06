@@ -7,8 +7,6 @@ import org.apache.spark.sql.{Column, DataFrame}
 object Utils {
   val DOWN_SYNDROM_MONDO_TERM = "MONDO:0008608"
 
-  val observableTitleStandard: Column => Column = term => trim(regexp_replace(term, "_", ":"))
-
   private def reformatFileFacetIds(documentDF: DataFrame) = {
     documentDF
       .withColumn("file_facet_ids", struct(col("fhir_id") as "file_fhir_id_1", col("fhir_id") as "file_fhir_id_2"))
@@ -59,7 +57,7 @@ object Utils {
       val mondoDownSyndrome = mondoTerms.where(
         exists(col("ancestors"), p => p("id") like s"%$DOWN_SYNDROM_MONDO_TERM%") || col("id") === DOWN_SYNDROM_MONDO_TERM).select(col("id") as "mondo_down_syndrome_id", col("name") as "mondo_down_syndrome_name")
 
-      val downSyndromeDiagnosis = diseases.join(mondoDownSyndrome, col("mondo_id") === col("mondo_down_syndrome_id"))
+      val downSyndromeDiagnosis = diseases.join(mondoDownSyndrome, col("mondo_code") === col("mondo_down_syndrome_id"))
         .select(
           col("participant_fhir_id"),
           when(col("mondo_down_syndrome_id").isNotNull, displayTerm(col("mondo_down_syndrome_id"), col("mondo_down_syndrome_name")))
@@ -122,7 +120,7 @@ object Utils {
       val diseaseColumns = diseases.columns.filter(col => !commonColumns.contains(col))
 
       val diseasesWithMondoTerms =
-        mapObservableTerms(diseases, "mondo_id")(mondoTerms)
+        mapObservableTerms(diseases, "mondo_code")(mondoTerms)
           .withColumn("mondo", explode_outer(col("observable_with_ancestors")))
           .drop("observable_with_ancestors", "study_id")
           .groupBy("participant_fhir_id")
@@ -134,7 +132,7 @@ object Utils {
               )
             ) as "diagnosis",
             collect_set(col("mondo")) as "mondo"
-          ).drop("mondo_id")
+          ).drop("mondo_code")
 
       val diseasesExplodedWithMondoTerms = diseasesWithMondoTerms
         .withColumn("mondo", explode(col("mondo")))
@@ -147,7 +145,7 @@ object Utils {
         diseasesWithMondoTerms
           .drop("mondo")
           .join(diseasesWithMondoTermsGrouped, Seq("participant_fhir_id"), "left_outer")
-          .drop("mondo_down_syndrome_id", "mondo_down_syndrome_name", "mondo_id")
+          .drop("mondo_down_syndrome_id", "mondo_down_syndrome_name", "mondo_code")
 
       df
         .join(phenotypesWithHPOTermsGroupedByEvent, col("fhir_id") === col("participant_fhir_id"), "left_outer")

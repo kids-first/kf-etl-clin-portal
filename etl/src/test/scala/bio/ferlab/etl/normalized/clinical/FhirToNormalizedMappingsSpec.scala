@@ -69,10 +69,9 @@ class FhirToNormalizedMappingsSpec
       "spark.sql.extensions" -> "io.delta.sql.DeltaSparkSessionExtension",
       "spark.sql.legacy.parquet.datetimeRebaseModeInWrite" -> CORRECTED.toString,
       "spark.sql.legacy.timeParserPolicy" -> CORRECTED.toString,
-      "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN,",
-      "data.mappings.specimen.isFlatSpecimenModel" -> "true"
+      "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN,"
     )
-    val c1 = ETLConfiguration(isFlatSpecimenModel = false,
+    val c1 = ETLConfiguration(
       dataservice_url = "",
       datalake = DatalakeConf(
         storages,
@@ -92,7 +91,7 @@ class FhirToNormalizedMappingsSpec
       "spark.sql.legacy.timeParserPolicy" -> CORRECTED.toString,
       "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN,"
     )
-    val c2 = ETLConfiguration(isFlatSpecimenModel = false,
+    val c2 = ETLConfiguration(
       dataservice_url = "",
       datalake = DatalakeConf(
         storages,

@@ -7,6 +7,7 @@ import bio.ferlab.datalake.commons.file.FileSystemType.S3
 import bio.ferlab.datalake.spark3.genomics.GenomicDatasets
 import bio.ferlab.datalake.spark3.publictables.PublicDatasets
 import bio.ferlab.datalake.spark3.publictables.PublicDatasets.gnomadStorage
+import bio.ferlab.fhir.etl.config.StudyConfiguration.studiesConfigurations
 import pureconfig.generic.auto._
 
 case class SourceConfig(entityType: String, partitionBy: List[String])
@@ -21,8 +22,6 @@ object ConfigurationGenerator extends App {
   private def populateTable(sources: List[DatasetConf], database: String): List[DatasetConf] = {
     sources.map(ds => ds.copy(table = ds.table.map(t => TableConf(database, t.name))))
   }
-
-  def isFlatSpecimenModel(project: String): Boolean = project == pKfStrides
 
   private val partitionByStudyId = List("study_id")
   val sourceNames: Seq[SourceConfig] = Seq(
@@ -198,7 +197,7 @@ object ConfigurationGenerator extends App {
     "spark.databricks.delta.replaceWhere.constraintCheck.enabled" -> "false"
   )
   conf.foreach { case (project, _) =>
-    ConfigurationWriter.writeTo(s"config/output/config/dev-$project.conf", ETLConfiguration(isFlatSpecimenModel(project), DatalakeConf(
+    ConfigurationWriter.writeTo(s"config/output/config/dev-$project.conf", ETLConfiguration(DatalakeConf(
       storages = List(
         StorageConf(storage, "s3a://storage", S3),
         gnomadStorage
@@ -227,7 +226,7 @@ object ConfigurationGenerator extends App {
     ))
 
 
-    ConfigurationWriter.writeTo(s"config/output/config/qa-$project.conf", ETLConfiguration(isFlatSpecimenModel(project), DatalakeConf(
+    ConfigurationWriter.writeTo(s"config/output/config/qa-$project.conf", ETLConfiguration(DatalakeConf(
       storages = List(
         StorageConf(storage, s"s3a://${conf(project)("bucketNamePrefix")}-qa", S3),
         gnomadStorage
@@ -236,10 +235,11 @@ object ConfigurationGenerator extends App {
       args = args.toList,
       sparkconf = spark_conf
     ),
-      dataservice_url = "https://kf-api-dataservice-qa.kidsfirstdrc.org"
+      dataservice_url = "https://kf-api-dataservice-qa.kidsfirstdrc.org",
+      studies = studiesConfigurations(project)
     ))
 
-    ConfigurationWriter.writeTo(s"config/output/config/prd-$project.conf", ETLConfiguration(isFlatSpecimenModel(project), DatalakeConf(
+    ConfigurationWriter.writeTo(s"config/output/config/prd-$project.conf", ETLConfiguration(DatalakeConf(
       storages = List(
         StorageConf(storage, s"s3a://${conf(project)("bucketNamePrefix")}-prd", S3),
         gnomadStorage
@@ -248,11 +248,12 @@ object ConfigurationGenerator extends App {
       args = args.toList,
       sparkconf = spark_conf
     ),
-      dataservice_url = "https://kf-api-dataservice.kidsfirstdrc.org"
+      dataservice_url = "https://kf-api-dataservice.kidsfirstdrc.org",
+      studies = studiesConfigurations(project)
     ))
   }
 
-  ConfigurationWriter.writeTo(s"config/output/config/ucsf.conf", ETLConfiguration(isFlatSpecimenModel = true, DatalakeConf(
+  ConfigurationWriter.writeTo(s"config/output/config/ucsf.conf", ETLConfiguration(DatalakeConf(
     storages = List(
       StorageConf(storage, s"s3a://d3b-portal-65-4-r-us-west-2.sec.ucsf.edu", S3),
       gnomadStorage

@@ -56,16 +56,28 @@
         "consent_type": {
           "type": "keyword"
         },
+        "dbgap_consent_code": {
+          "type": "keyword"
+        },
         "container_id": {
           "type": "keyword"
         },
         "diagnosis_icd": {
           "type": "keyword"
         },
+        "icd_code": {
+          "type": "keyword"
+        },
         "diagnosis_mondo": {
           "type": "keyword"
         },
+        "mondo_code": {
+          "type": "keyword"
+        },
         "diagnosis_ncit": {
+          "type": "keyword"
+        },
+        "ncit_code": {
           "type": "keyword"
         },
         "external_collection_sample_id": {
@@ -321,13 +333,22 @@
                 "diagnosis_icd": {
                   "type": "keyword"
                 },
+                "icd_code": {
+                  "type": "keyword"
+                },
                 "diagnosis_id": {
                   "type": "keyword"
                 },
                 "diagnosis_mondo": {
                   "type": "keyword"
                 },
+                "mondo_code": {
+                  "type": "keyword"
+                },
                 "diagnosis_ncit": {
+                  "type": "keyword"
+                },
+                "ncit_code": {
                   "type": "keyword"
                 },
                 "fhir_id": {
@@ -336,13 +357,19 @@
                 "icd_id_diagnosis": {
                   "type": "keyword"
                 },
-                "mondo_id": {
+                "icd_display_term": {
                   "type": "keyword"
                 },
                 "mondo_id_diagnosis": {
                   "type": "keyword"
                 },
+                "mondo_display_term": {
+                  "type": "keyword"
+                },
                 "ncit_id_diagnosis": {
+                  "type": "keyword"
+                },
+                "ncit_display_term": {
                   "type": "keyword"
                 },
                 "source_text": {
@@ -352,6 +379,9 @@
                   "type": "keyword"
                 },
                 "uberon_id_tumor_location": {
+                  "type": "keyword"
+                },
+                "down_syndrome_diagnosis": {
                   "type": "keyword"
                 }
               }
@@ -460,9 +490,6 @@
               "properties": {
                 "age_at_event_days": {
                   "properties": {
-                    "from": {
-                      "type": "keyword"
-                    },
                     "units": {
                       "type": "keyword"
                     },
@@ -610,6 +637,9 @@
                 },
                 "website": {
                   "type": "keyword"
+                },
+                "investigator_id": {
+                  "type": "keyword"
                 }
               }
             },
@@ -711,6 +741,9 @@
             },
             "website": {
               "type": "keyword"
+            },
+            "investigator_id": {
+              "type": "keyword"
             }
           }
         },
@@ -720,7 +753,7 @@
         "tissue_type_source_text": {
           "type": "keyword"
         },
-        "volume_ul": {
+        "volume": {
           "type": "float"
         },
         "volume_unit": {

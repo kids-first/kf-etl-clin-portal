@@ -29,11 +29,27 @@
       "spark.hadoop.fs.s3a.assumed.role.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
       "spark.hadoop.fs.s3a.bucket.kf-strides-232196027141-datalake-qa.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
       "spark.hadoop.fs.s3a.bucket.kf-strides-232196027141-datalake-prd.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
+      "spark.hadoop.fs.s3a.bucket.kf-strides-study-us-east-1-prd-sd-54g4wg4r.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
+      "spark.hadoop.fs.s3a.bucket.kf-strides-study-us-east-1-prd-sd-w6fwtd8a.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
+      "spark.hadoop.fs.s3a.bucket.kf-strides-study-us-east-1-prd-sd-jk4z4t6v.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
       "spark.hadoop.fs.s3a.bucket.include-373997854230-datalake-qa.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
       "spark.hadoop.fs.s3a.bucket.include-373997854230-datalake-prd.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
       "spark.hadoop.fs.s3a.bucket.kf-strides-variant-parquet-prd.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
       "spark.hadoop.fs.s3a.bucket.gnomad-public-us-east-1.aws.credentials.provider": "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider"
     }
+  },
+  {
+    "Classification": "hadoop-env",
+    "Configurations": [
+      {
+        "Classification": "export",
+        "Configurations": [],
+        "Properties": {
+          "JAVA_HOME": "/usr/lib/jvm/java-11-amazon-corretto.x86_64"
+        }
+      }
+    ],
+    "Properties": {}
   },
   {
     "Classification": "delta-defaults",
