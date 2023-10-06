@@ -82,16 +82,16 @@ resource "aws_iam_role_policy" "get_secret_role_policy" {
 
 data "aws_iam_policy_document" "start_step_fn_role_policy" {
   statement {
-    effect = "Allow"
-    actions = ["states:StartExecution"]
+    effect    = "Allow"
+    actions   = ["states:StartExecution"]
     resources = [aws_sfn_state_machine.genomic_index_etl.arn]
   }
 }
 
 resource "aws_iam_role_policy" "start_step_fn_policy" {
   name_prefix = "lambdaPortalEtlStartStepFnPolicy-${var.environment}"
-  policy = data.aws_iam_policy_document.start_step_fn_role_policy.json
-  role   = aws_iam_role.lambda_service_role.name
+  policy      = data.aws_iam_policy_document.start_step_fn_role_policy.json
+  role        = aws_iam_role.lambda_service_role.name
 }
 
 resource "aws_iam_role_policy_attachment" "github_actions_managed_role_policies" {
