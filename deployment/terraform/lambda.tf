@@ -106,6 +106,7 @@ data "archive_file" "archive-initialize-portal-etl-emr-lambda" {
   type        = "zip"
   output_path = "../lambda_functions/initialize_portal_etl_emr_archive.zip"
   source_dir  = "../lambda_functions/initialize_portal_etl_emr/"
+  depends_on  = [null_resource.copy_emr_config_file]
 }
 
 resource "aws_lambda_function" "initialize-portal-etl-emr-lambda" {

@@ -44,3 +44,7 @@ variable "emr_service_role" {
 variable "elastic_search_endpoint" {
   type = string
 }
+
+variable "spark_assumed_role" {
+  type = string
+}
