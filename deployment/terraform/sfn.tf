@@ -82,15 +82,10 @@ data "aws_iam_policy_document" "step_functions_service_role_policy" {
     ]
     resources = ["*"]
   }
-  statement {
-    effect    = "Allow"
-    actions   = ["states:StartExecution"]
-    resources = [aws_sfn_state_machine.genomic_index_etl.arn]
-  }
 }
 
 resource "aws_iam_role" "step_functions_service_role" {
-  name_prefix        = "sfn${local.short}ServiceRole"
+  name               = "kf-sfn-portal-etl-${var.environment}-role"
   assume_role_policy = data.aws_iam_policy_document.step_functions_assume_role.json
 }
 
