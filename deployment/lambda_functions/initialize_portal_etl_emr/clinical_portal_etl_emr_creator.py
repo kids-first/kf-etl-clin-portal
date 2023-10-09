@@ -11,12 +11,14 @@ class ClinicalPortalEtlEmrCreator(PortalEtlEmrCreator):
         return 1
 
     def get_bootstrap_actions(self):
-        return {
-            'Name': 'Install Java 11',
-            'ScriptBootstrapAction': {
-                'Path': f's3://{self.bucket}/jobs/bootstrap-actions/install-java11.sh'
+        return [
+            {
+                'Name': 'Install Java 11',
+                'ScriptBootstrapAction': {
+                    'Path': f's3://{self.bucket}/jobs/bootstrap-actions/install-java11.sh'
+                }
             }
-        }
+        ]
 
     def get_instance_config(self, instance_count: int):
         instance_type = 'm5.8xlarge'

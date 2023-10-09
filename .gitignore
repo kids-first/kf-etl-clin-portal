@@ -120,3 +120,4 @@ bin/spark_ivy
 *.terraform
 **/.terraform.lock.hcl
 **/__pycache__
+/deployment/lambda_functions/initialize_portal_etl_emr/conf/

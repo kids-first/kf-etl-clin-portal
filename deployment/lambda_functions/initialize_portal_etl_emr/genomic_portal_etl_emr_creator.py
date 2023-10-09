@@ -6,15 +6,24 @@ class GenomicPortalEtlEmrCreator(PortalEtlEmrCreator):
         super(GenomicPortalEtlEmrCreator, self).__init__(etl_args)
 
     def get_step_concurrency(self) -> int:
-        return 1
+        return 2
 
     def get_bootstrap_actions(self):
-        return {
-            'Name': 'Install Human Reference Genome',
-            'ScriptBootstrapAction': {
-                'Path': f's3://{self.bucket}/jobs/bootstrap-actions/download_human_reference_genome.sh'
+        return [
+            {
+                'Name': 'Install Human Reference Genome',
+                'ScriptBootstrapAction': {
+                    'Path': f's3://{self.bucket}/jobs/bootstrap-actions/download_human_reference_genome.sh'
+                }
+            },
+            {
+                'Name': 'Install Ivy Settings',
+                'ScriptBootstrapAction': {
+                    'Path': f's3://{self.bucket}/jobs/bootstrap-actions/download_ivy_settings.sh'
+                }
             }
-        }
+
+        ]
 
     def get_instance_config(self, instance_count: int):
         instance_type = 'r5.4xlarge'

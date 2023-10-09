@@ -78,9 +78,9 @@ class PortalEtlEmrCreator(ABC):
             ],
             ServiceRole=self.service_role,
             JobFlowRole=self.instance_profile,
-            BootstrapActions=[
+            BootstrapActions=
                 bootstrap_actions_config
-            ],
+            ,
             Configurations=spark_config,
             StepConcurrencyLevel=step_concurrency,
             AutoTerminationPolicy={
