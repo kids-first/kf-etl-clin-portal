@@ -1,4 +1,4 @@
-from add_portal_etl_emr_step import PortalEtlEmrStepService
+from portal_etl_emr_step_service import PortalEtlEmrStepService
 from portal_emr_step_builder import EmrStepBuilder, EmrStepArgumentBuilder
 
 DEFAULT_GENOMIC_INDEX_PORTAL_ETL_STEPS = ['variant_centric', 'variant_suggestions', 'gene_centric', 'gene_suggestions']

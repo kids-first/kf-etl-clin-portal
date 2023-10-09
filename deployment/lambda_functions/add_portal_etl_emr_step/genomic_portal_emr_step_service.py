@@ -1,7 +1,7 @@
 from typing import List, Any
 
 from portal_emr_step_builder import EmrStepBuilder, EmrStepArgumentBuilder
-from add_portal_etl_emr_step import PortalEtlEmrStepService
+from portal_etl_emr_step_service import PortalEtlEmrStepService
 
 # Default list of Portal ETL Steps
 DEFAULT_PORTAL_ETL_STEPS = ['normalize-snv', 'normalize-consequences', 'enrich-variant', 'enrich-consequences',
