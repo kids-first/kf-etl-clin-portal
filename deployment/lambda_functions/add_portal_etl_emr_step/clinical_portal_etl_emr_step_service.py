@@ -4,7 +4,7 @@ from portal_etl_emr_step_service import PortalEtlEmrStepService
 from portal_emr_step_builder import EmrStepBuilder, EmrStepArgumentBuilder
 
 # Default list of Portal ETL Steps
-DEFAULT_PORTAL_ETL_STEPS = ['cleanup jars', 'download and run fhavro-export', 'normalize dataservice',
+DEFAULT_CLINICAL_PORTAL_ETL_STEPS = ['cleanup jars', 'download and run fhavro-export', 'normalize dataservice',
                             'normalize clinical',
                             'enrich all', 'prepare index', 'index study', 'index participant', 'index file',
                             'index biospecimen']
@@ -15,7 +15,7 @@ class ClinicalPortalEtlEmrStepService(PortalEtlEmrStepService):
         super(ClinicalPortalEtlEmrStepService, self).__init__(etl_args=etl_args)
 
     def get_default_etl_steps_to_execute(self) -> list:
-        default_etl_steps_to_execute = list(DEFAULT_PORTAL_ETL_STEPS)
+        default_etl_steps_to_execute = list(DEFAULT_CLINICAL_PORTAL_ETL_STEPS)
         if self.etl_args['account'] == 'include':
             default_etl_steps_to_execute.remove('normalize dataservice')
         return default_etl_steps_to_execute

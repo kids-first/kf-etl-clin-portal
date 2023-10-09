@@ -4,7 +4,7 @@ from portal_emr_step_builder import EmrStepBuilder, EmrStepArgumentBuilder
 from portal_etl_emr_step_service import PortalEtlEmrStepService
 
 # Default list of Portal ETL Steps
-DEFAULT_PORTAL_ETL_STEPS = ['normalize-snv', 'normalize-consequences', 'enrich-variant', 'enrich-consequences',
+DEFAULT_GENOMIC_PORTAL_ETL_STEPS = ['normalize-snv', 'normalize-consequences', 'enrich-variant', 'enrich-consequences',
                             'prepare-variant_centric',
                             'prepare-variant_suggestions', 'prepare-gene_centric', 'prepare-gene_suggestions']
 
@@ -14,7 +14,7 @@ class GenomicPortalEtlEmrStepService(PortalEtlEmrStepService):
         super(GenomicPortalEtlEmrStepService, self).__init__(etl_args)
 
     def get_default_etl_steps_to_execute(self) -> list:
-        return DEFAULT_PORTAL_ETL_STEPS
+        return DEFAULT_GENOMIC_PORTAL_ETL_STEPS
 
     def get_next_steps(self, portal_etl_steps_to_execute: list, current_etl_steps: list, study_ids: list):
         """
