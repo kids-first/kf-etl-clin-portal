@@ -643,6 +643,12 @@
                 },
                 "investigator_id": {
                   "type": "keyword"
+                },
+                "biobank_contact": {
+                  "type": "keyword"
+                },
+                "biobank_request_link": {
+                  "type": "keyword"
                 }
               }
             },
