@@ -144,6 +144,8 @@ object Transformations {
       .withColumn("program", extractFirstMatchingSystem(flatten(col("keyword.coding")), Seq(SYS_PROGRAMS_KF, SYS_PROGRAMS_INCLUDE))("display"))
       .withColumn("website", extractDocUrl(col("relatedArtifact"))("url"))
       .withColumn("domain", col("category")(0)("text"))
+      .withColumn("biobank_contact", extractFirstMatchingSystem(extractVirtualBiorepositoryContact(col("contact"))("telecom"), Seq("email"))("value"))
+      .withColumn("biobank_request_link", extractFirstMatchingSystem(extractVirtualBiorepositoryContact(col("contact"))("telecom"), Seq("url"))("value"))
     ),
     Drop(
       "title",
