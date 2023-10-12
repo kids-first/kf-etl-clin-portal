@@ -89,6 +89,9 @@
         },
         "biobank_request_link": {
           "type": "keyword"
+        },
+        "note": {
+          "type": "keyword"
         }
       }
     }
