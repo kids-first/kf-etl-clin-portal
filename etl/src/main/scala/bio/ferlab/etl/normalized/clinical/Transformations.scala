@@ -146,6 +146,7 @@ object Transformations {
       .withColumn("domain", col("category")(0)("text"))
       .withColumn("biobank_contact", extractFirstMatchingSystem(extractVirtualBiorepositoryContact(col("contact"))("telecom"), Seq("email"))("value"))
       .withColumn("biobank_request_link", extractFirstMatchingSystem(extractVirtualBiorepositoryContact(col("contact"))("telecom"), Seq("url"))("value"))
+      .withColumn("note", col("note")(0)("text"))
     ),
     Drop(
       "title",
