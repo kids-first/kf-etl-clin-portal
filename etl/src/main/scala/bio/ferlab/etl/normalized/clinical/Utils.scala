@@ -13,6 +13,7 @@ object Utils {
   val patternUrnUniqueIdStudy = "[A-Z][a-z]+-(SD_[0-9A-Za-z]+)-([A-Z]{2}_[0-9A-Za-z]+)"
   val phenotypeExtract = "^[A-Z]{2,}.[0-9]+$"
   val DRS_HOSTNAME = "drs://data.kidsfirstdrc.org/"
+  val virtualBiorepositoryContact = "Virtual Biorepository Contact"
 
   private def codingSystemClassify(url: String) = {
     url match {
@@ -39,7 +40,7 @@ object Utils {
 
   val extractDocUrl: Column => Column = artifacts => filter(artifacts, c => c("type") === "documentation")(0)
 
-  val extractVirtualBiorepositoryContact: Column => Column = contacts => filter(contacts, c => c("name") === "Virtual Biorepository Contact")(0)
+  val extractVirtualBiorepositoryContact: Column => Column = contacts => filter(contacts, c => c("name") === virtualBiorepositoryContact)(0)
 
   val firstSystemEquals: (Column, String) => Column = (column: Column, system: String) => filter(column, c => c("system") === system)(0)
 
