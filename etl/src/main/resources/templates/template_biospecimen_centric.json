@@ -307,6 +307,9 @@
         "parent_sample_id": {
           "type": "keyword"
         },
+        "external_parent_sample_id": {
+          "type": "keyword"
+        },
         "parent_sample_type": {
           "type": "keyword"
         },

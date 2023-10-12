@@ -39,6 +39,8 @@ object Utils {
 
   val extractDocUrl: Column => Column = artifacts => filter(artifacts, c => c("type") === "documentation")(0)
 
+  val extractVirtualBiorepositoryContact: Column => Column = contacts => filter(contacts, c => c("name") === "Virtual Biorepository Contact")(0)
+
   val firstSystemEquals: (Column, String) => Column = (column: Column, system: String) => filter(column, c => c("system") === system)(0)
 
   val extractOfficial: Column => Column = (identifiers: Column) => coalesce(filter(identifiers, identifier => identifier("use") === "official")(0)("value"), identifiers(0)("value"))
