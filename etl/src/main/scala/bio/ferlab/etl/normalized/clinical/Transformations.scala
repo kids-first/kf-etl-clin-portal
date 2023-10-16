@@ -129,7 +129,7 @@ object Transformations {
 
   val researchstudyMappings: List[Transformation] = List(
     Custom(_
-      .select("fhir_id", "keyword", "release_id", "study_id", "title", "identifier", "principalInvestigator", "status", "relatedArtifact", "category")
+      .select("fhir_id", "keyword", "release_id", "study_id", "title", "identifier", "principalInvestigator", "status", "relatedArtifact", "category", "contact", "note")
       .withColumn("attribution", extractFirstForSystem(col("identifier"), Seq(SYS_NCBI_URL))("value"))
       .withColumn("external_id", extractStudyExternalId(extractFirstForSystem(col("identifier"), Seq(SYS_NCBI_URL))("value")))
       .withColumnRenamed("title", "name")
@@ -156,7 +156,9 @@ object Transformations {
       "relatedArtifact",
       "category",
       "study_code_fallback",
-      "study_code_from_system"
+      "study_code_from_system",
+      "contact",
+      "note"
     )
   )
 
