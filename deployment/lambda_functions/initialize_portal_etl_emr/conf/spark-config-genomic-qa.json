@@ -1,0 +1,73 @@
+[
+  {
+    "Classification": "spark",
+    "Properties": {
+      "maximizeResourceAllocation": "true"
+    }
+  },
+  {
+    "Classification": "spark-defaults",
+    "Properties": {
+      "spark.jars.packages": "io.projectglow:glow-spark3_2.12:1.2.1",
+      "spark.jars.excludes": "org.apache.httpcomponents:httpcore,org.apache.httpcomponents:httpclient",
+      "spark.jars.ivySettings": "/mnt/ivysettings.xml",
+      "spark.memory.storageFraction": "0",
+      "spark.sql.shuffle.partitions": "500",
+      "spark.dynamicAllocation.enabled": "false",
+      "spark.network.timeout": "1000000",
+      "spark.hadoop.parquet.block.size": "1073741824",
+      "spark.hadoop.dfs.block.size": "1073741824",
+      "spark.hadoop.fs.s3a.multiobjectdelete.enable": "false",
+      "spark.sql.adaptive.enabled": "false",
+      "parquet.block.size": "1073741824",
+      "spark.hadoop.fs.s3a.connection.maximum": "5000",
+      "spark.sql.extensions": "io.delta.sql.DeltaSparkSessionExtension",
+      "spark.sql.catalog.spark_catalog": "org.apache.spark.sql.delta.catalog.DeltaCatalog",
+      "spark.hadoop.io.compression.codecs": "io.projectglow.sql.util.BGZFCodec",
+      "spark.hadoop.fs.s3n": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
+      "spark.hadoop.fs.s3a.aws.credentials.provider": "org.apache.hadoop.fs.s3a.auth.AssumedRoleCredentialProvider",
+      "spark.hadoop.fs.s3a.assumed.role.arn": "arn:aws:iam::538745987955:role/kf-etl-server-qa-role",
+      "spark.hadoop.fs.s3a.assumed.role.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
+      "spark.hadoop.fs.s3a.bucket.kf-strides-232196027141-datalake-qa.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
+      "spark.hadoop.fs.s3a.bucket.kf-strides-232196027141-datalake-prd.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
+      "spark.hadoop.fs.s3a.bucket.kf-strides-study-us-east-1-prd-sd-54g4wg4r.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
+      "spark.hadoop.fs.s3a.bucket.kf-strides-study-us-east-1-prd-sd-w6fwtd8a.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
+      "spark.hadoop.fs.s3a.bucket.kf-strides-study-us-east-1-prd-sd-jk4z4t6v.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
+      "spark.hadoop.fs.s3a.bucket.include-373997854230-datalake-qa.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
+      "spark.hadoop.fs.s3a.bucket.include-373997854230-datalake-prd.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
+      "spark.hadoop.fs.s3a.bucket.kf-strides-variant-parquet-prd.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
+      "spark.hadoop.fs.s3a.bucket.gnomad-public-us-east-1.aws.credentials.provider": "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider"
+    }
+  },
+  {
+    "Classification": "hadoop-env",
+    "Configurations": [
+      {
+        "Classification": "export",
+        "Configurations": [],
+        "Properties": {
+          "JAVA_HOME": "/usr/lib/jvm/java-11-amazon-corretto.x86_64"
+        }
+      }
+    ],
+    "Properties": {}
+  },
+  {
+    "Classification": "delta-defaults",
+    "Properties": {
+      "delta.enabled": "true"
+    }
+  },
+  {
+    "Classification": "spark-hive-site",
+    "Properties": {
+      "hive.metastore.client.factory.class": "com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory"
+    }
+  },
+  {
+    "Classification": "emrfs-site",
+    "Properties": {
+      "fs.s3.maxConnections": "5000"
+    }
+  }
+]

@@ -35,7 +35,7 @@ data "aws_iam_policy_document" "emr_role_policy" {
 }
 
 resource "aws_iam_role_policy" "emr_role_policy" {
-  name_prefix = "lambdaPortalEtlEMRReadPolicy"
+  name_prefix = "lambdaPortalEtlEMRReadPolicy-"
   policy      = data.aws_iam_policy_document.emr_role_policy.json
   role        = aws_iam_role.lambda_service_role.name
 }
@@ -61,7 +61,7 @@ data "aws_iam_policy_document" "describe_sg_role_policy" {
 }
 
 resource "aws_iam_role_policy" "describe_sg_role_policy" {
-  name_prefix = "lambdaPortalEtlSGReadPolicy"
+  name_prefix = "lambdaPortalEtlSGReadPolicy-"
   policy      = data.aws_iam_policy_document.describe_sg_role_policy.json
   role        = aws_iam_role.lambda_service_role.name
 }
@@ -75,7 +75,7 @@ data "aws_iam_policy_document" "get_secret_policy" {
 }
 
 resource "aws_iam_role_policy" "get_secret_role_policy" {
-  name_prefix = "lambdaPortalEtlGetSecretPolicy-${var.environment}"
+  name_prefix = "lambdaPortalEtlGetSecretPolicy-${var.environment}-"
   policy      = data.aws_iam_policy_document.get_secret_policy.json
   role        = aws_iam_role.lambda_service_role.name
 }
@@ -89,7 +89,7 @@ data "aws_iam_policy_document" "start_step_fn_role_policy" {
 }
 
 resource "aws_iam_role_policy" "start_step_fn_policy" {
-  name_prefix = "lambdaPortalEtlStartStepFnPolicy-${var.environment}"
+  name_prefix = "lambdaPortalEtlStartStepFnPolicy-${var.environment}-"
   policy      = data.aws_iam_policy_document.start_step_fn_role_policy.json
   role        = aws_iam_role.lambda_service_role.name
 }
@@ -102,63 +102,62 @@ resource "aws_iam_role_policy_attachment" "github_actions_managed_role_policies"
 #
 # Create Lambda Functions
 #
-data "archive_file" "archive-initialize-portal-etl-emr-lambda" {
+data "archive_file" "archive_initialize_portal_etl_emr_lambda" {
   type        = "zip"
-  output_path = "../lambda_functions/initialize_portal_etl_emr_archive.zip"
-  source_dir  = "../lambda_functions/initialize_portal_etl_emr/"
-  depends_on  = [null_resource.copy_emr_config_file]
+  output_path = "${path.module}/../lambda_functions/initialize_portal_etl_emr_archive.zip"
+  source_dir  = "${path.module}/../lambda_functions/initialize_portal_etl_emr/"
 }
 
-resource "aws_lambda_function" "initialize-portal-etl-emr-lambda" {
+resource "aws_lambda_function" "initialize_portal_etl_emr_lambda" {
   function_name    = "PortalEtl-Initialize-EMR-${var.environment}"
-  filename         = "../lambda_functions/initialize_portal_etl_emr_archive.zip"
+  filename         = "${path.module}/../lambda_functions/initialize_portal_etl_emr_archive.zip"
   role             = aws_iam_role.lambda_service_role.arn
   handler          = "main.initialize_portal_etl_emr"
   runtime          = "python3.9"
-  source_code_hash = data.archive_file.archive-initialize-portal-etl-emr-lambda.output_base64sha256
+  source_code_hash = data.archive_file.archive_initialize_portal_etl_emr_lambda.output_base64sha256
 
   timeout = 30
 }
 
-data "archive_file" "archive-check-portal-etl-emr-step-status-lambda" {
+data "archive_file" "archive_check_portal_etl_emr_step_status_lambda" {
   type        = "zip"
-  output_path = "../lambda_functions/check_portal_etl_emr_step_status_archive.zip"
-  source_dir  = "../lambda_functions/check_portal_etl_emr_step_status/"
+  output_path = "${path.module}/../lambda_functions/check_portal_etl_emr_step_status_archive.zip"
+  source_dir  = "${path.module}/../lambda_functions/check_portal_etl_emr_step_status/"
 }
 
-resource "aws_lambda_function" "monitor-portal-etl-emr-lambda" {
+resource "aws_lambda_function" "monitor_portal_etl_emr_lambda" {
   function_name    = "PortalEtl-Monitor-EMR-${var.environment}"
-  filename         = "../lambda_functions/check_portal_etl_emr_step_status_archive.zip"
+  filename         = "${path.module}/../lambda_functions/check_portal_etl_emr_step_status_archive.zip"
   role             = aws_iam_role.lambda_service_role.arn
   handler          = "main.check_portal_etl_emr_step_status"
   runtime          = "python3.9"
-  source_code_hash = data.archive_file.archive-check-portal-etl-emr-step-status-lambda.output_base64sha256
+  source_code_hash = data.archive_file.archive_check_portal_etl_emr_step_status_lambda.output_base64sha256
 }
 
-data "archive_file" "archive-add-portal-etl-emr-step-lambda" {
+data "archive_file" "archive_add_portal_etl_emr_step_lambda" {
   type        = "zip"
-  output_path = "../lambda_functions/add_portal_etl_emr_step_archive.zip"
-  source_dir  = "../lambda_functions/add_portal_etl_emr_step/"
+  output_path = "${path.module}/../lambda_functions/add_portal_etl_emr_step_archive.zip"
+  source_dir  = "${path.module}/../lambda_functions/add_portal_etl_emr_step/"
 }
 
-resource "aws_lambda_function" "add-portal-etl-emr-step-lambda" {
+resource "aws_lambda_function" "add_portal_etl_emr_step_lambda" {
   function_name    = "PortalEtl-Submit-ETL-Step-${var.environment}"
-  filename         = "../lambda_functions/add_portal_etl_emr_step_archive.zip"
+  filename         = "${path.module}/../lambda_functions/add_portal_etl_emr_step_archive.zip"
   role             = aws_iam_role.lambda_service_role.arn
   handler          = "main.add_portal_etl_emr_step"
   runtime          = "python3.9"
-  source_code_hash = data.archive_file.archive-add-portal-etl-emr-step-lambda.output_base64sha256
+  source_code_hash = data.archive_file.archive_add_portal_etl_emr_step_lambda.output_base64sha256
 }
 
-data "archive_file" "archive-notify-portal-etl-emr-status-lambda" {
+data "archive_file" "archive_notify_portal_etl_emr_status_lambda" {
   type        = "zip"
-  output_path = "../lambda_functions/notify_portal_etl_status_archive.zip"
-  source_dir  = "../lambda_functions/notify_portal_etl_status/"
+  output_path = "${path.module}/../lambda_functions/notify_portal_etl_status_archive.zip"
+  source_dir  = "${path.module}/../lambda_functions/notify_portal_etl_status/"
 }
 
-resource "aws_lambda_function" "notify-portal-etl-emr-status-lambda" {
+resource "aws_lambda_function" "notify_portal_etl_emr_status_lambda" {
   function_name = "PortalEtl-Notify-ETL-Status-${var.environment}"
-  filename      = "../lambda_functions/notify_portal_etl_status_archive.zip"
+  filename      = "${path.module}/../lambda_functions/notify_portal_etl_status_archive.zip"
   role          = aws_iam_role.lambda_service_role.arn
   handler       = "main.notify_portal_etl_status"
   environment {
@@ -167,18 +166,18 @@ resource "aws_lambda_function" "notify-portal-etl-emr-status-lambda" {
     }
   }
   runtime          = "python3.9"
-  source_code_hash = data.archive_file.archive-notify-portal-etl-emr-status-lambda.output_base64sha256
+  source_code_hash = data.archive_file.archive_notify_portal_etl_emr_status_lambda.output_base64sha256
 }
 
-data "archive_file" "archive-start-genomic-index-step-fn-lambda" {
+data "archive_file" "archive_start_genomic_index_step_fn_lambda" {
   type        = "zip"
-  output_path = "../lambda_functions/start_genomic_index_step_fn.zip"
-  source_dir  = "../lambda_functions/start_genomic_index_step_fn/"
+  output_path = "${path.module}/../lambda_functions/start_genomic_index_step_fn.zip"
+  source_dir  = "${path.module}/../lambda_functions/start_genomic_index_step_fn/"
 }
 
-resource "aws_lambda_function" "start-genomic-index-step-fn-lambda" {
+resource "aws_lambda_function" "start_genomic_index_step_fn_lambda" {
   function_name = "PortalEtl-Start-Genomic-Index-StepFn-${var.environment}"
-  filename      = "../lambda_functions/start_genomic_index_step_fn.zip"
+  filename      = "${path.module}/../lambda_functions/start_genomic_index_step_fn.zip"
   role          = aws_iam_role.lambda_service_role.arn
   handler       = "main.start_genomic_index_step_fn"
   environment {
@@ -187,6 +186,6 @@ resource "aws_lambda_function" "start-genomic-index-step-fn-lambda" {
     }
   }
   runtime          = "python3.9"
-  source_code_hash = data.archive_file.archive-start-genomic-index-step-fn-lambda.output_base64sha256
+  source_code_hash = data.archive_file.archive_start_genomic_index_step_fn_lambda.output_base64sha256
 }
 

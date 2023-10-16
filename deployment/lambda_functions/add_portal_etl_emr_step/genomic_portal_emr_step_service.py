@@ -1,7 +1,7 @@
 from typing import List, Any
 
 from portal_emr_step_builder import EmrStepBuilder, EmrStepArgumentBuilder
-from portal_etl_emr_step_service import PortalEtlEmrStepService
+from portal_etl_emr_step_service import PortalEtlEmrStepService, get_next_step_prefix
 
 # Default list of Portal ETL Steps
 DEFAULT_GENOMIC_PORTAL_ETL_STEPS = ['normalize-snv', 'normalize-consequences', 'enrich-variant', 'enrich-consequences',
@@ -25,24 +25,12 @@ class GenomicPortalEtlEmrStepService(PortalEtlEmrStepService):
              :param current_etl_steps:
              :param study_ids:
          """
-        etl_step_name = ""
+        etl_step_name = get_next_step_prefix(portal_etl_steps_to_execute, current_etl_steps)
+
+        if not etl_step_name:
+            return []
+
         next_steps_to_execute = []
-        if not current_etl_steps:
-            etl_step_name = portal_etl_steps_to_execute[0]
-        else:
-            try:
-                index = next(
-                    (i for i, prefix in enumerate(portal_etl_steps_to_execute) if
-                     current_etl_steps[-1].startswith(prefix)),
-                    None)
-
-                if index is not None and index < len(portal_etl_steps_to_execute) - 1:
-                    etl_step_name = portal_etl_steps_to_execute[index + 1]
-                else:
-                    return []  # No next step
-            except ValueError:
-                return []  # Current step not found in the list
-
         if etl_step_name in ['normalize-snv', 'normalize-consequences']:
             next_steps_to_execute = [(etl_step_name, study_id) for study_id in study_ids]
         elif etl_step_name.startswith('enrich') or etl_step_name.startswith('prepare'):

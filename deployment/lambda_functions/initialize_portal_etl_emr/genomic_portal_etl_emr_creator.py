@@ -38,7 +38,7 @@ class GenomicPortalEtlEmrCreator(PortalEtlEmrCreator):
         }
 
     def get_spark_config_file_path(self) -> str:
-        return f'conf/spark-config-genomic.json'
+        return f'conf/spark-config-genomic-{self.env}.json'
 
 
 def get_genomic_instance_group_config(instance_type: str, instance_count: int):

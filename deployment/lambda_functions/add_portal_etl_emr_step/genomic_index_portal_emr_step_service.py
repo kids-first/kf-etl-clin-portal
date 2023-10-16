@@ -1,4 +1,4 @@
-from portal_etl_emr_step_service import PortalEtlEmrStepService
+from portal_etl_emr_step_service import PortalEtlEmrStepService, get_next_step_prefix
 from portal_emr_step_builder import EmrStepBuilder, EmrStepArgumentBuilder
 
 DEFAULT_GENOMIC_INDEX_PORTAL_ETL_STEPS = ['variant_centric', 'variant_suggestions', 'gene_centric', 'gene_suggestions']
@@ -19,21 +19,10 @@ class GenomicIndexPortalEtlEmrStepService(PortalEtlEmrStepService):
         user_input = self.etl_args['input']
         user_custom_chromosomes = user_input.get('chromosomes', [])
 
-        if not current_etl_steps:
-            etl_step_name = portal_etl_steps_to_execute[0]
-        else:
-            try:
-                index = next(
-                    (i for i, prefix in enumerate(portal_etl_steps_to_execute) if
-                     current_etl_steps[-1].startswith(prefix)),
-                    None)
+        etl_step_name = get_next_step_prefix(portal_etl_steps_to_execute, current_etl_steps)
 
-                if index is not None and index < len(portal_etl_steps_to_execute) - 1:
-                    etl_step_name = portal_etl_steps_to_execute[index + 1]
-                else:
-                    return []  # No next step
-            except ValueError:
-                return []  # Current step not found in the list
+        if not etl_step_name:
+            return []
 
         if etl_step_name in ['variant-centric', 'variant-suggestions']:
             next_steps_to_execute = generate_variant_etl_steps(etl_step_name, user_custom_chromosomes)

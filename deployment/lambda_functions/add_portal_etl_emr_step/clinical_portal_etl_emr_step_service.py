@@ -1,6 +1,6 @@
 from typing import Any
 
-from portal_etl_emr_step_service import PortalEtlEmrStepService
+from portal_etl_emr_step_service import PortalEtlEmrStepService, get_next_step_prefix
 from portal_emr_step_builder import EmrStepBuilder, EmrStepArgumentBuilder
 
 # Default list of Portal ETL Steps
@@ -30,16 +30,11 @@ class ClinicalPortalEtlEmrStepService(PortalEtlEmrStepService):
              :param current_etl_steps:
              :param portal_etl_steps_to_execute:
          """
-        if current_etl_steps is None or len(current_etl_steps) < 0:
-            return [portal_etl_steps_to_execute[0]]
-        try:
-            index = portal_etl_steps_to_execute.index(current_etl_steps[-1])
-            if index < len(portal_etl_steps_to_execute) - 1:
-                return [portal_etl_steps_to_execute[index + 1]]
-            else:
-                return []  # No next step
-        except ValueError:
-            return []  # Current step not found in the list
+        next_step = get_next_step_prefix(portal_etl_steps_to_execute, current_etl_steps)
+        if not next_step:
+            return []
+        return [next_step]
+
 
     def get_etl_step_description(self, next_etl_steps: list) -> list[Any]:
         elastic_search_endpoint = self.etl_args['esEndpoint']

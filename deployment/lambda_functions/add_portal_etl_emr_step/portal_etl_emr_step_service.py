@@ -4,6 +4,26 @@ from abc import ABC, abstractmethod
 import boto3
 
 
+def get_next_step_prefix(portal_etl_steps_to_execute: list, current_etl_steps: list, ) -> str:
+    if not current_etl_steps:
+        etl_step_name = portal_etl_steps_to_execute[0]
+    else:
+        try:
+            index = next(
+                (i for i, prefix in enumerate(portal_etl_steps_to_execute) if
+                 current_etl_steps[-1].startswith(prefix)),
+                None)
+
+            if index is not None and index < len(portal_etl_steps_to_execute) - 1:
+                etl_step_name = portal_etl_steps_to_execute[index + 1]
+            else:
+                return ""  # No next step
+        except ValueError:
+            return ""  # Current step not found in the list
+
+    return etl_step_name
+
+
 class PortalEtlEmrStepService(ABC):
     def __init__(self, etl_args: dict):
         self.portal_etl_steps_to_execute = []
