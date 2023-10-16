@@ -19,7 +19,7 @@ object SpecimensTransformations {
   private def addParentsToSpecimen(specimen: DataFrame): DataFrame = {
     val parentRange = 1 to 10
     val samplesWithParent = parentRange.foldLeft(specimen) { case (s, i) =>
-        val joined = specimen.select(struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(i) as "level") as s"parent_$i")
+        val joined = specimen.select(struct(col("fhir_id"), col("sample_id"), col("external_sample_id"), col("parent_id"), col("sample_type"), lit(i) as "level") as s"parent_$i")
         s.join(joined, s(s"parent_${i - 1}.parent_id") === joined(s"parent_$i.fhir_id"), "left")
       }
       .withColumn("parent_sample_type", col("parent_1.sample_type"))
