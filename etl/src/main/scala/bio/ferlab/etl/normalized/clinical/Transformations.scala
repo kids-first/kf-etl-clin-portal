@@ -158,7 +158,6 @@ object Transformations {
       "study_code_fallback",
       "study_code_from_system",
       "contact",
-      "note"
     )
   )
 
