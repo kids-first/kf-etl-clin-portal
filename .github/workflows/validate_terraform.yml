@@ -20,7 +20,11 @@ jobs:
             region: [us-east-1]
             include:
                 - account: kf-strides
-                  role: KF_ROLE
+                  environment: qa
+                  role: KF_ROLE_QA
+                - account: kf-strides
+                  environment: prd
+                  role: KF_ROLE_PRD
     env:
         subfolder: "deployment/terraform"
         config_folder: "${{ matrix.account }}/${{ matrix.region }}/${{ matrix.environment }}"
