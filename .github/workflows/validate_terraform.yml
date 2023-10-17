@@ -31,6 +31,8 @@ jobs:
             role-to-assume: ${{ secrets[matrix.role] }}
             aws-region: ${{ matrix.region }}
         - uses: hashicorp/setup-terraform@v2
+          with:
+            terraform_version: "1.5.5"
         - name: Terraform Init
           working-directory: ${{ env.subfolder }}
           id: init
