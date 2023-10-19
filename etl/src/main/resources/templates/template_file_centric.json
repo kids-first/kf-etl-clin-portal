@@ -171,6 +171,9 @@
                 "container_id": {
                   "type": "keyword"
                 },
+                "external_container_id": {
+                  "type": "keyword"
+                },
                 "dbgap_consent_code": {
                   "type": "keyword"
                 },

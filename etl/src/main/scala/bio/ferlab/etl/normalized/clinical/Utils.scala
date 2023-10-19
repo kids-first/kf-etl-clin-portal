@@ -44,7 +44,9 @@ object Utils {
 
   val firstSystemEquals: (Column, String) => Column = (column: Column, system: String) => filter(column, c => c("system") === system)(0)
 
-  val extractOfficial: Column => Column = (identifiers: Column) => coalesce(filter(identifiers, identifier => identifier("use") === "official")(0)("value"), identifiers(0)("value"))
+  val extractOfficial: Column => Column = (identifiers: Column) => coalesce(extractIdentifierForUse(identifiers, "official"), identifiers(0)("value"))
+
+  val extractIdentifierForUse: (Column, String) => Column = (identifiers: Column, use: String) => filter(identifiers, identifier => identifier("use") === use)(0)("value")
 
   val codingClassify: UserDefinedFunction =
     udf((arr: Seq[(String, String, String, String, String, String)]) =>
