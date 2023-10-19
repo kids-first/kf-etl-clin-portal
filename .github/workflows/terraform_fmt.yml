@@ -1,4 +1,4 @@
-name: Terraform Plan
+name: Terraform Format
 on:
   pull_request:
     branches: [ master ]

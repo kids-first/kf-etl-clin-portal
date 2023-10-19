@@ -1,4 +1,4 @@
-name: Validate Terraform
+name: Validate/Plan Terraform
 
 on:
   push:

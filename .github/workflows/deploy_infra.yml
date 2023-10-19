@@ -1,0 +1,80 @@
+name: Deploy Infrastructure
+
+on:
+  push:
+    branches:
+      - 'master'
+  release:
+    types:
+      - published
+
+permissions:
+    contents: read
+    id-token: write
+
+jobs:
+  deploy-infra-qa:
+    name: Deploy QA Infrastructure
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
+    strategy:
+        fail-fast: false
+        matrix:
+            environment: [qa]
+            account: [kf-strides]
+            region: [us-east-1]
+            include:
+                - account: kf-strides
+                  role: KF_ROLE_QA
+    env:
+        subfolder: "deployment/terraform"
+        config_folder: "${{ matrix.account }}/${{ matrix.region }}/${{ matrix.environment }}"
+    steps:
+        - uses: actions/checkout@v3
+        - uses: aws-actions/configure-aws-credentials@v2
+          with:
+            role-to-assume: ${{ secrets[matrix.role] }}
+            aws-region: ${{ matrix.region }}
+        - uses: hashicorp/setup-terraform@v2
+        - name: Terraform Init
+          working-directory: ${{ env.subfolder }}
+          id: init
+          run: terraform init -backend=true -backend-config="${{ env.config_folder }}/backend.conf"
+        - name: Terraform Apply
+          working-directory: ${{ env.subfolder }}
+          id: apply
+          run: terraform apply -var-file="${{ env.config_folder }}/variables.tfvars" --auto-approve
+  deploy-infra-prd:
+    name: Deploy PRD Infrastructure
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'release' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [ prd ]
+        account: [ kf-strides ]
+        region: [ us-east-1 ]
+        include:
+          - account: kf-strides
+            role: KF_ROLE_PRD
+    env:
+      subfolder: "deployment/terraform"
+      config_folder: "${{ matrix.account }}/${{ matrix.region }}/${{ matrix.environment }}"
+    steps:
+      - uses: actions/checkout@v3
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets[matrix.role] }}
+          aws-region: ${{ matrix.region }}
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: "1.5.5"
+      - name: Terraform Init
+        working-directory: ${{ env.subfolder }}
+        id: init
+        run: terraform init -backend=true -backend-config="${{ env.config_folder }}/backend.conf"
+      - name: Terraform Apply
+        working-directory: ${{ env.subfolder }}
+        id: apply
+        run: terraform apply -var-file="${{ env.config_folder }}/variables.tfvars" --auto-approve
+
