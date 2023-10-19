@@ -183,6 +183,9 @@
                 "container_id": {
                   "type": "keyword"
                 },
+                "external_container_id": {
+                  "type": "keyword"
+                },
                 "diagnosis_icd": {
                   "type": "keyword"
                 },
