@@ -1,0 +1,9 @@
+<ivysettings>
+    <settings defaultResolver="central"/>
+
+    <!-- Define a resolver for Maven Central -->
+    <resolvers>
+        <ibiblio name="central" m2compatible="true" />
+    </resolvers>
+    <caches lockStrategy="artifact-lock"/>
+</ivysettings>

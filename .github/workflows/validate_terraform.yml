@@ -1,0 +1,51 @@
+name: Validate/Plan Terraform
+
+on:
+  push:
+    branches: [ feature/**, bugfix/** ]
+
+permissions:
+    contents: read
+    id-token: write
+
+jobs:
+  Terraform-Validate-Plan:
+    name: Terraform Validate/Plan
+    runs-on: ubuntu-latest
+    strategy:
+        fail-fast: false
+        matrix:
+            environment: [qa, prd]
+            account: [kf-strides]
+            region: [us-east-1]
+            include:
+                - account: kf-strides
+                  environment: qa
+                  role: KF_ROLE_QA
+                - account: kf-strides
+                  environment: prd
+                  role: KF_ROLE_PRD
+    env:
+        subfolder: "deployment/terraform"
+        config_folder: "${{ matrix.account }}/${{ matrix.region }}/${{ matrix.environment }}"
+    steps:
+        - uses: actions/checkout@v3
+        - uses: aws-actions/configure-aws-credentials@v2
+          with:
+            role-to-assume: ${{ secrets[matrix.role] }}
+            aws-region: ${{ matrix.region }}
+        - uses: hashicorp/setup-terraform@v2
+          with:
+            terraform_version: "1.5.5"
+        - name: Terraform Init
+          working-directory: ${{ env.subfolder }}
+          id: init
+          run: terraform init -backend=true -backend-config="${{ env.config_folder }}/backend.conf"
+        - name: Validate
+          working-directory: ${{ env.subfolder }}
+          id: validate
+          run: terraform validate -no-color
+        - name: Terraform Plan
+          working-directory: ${{ env.subfolder }}
+          id: plan
+          run: terraform plan -var-file="${{ env.config_folder }}/variables.tfvars"

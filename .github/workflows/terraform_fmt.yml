@@ -1,0 +1,25 @@
+name: Terraform Format
+on:
+  pull_request:
+    branches: [ master ]
+    paths:
+      - 'deployment/**'
+
+jobs:
+
+  Terraform-Fmt:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: hashicorp/setup-terraform@v1.3.2
+      with:
+        terraform_version: 1.5.5
+
+    - name: Terraform fmt
+      id: fmt
+      run: terraform fmt -recursive
+
+    - uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: 🎨 Apply terraform fmt
