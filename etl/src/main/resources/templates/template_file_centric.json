@@ -146,6 +146,9 @@
                 "age_at_biospecimen_collection_years": {
                   "type": "integer"
                 },
+                "age_at_event": {
+                  "type": "keyword"
+                },
                 "biospecimen_facet_ids": {
                   "properties": {
                     "biospecimen_fhir_id_1": {
@@ -258,6 +261,9 @@
                   "type": "keyword"
                 },
                 "source_text_tumor_location": {
+                  "type": "keyword"
+                },
+                "source_text_tumor_descriptor": {
                   "type": "keyword"
                 },
                 "status": {

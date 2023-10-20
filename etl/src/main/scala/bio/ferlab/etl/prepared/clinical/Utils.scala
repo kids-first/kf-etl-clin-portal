@@ -313,12 +313,16 @@ object Utils {
           "diagnosis_icd",
           "source_text",
           "source_text_tumor_location",
-          "study_id"
+          "study_id",
+          "source_text_tumor_descriptor",
+          "age_at_event"
         )
       df.join(
         histToDiseases,
-        df("fhir_id") === histToDiseases("specimen_id")
-          and df("study_id") === histToDiseases("study_id"), "left_outer")
+        df(
+          "fhir_id") === histToDiseases("specimen_id") and df("study_id") === histToDiseases("study_id"),
+          "left_outer"
+        )
         .drop(histToDiseases("study_id"))
         .drop(histToDiseases("specimen_id"))
     }

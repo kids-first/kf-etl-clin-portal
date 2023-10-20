@@ -149,7 +149,10 @@
                 "age_at_biospecimen_collection_years": {
                   "type": "integer"
                 },
-                "anatomy_site": {
+                "age_at_event": {
+                  "type": "keyword"
+                },
+                "collection_anatomy_site": {
                   "type": "keyword"
                 },
                 "biospecimen_facet_ids": {
@@ -220,13 +223,13 @@
                 "laboratory_procedure": {
                   "type": "keyword"
                 },
-                "method_of_sample_procurement": {
+                "collection_method_of_sample_procurement": {
                   "type": "keyword"
                 },
-                "ncit_anatomy_site_id": {
+                "collection_ncit_anatomy_site_id": {
                   "type": "keyword"
                 },
-                "ncit_id_tissue_type": {
+                "collection_ncit_id_tissue_type": {
                   "type": "keyword"
                 },
                 "parent_0": {
@@ -279,6 +282,9 @@
                   "type": "keyword"
                 },
                 "source_text_tumor_location": {
+                  "type": "keyword"
+                },
+                "source_text_tumor_descriptor": {
                   "type": "keyword"
                 },
                 "status": {
