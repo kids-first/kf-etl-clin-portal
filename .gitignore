@@ -87,6 +87,9 @@ fabric.properties
 # https://plugins.jetbrains.com/plugin/12206-codestream
 .idea/codestream.xml
 
+# VSCode stuff
+.vscode
+
 ### Scala ###
 *.class
 *.log
@@ -111,3 +114,9 @@ metastore_db/*
 .DS_store
 
 bin/spark_ivy
+
+*.zip
+**/.terraform
+*.terraform
+**/.terraform.lock.hcl
+**/__pycache__

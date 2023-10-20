@@ -1,0 +1,130 @@
+{
+  "StartAt": "Initialize Portal ETL",
+  "TimeoutSeconds": 28800,
+  "States": {
+    "Initialize Portal ETL": {
+      "Type": "Task",
+      "Resource": "${portal_etl_initialize_emr_arn}",
+      "Parameters": {
+        "input.$": "$",
+        "environment": "${environment}",
+        "account": "${account}",
+        "emrEc2Subnet": "${portal_emr_ec2_subnet_id}",
+        "etlPortalBucket": "${portal_etl_bucket}",
+        "emrInstanceProfile": "${emr_instance_profile}",
+        "emrServiceRole": "${emr_service_role}",
+        "esEndpoint":     "${elastic_search_endpoint}",
+        "genomicIndexEtl": ${run_genomic_index_etl}
+      },
+      "Next": "Wait For EMR Cluster to Spin Up",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "Notify ETL Failed"
+        }
+      ]
+    },
+    "Wait For EMR Cluster to Spin Up" : {
+      "Type": "Wait",
+      "Seconds" : 240,
+      "Next": "Submit ETL Step"
+    },
+    "Submit ETL Step" : {
+      "Type": "Task",
+      "Resource": "${portal_etl_add_emr_step_arn}",
+      "Next" : "ETL Step Monitor Wait",
+       "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "Notify ETL Failed"
+        }
+      ]
+    },
+    "ETL Step Monitor Wait" : {
+      "Type": "Wait",
+      "Seconds": 60,
+      "Next" : "Monitor Portal ETL"
+    },
+    "Monitor Portal ETL": {
+      "Type": "Task",
+      "Resource": "${portal_etl_monitor_emr_arn}",
+      "Next": "Monitor Portal ETL Choice",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "Notify ETL Failed"
+        }
+      ]
+    },
+    "Monitor Portal ETL Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.etlStatus",
+          "StringEquals" : "COMPLETED",
+          "Next": "Notify ETL Success"
+        },
+        {
+          "Variable": "$.etlStatus",
+          "StringEquals" : "SUBMIT_STEP",
+          "Next": "Submit ETL Step"
+        },
+        {
+          "Variable": "$.etlStatus",
+          "StringEquals" : "FAILED",
+          "Next": "Notify ETL Failed"
+        }
+      ],
+      "Default": "ETL Step Monitor Wait"
+    },
+    "Notify ETL Failed": {
+      "Type": "Task",
+      "Resource": "${portal_etl_notify_emr_status_arn}",
+      "Next": "Terminate EMR Cluster"
+    },
+    "Notify ETL Success": {
+      "Type": "Task",
+      "Resource": "${portal_etl_notify_emr_status_arn}",
+%{ if run_genomic_index_etl == true }
+      "Next": "Terminate EMR Cluster"
+    },
+%{ endif }
+%{ if run_genomic_index_etl == false }
+       "Next": "Is Genomic ETL"
+    },
+   "Is Genomic ETL": {
+     "Type": "Choice",
+     "Choices": [
+       {
+         "Variable": "$.input.runGenomicEtl",
+         "BooleanEquals": true,
+         "Next": "Start Genomic Index ETL"
+       }
+     ],
+     "Default": "Terminate EMR Cluster"
+   },
+   "Start Genomic Index ETL": {
+     "Type": "Task",
+     "Resource": "${start_genomic_index_step_fn_lambda_arn}",
+     "Next": "Terminate EMR Cluster"
+   },
+%{ endif }
+    "Terminate EMR Cluster": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::elasticmapreduce:terminateCluster",
+      "Parameters": {
+        "ClusterId.$": "$.portalEtlClusterId"
+      },
+      "End": true
+    }
+  }
+}
