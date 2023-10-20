@@ -18,8 +18,20 @@ object SpecimensTransformations {
 
   private def addParentsToSpecimen(specimen: DataFrame): DataFrame = {
     val parentRange = 1 to 10
-    val samplesWithParent = parentRange.foldLeft(specimen) { case (s, i) =>
-        val joined = specimen.select(struct(col("fhir_id"), col("sample_id"), col("external_sample_id"), col("parent_id"), col("sample_type"), lit(i) as "level") as s"parent_$i")
+    parentRange.foldLeft(specimen) { case (s, i) =>
+        val joined = specimen
+          .select(
+            struct(col("fhir_id"),
+              col("sample_id"),
+              col("external_sample_id"),
+              col("parent_id"),
+              col("sample_type"),
+              col("collection.method.text") as "method",
+              col("collection.bodySite.text") as "bodySite",
+              col("collection.bodySite.coding") as "bodySiteCoding",
+              lit(i) as "level"
+            ) as s"parent_$i"
+          )
         s.join(joined, s(s"parent_${i - 1}.parent_id") === joined(s"parent_$i.fhir_id"), "left")
       }
       .withColumn("parent_sample_type", col("parent_1.sample_type"))
@@ -31,7 +43,9 @@ object SpecimensTransformations {
       .withColumn("collection_sample_type", col("collection_sample.sample_type"))
       .withColumn("collection_fhir_id", col("collection_sample.fhir_id"))
       .withColumn("external_collection_sample_id", col("collection_sample.external_sample_id"))
-    samplesWithParent
+      .withColumn("collection_method_of_sample_procurement", col("collection_sample.method"))
+      .withColumn("collection_anatomy_site", col("collection_sample.bodySite"))
+      .withColumn("collection_ncit_anatomy_site_id", extractNcitAnatomySiteId(col("collection_sample.bodySiteCoding")))
       .where(col("collection_fhir_id") =!= col("fhir_id"))
       .drop(parentRange.map(p => s"parent_$p"): _*).select(struct(col("*")) as "specimen")
   }
@@ -57,9 +71,6 @@ object SpecimensTransformations {
         .withColumn("parent_id", extractReferenceId(col("parent.reference")))
         .withColumn("parent_0", struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(0) as "level"))
         .withColumn("external_sample_id", extractSecondaryIdentifier(col("identifier"), "/specimen"))
-        .withColumn("method_of_sample_procurement", col("collection.method.text"))
-        .withColumn("ncit_anatomy_site_id", extractNcitAnatomySiteId(col("collection.bodySite.coding")))
-        .withColumn("anatomy_site", col("collection.bodySite.text"))
         .withColumn("tissue_type_source_text", col("type")("text"))
         .withColumn("ncit_id_tissue_type", extractNcitAnatomySiteId(col("type")("coding")))
         .withColumn("consent_type", extractConsentType("consent_type"))

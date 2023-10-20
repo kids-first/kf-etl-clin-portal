@@ -98,7 +98,9 @@ object Transformations {
       .withColumn("condition_id", explode(col("focus.reference")))
       .withColumn("condition_id", extractReferenceId(col("condition_id")))
       .withColumn("specimen_id", extractReferenceId(col("specimen.reference")))
-      .withColumn("patient_id", extractReferenceId(col("subject.reference")))),
+      .withColumn("patient_id", extractReferenceId(col("subject.reference")))
+      .withColumn("source_text_tumor_descriptor", col("valueCodeableConcept")("text"))
+    ),
     Drop("specimen", "subject", "focus")
   )
 
