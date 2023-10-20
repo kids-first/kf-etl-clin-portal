@@ -40,6 +40,10 @@
             }
           }
         },
+        "biospecimen_id": {
+          "type": "keyword",
+          "normalizer": "custom_normalizer"
+        },
         "biospecimen_storage": {
           "type": "keyword"
         },

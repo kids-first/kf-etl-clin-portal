@@ -4,7 +4,7 @@ import bio.ferlab.datalake.spark3.transformation.{Custom, Drop, Transformation}
 import bio.ferlab.etl.normalized.clinical.Utils._
 import bio.ferlab.etl.normalized.clinical.clinical._
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{Column, DataFrame}
+import org.apache.spark.sql.{Column, DataFrame, functions}
 
 object SpecimensTransformations {
 
@@ -64,6 +64,8 @@ object SpecimensTransformations {
         .withColumn("ncit_id_tissue_type", extractNcitAnatomySiteId(col("type")("coding")))
         .withColumn("consent_type", extractConsentType("consent_type"))
         .withColumn("dbgap_consent_code", extractConsentType("dbgap_consent_code"))
+        .withColumn("biospecimen_id", functions.concat(coalesce(col("container_id"), lit("")), lit("__"), col("sample_id")))
+
 
       val grouped = addParentsToSpecimen(specimen)
         .groupBy("specimen.fhir_id", "specimen.container_id")
