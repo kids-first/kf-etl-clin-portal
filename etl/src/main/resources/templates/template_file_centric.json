@@ -202,6 +202,9 @@
                 "ncit_code": {
                   "type": "keyword"
                 },
+                "external_collection_sample_id": {
+                  "type": "keyword"
+                },
                 "external_sample_id": {
                   "type": "keyword"
                 },
@@ -759,6 +762,15 @@
               "type": "keyword"
             },
             "website": {
+              "type": "keyword"
+            },
+            "biobank_contact": {
+              "type": "keyword"
+            },
+            "biobank_request_link": {
+              "type": "keyword"
+            },
+            "note": {
               "type": "keyword"
             }
           }
