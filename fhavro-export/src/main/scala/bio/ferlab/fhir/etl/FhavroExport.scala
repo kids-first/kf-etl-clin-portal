@@ -31,7 +31,7 @@ object FhavroExport extends App {
   val studyIds = args(positions("studyIds"))
   val project = args(positions("project"))
 
-  private val studyList = studyIds.split(",").toList
+  private val studyList = studyIds.split(",").toList.distinct
 
   studyList.foreach(studyId => {
     withSystemExit {
