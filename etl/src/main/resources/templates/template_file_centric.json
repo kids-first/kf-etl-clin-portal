@@ -147,7 +147,7 @@
                   "type": "integer"
                 },
                 "age_at_event": {
-                  "type": "keyword"
+                  "type": "object"
                 },
                 "biospecimen_facet_ids": {
                   "properties": {
