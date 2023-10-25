@@ -280,6 +280,9 @@
         "collection_method_of_sample_procurement": {
           "type": "keyword"
         },
+        "collection_ncit_anatomy_site_id": {
+          "type": "keyword"
+        },
         "nb_files": {
           "type": "integer"
         },

@@ -214,6 +214,9 @@
                 "laboratory_procedure": {
                   "type": "keyword"
                 },
+                "collection_ncit_anatomy_site_id": {
+                  "type": "keyword"
+                },
                 "parent_0": {
                   "properties": {
                     "fhir_id": {
