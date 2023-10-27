@@ -17,10 +17,19 @@ case class ParticipantCentric(rc: RuntimeETLContext, studyIds: List[String]) ext
   val normalized_specimen: DatasetConf = conf.getDataset("normalized_specimen")
   val normalized_sequencing_experiment: DatasetConf = conf.getDataset("normalized_sequencing_experiment")
   val normalized_sequencing_experiment_genomic_file: DatasetConf = conf.getDataset("normalized_sequencing_experiment_genomic_file")
+  private val enriched_histology_disease: DatasetConf = conf.getDataset("enriched_histology_disease")
+
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now()): Map[String, DataFrame] = {
-    Seq(simple_participant, normalized_drs_document_reference, normalized_specimen, normalized_sequencing_experiment, normalized_sequencing_experiment_genomic_file)
+    Seq(
+      simple_participant,
+      normalized_drs_document_reference,
+      normalized_specimen,
+      normalized_sequencing_experiment,
+      normalized_sequencing_experiment_genomic_file,
+      enriched_histology_disease
+    )
       .map(ds => ds.id -> ds.read
         .where(col("study_id").isin(studyIds: _*))
       ).toMap
@@ -37,7 +46,8 @@ case class ParticipantCentric(rc: RuntimeETLContext, studyIds: List[String]) ext
         .withColumn("study_external_id", col("study")("external_id"))
         .addParticipantFilesWithBiospecimen(
           filesWithSeqExp,
-          data(normalized_specimen.id)
+          data(normalized_specimen.id),
+          data(enriched_histology_disease.id)
         )
 
     transformedParticipant

@@ -1,6 +1,7 @@
 package bio.ferlab.etl.prepared.clinical
 
 import bio.ferlab.datalake.testutils.WithSparkSession
+import bio.ferlab.etl.testmodels.enriched.ENRICHED_HISTOLOGY_DISEASE
 import bio.ferlab.etl.testmodels.normalized._
 import bio.ferlab.etl.testmodels.prepared._
 import bio.ferlab.etl.testutils.WithTestSimpleConfiguration
@@ -41,7 +42,8 @@ class FileCentricSpec extends AnyFlatSpec with Matchers with WithSparkSession wi
       ).toDF(),
       "normalized_task" -> Seq(NORMALIZED_TASK(`fhir_id` = "1", `document_reference_fhir_ids` = Seq("11", "12")), NORMALIZED_TASK(`fhir_id` = "2", `document_reference_fhir_ids` = Seq("21"))).toDF(),
       "normalized_sequencing_experiment" -> Seq(NORMALIZED_SEQUENCING_EXPERIMENT()).toDF(),
-      "normalized_sequencing_experiment_genomic_file" -> Seq(NORMALIZED_SEQUENCING_EXPERIMENT_GENOMIC_FILE()).toDF()
+      "normalized_sequencing_experiment_genomic_file" -> Seq(NORMALIZED_SEQUENCING_EXPERIMENT_GENOMIC_FILE()).toDF(),
+      "enriched_histology_disease" -> Seq(ENRICHED_HISTOLOGY_DISEASE(`specimen_id` = "222")).toDF()
     )
 
     val output = FileCentric(defaultRuntime, List("SD_Z6MWD3H0")).transform(data)
@@ -95,8 +97,13 @@ class FileCentricSpec extends AnyFlatSpec with Matchers with WithSparkSession wi
           participant_facet_ids = PARTICIPANT_FACET_IDS(participant_fhir_id_1 = "2", participant_fhir_id_2 = "2"),
           `biospecimens` = Set(PREPARED_BIOSPECIMEN_FOR_FILE(
             `fhir_id` = "222",
-            biospecimen_facet_ids = BIOSPECIMEN_FACET_IDS(biospecimen_fhir_id_1 = "222", biospecimen_fhir_id_2 = "222"),
+            `biospecimen_facet_ids` = BIOSPECIMEN_FACET_IDS(biospecimen_fhir_id_1 = "222", biospecimen_fhir_id_2 = "222"),
             `participant_fhir_id` = "2",
+            `diagnosis_mondo` = Some("MONDO:0005072"),
+            `diagnosis_ncit` = Some("NCIT:0005072"),
+            `diagnosis_icd` = Seq.empty,
+            `source_text` = Some("Neuroblastoma"),
+            `source_text_tumor_location` = Seq("Reported Unknown"),
           ))
         ))
       )
@@ -138,6 +145,11 @@ class FileCentricSpec extends AnyFlatSpec with Matchers with WithSparkSession wi
               `fhir_id` = "222",
               biospecimen_facet_ids = BIOSPECIMEN_FACET_IDS(biospecimen_fhir_id_1 = "222", biospecimen_fhir_id_2 = "222"),
               `participant_fhir_id` = "2",
+              `diagnosis_mondo` = Some("MONDO:0005072"),
+              `diagnosis_ncit` = Some("NCIT:0005072"),
+              `diagnosis_icd` = Seq.empty,
+              `source_text` = Some("Neuroblastoma"),
+              `source_text_tumor_location` = Seq("Reported Unknown"),
             ))
           )
         )
@@ -179,6 +191,11 @@ class FileCentricSpec extends AnyFlatSpec with Matchers with WithSparkSession wi
               `fhir_id` = "222",
               biospecimen_facet_ids = BIOSPECIMEN_FACET_IDS(biospecimen_fhir_id_1 = "222", biospecimen_fhir_id_2 = "222"),
               `participant_fhir_id` = "2",
+              `diagnosis_mondo` = Some("MONDO:0005072"),
+              `diagnosis_ncit` = Some("NCIT:0005072"),
+              `diagnosis_icd` = Seq.empty,
+              `source_text` = Some("Neuroblastoma"),
+              `source_text_tumor_location` = Seq("Reported Unknown"),
 
             ))
           ))
@@ -200,7 +217,8 @@ class FileCentricSpec extends AnyFlatSpec with Matchers with WithSparkSession wi
       "simple_participant" -> Seq(PREPARED_SIMPLE_PARTICIPANT(`fhir_id` = "1")).toDF(),
       "normalized_task" -> Seq(NORMALIZED_TASK(`fhir_id` = "1")).toDF(),
       "normalized_sequencing_experiment" -> Seq(NORMALIZED_SEQUENCING_EXPERIMENT()).toDF(),
-      "normalized_sequencing_experiment_genomic_file" -> Seq(NORMALIZED_SEQUENCING_EXPERIMENT_GENOMIC_FILE()).toDF()
+      "normalized_sequencing_experiment_genomic_file" -> Seq(NORMALIZED_SEQUENCING_EXPERIMENT_GENOMIC_FILE()).toDF(),
+      "enriched_histology_disease" -> Seq(ENRICHED_HISTOLOGY_DISEASE(`specimen_id` = "x")).toDF()
     )
 
     val output = FileCentric(defaultRuntime, List("SD_Z6MWD3H0")).transform(data)

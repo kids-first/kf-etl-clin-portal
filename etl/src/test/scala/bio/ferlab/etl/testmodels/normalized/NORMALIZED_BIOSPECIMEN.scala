@@ -12,6 +12,5 @@ case class NORMALIZED_BIOSPECIMEN(
                                    `sample_id`: String = "BS_F6NDMZCN",
                                    consent_type: Option[String] = None,
                                    `study_id`: String = "SD_Z6MWD3H0",
-                                   `release_id`: String = "re_000001",
-                                   `source_text_tumor_descriptor`: Option[String] = None
+                                   `release_id`: String = "re_000001"
                       )

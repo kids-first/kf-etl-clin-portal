@@ -661,8 +661,9 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithTestSimpleConfigurati
       PREPARED_DOCUMENTREFERENCE(`participant_fhir_id` = "P_NOT_THERE", `fhir_id` = "F7", `specimen_fhir_ids` = Seq.empty),
     ).toDF()
 
-    val output = inputParticipant.addParticipantFilesWithBiospecimen(inputDocumentReference, inputBiospecimen)
+    val enrichedHistology =  Seq(ENRICHED_HISTOLOGY_DISEASE(`specimen_id` = "B11")).toDF()
 
+    val output = inputParticipant.addParticipantFilesWithBiospecimen(inputDocumentReference, inputBiospecimen, enrichedHistology)
     val participantWithFileAndSpecimen = output.select("fhir_id", "files").as[(String, Seq[FILE_WITH_BIOSPECIMEN])].collect()
 
     // Assertions
@@ -694,6 +695,10 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithTestSimpleConfigurati
 
     val participantP1FileF1 = participant1._2.filter(_.`fhir_id`.contains("F1")).head
     participantP1FileF1.`biospecimens`.map(_.`fhir_id`) should contain theSameElementsAs Seq("B11", "B12")
+    participantP1FileF1.`biospecimens`.map(_.`diagnosis_mondo`) should contain(Some("MONDO:0005072"))
+    participantP1FileF1.`biospecimens`.map(_.`diagnosis_ncit`) should contain(Some("NCIT:0005072"))
+    participantP1FileF1.`biospecimens`.map(_.`source_text`) should contain(Some("Neuroblastoma"))
+    participantP1FileF1.`biospecimens`.map(_.`source_text_tumor_location`) should contain(Seq("Reported Unknown"))
 
     val participantP1FileF2 = participant1._2.filter(_.`fhir_id`.contains("F2")).head
     participantP1FileF2.`biospecimens`.map(_.`fhir_id`) should contain theSameElementsAs Seq("B11", "B13")
@@ -729,7 +734,10 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithTestSimpleConfigurati
       PREPARED_DOCUMENTREFERENCE(`participant_fhir_id` = "P1", `fhir_id` = "F1", `specimen_fhir_ids` = Seq("B11")),
     ).toDF()
 
-    val output = inputParticipant.addParticipantFilesWithBiospecimen(inputDocumentReference, inputBiospecimen)
+    val enrichedHistology =  Seq(ENRICHED_HISTOLOGY_DISEASE(`specimen_id` = "111")).toDF()
+
+
+    val output = inputParticipant.addParticipantFilesWithBiospecimen(inputDocumentReference, inputBiospecimen, enrichedHistology)
 
     //B11 and B12 should be attached to P1
     val participant1AndSpecimen = output.select("fhir_id", "files.biospecimens").filter(col("fhir_id") === "P1").as[(String, Seq[Seq[PREPARED_BIOSPECIMEN_FOR_FILE]])].collect()

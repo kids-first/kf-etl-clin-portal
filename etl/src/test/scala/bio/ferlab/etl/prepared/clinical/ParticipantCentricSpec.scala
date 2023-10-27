@@ -1,5 +1,6 @@
 package bio.ferlab.etl.prepared.clinical
 
+import bio.ferlab.etl.testmodels.enriched.ENRICHED_HISTOLOGY_DISEASE
 import bio.ferlab.etl.testmodels.normalized._
 import bio.ferlab.etl.testmodels.prepared._
 import bio.ferlab.etl.testutils.WithTestSimpleConfiguration
@@ -36,7 +37,8 @@ class ParticipantCentricSpec extends AnyFlatSpec with Matchers with WithTestSimp
       ).toDF(),
       "es_index_study_centric" -> Seq(PREPARED_STUDY()).toDF(),
       "normalized_sequencing_experiment" -> Seq(NORMALIZED_SEQUENCING_EXPERIMENT()).toDF(),
-      "normalized_sequencing_experiment_genomic_file" -> Seq(NORMALIZED_SEQUENCING_EXPERIMENT_GENOMIC_FILE()).toDF()
+      "normalized_sequencing_experiment_genomic_file" -> Seq(NORMALIZED_SEQUENCING_EXPERIMENT_GENOMIC_FILE()).toDF(),
+      "enriched_histology_disease" -> Seq(ENRICHED_HISTOLOGY_DISEASE(`specimen_id` = "x")).toDF()
     )
 
     val output = ParticipantCentric(defaultRuntime, List("SD_Z6MWD3H0")).transform(data)
@@ -44,6 +46,7 @@ class ParticipantCentricSpec extends AnyFlatSpec with Matchers with WithTestSimp
     output.keys should contain("es_index_participant_centric")
 
     val participant_centric = output("es_index_participant_centric").as[PREPARED_PARTICIPANT].collect()
+
     participant_centric.find(_.`fhir_id` == "2") shouldBe Some(
       PREPARED_PARTICIPANT(
         `fhir_id` = "2",
