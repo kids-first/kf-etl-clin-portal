@@ -155,8 +155,9 @@ object Utils {
 
     }
 
-    def addParticipantFilesWithBiospecimen(filesDf: DataFrame, biospecimensDf: DataFrame): DataFrame = {
-      val biospecimenDfReformat = reformatBiospecimen(biospecimensDf)
+    def addParticipantFilesWithBiospecimen(filesDf: DataFrame, biospecimensDf: DataFrame, histToDiseasesDf: DataFrame): DataFrame = {
+      val specimenEnrichedWithHist = biospecimensDf.addHistologicalInformation(histToDiseasesDf)
+      val biospecimenDfReformat = reformatBiospecimen(specimenEnrichedWithHist)
 
       val filesWithFacetIds = reformatFileFacetIds(filesDf)
 
@@ -197,12 +198,13 @@ object Utils {
         .drop("participant_fhir_id")
     }
 
-    def addFileParticipantsWithBiospecimen(participantDf: DataFrame, biospecimensDf: DataFrame): DataFrame = {
+    def addFileParticipantsWithBiospecimen(participantDf: DataFrame, biospecimensDf: DataFrame, histToDiseasesDf: DataFrame): DataFrame = {
 
       val fileWithSeqExp = reformatFileFacetIds(df)
         .withColumn("specimen_fhir_id", explode_outer(col("specimen_fhir_ids")))
 
-      val biospecimensDfReformat = reformatBiospecimen(biospecimensDf)
+      val specimenEnrichedWithHist = biospecimensDf.addHistologicalInformation(histToDiseasesDf)
+      val biospecimensDfReformat = reformatBiospecimen(specimenEnrichedWithHist)
 
       val fileWithBiospecimen = fileWithSeqExp
         .select(struct(col("*")) as "file")

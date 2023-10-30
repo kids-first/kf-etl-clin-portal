@@ -18,10 +18,20 @@ case class FileCentric(rc: RuntimeETLContext, studyIds: List[String]) extends Si
   val normalized_sequencing_experiment_genomic_file: DatasetConf = conf.getDataset("normalized_sequencing_experiment_genomic_file")
   val simple_participant: DatasetConf = conf.getDataset("simple_participant")
   val es_index_study_centric: DatasetConf = conf.getDataset("es_index_study_centric")
+  val enriched_histology_disease: DatasetConf = conf.getDataset("enriched_histology_disease")
+
 
   override def extract(lastRunDateTime: LocalDateTime = minDateTime,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now()): Map[String, DataFrame] = {
-    Seq(normalized_drs_document_reference, normalized_specimen, simple_participant, normalized_sequencing_experiment_genomic_file, normalized_sequencing_experiment, es_index_study_centric)
+    Seq(
+      normalized_drs_document_reference,
+      normalized_specimen,
+      simple_participant,
+      normalized_sequencing_experiment_genomic_file,
+      normalized_sequencing_experiment,
+      es_index_study_centric,
+      enriched_histology_disease,
+    )
       .map(ds => ds.id -> ds.read
         .where(col("study_id").isin(studyIds: _*))
       ).toMap
@@ -35,7 +45,7 @@ case class FileCentric(rc: RuntimeETLContext, studyIds: List[String]) extends Si
     val transformedFile =
       fileDF
         .addStudy(data(es_index_study_centric.id))
-        .addFileParticipantsWithBiospecimen(data(simple_participant.id), data(normalized_specimen.id))
+        .addFileParticipantsWithBiospecimen(data(simple_participant.id), data(normalized_specimen.id),  data(enriched_histology_disease.id))
         .withColumn("file_facet_ids", struct(col("fhir_id") as "file_fhir_id_1", col("fhir_id") as "file_fhir_id_2"))
         .addSequencingExperiment(data(normalized_sequencing_experiment.id), data(normalized_sequencing_experiment_genomic_file.id))
 
