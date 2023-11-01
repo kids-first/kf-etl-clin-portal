@@ -3,7 +3,7 @@ from portal_emr_step_builder import EmrStepBuilder, EmrStepArgumentBuilder
 
 DEFAULT_GENOMIC_INDEX_PORTAL_ETL_STEPS = ['variant_centric', 'variant_suggestions', 'gene_centric', 'gene_suggestions']
 
-CHROMOSOMES = ['1', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '2', '20', '21', '22', '2', '3', '5',
+CHROMOSOMES = ['1', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '2', '20', '21', '22', '3', '4', '5',
                '6', '7', '8', '9', 'X', 'Y']
 
 
