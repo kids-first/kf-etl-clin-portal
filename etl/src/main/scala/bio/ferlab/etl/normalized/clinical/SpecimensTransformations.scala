@@ -64,13 +64,19 @@ object SpecimensTransformations {
         .withColumn("container", explode_outer(col("container")))
         .withColumn("container_id", extractIdentifierForUse(col("container")("identifier"), "official"))
         .withColumn("external_container_id", extractIdentifierForUse(col("container")("identifier"), "secondary"))
-        .withColumn("volume", col("container")("specimenQuantity")("value"))
-        .withColumn("volume_unit", col("container")("specimenQuantity")("unit"))
+        .withColumn("volume_kf", col("collection")("quantity")("value"))
+        .withColumn("volume_unit_kf", col("collection")("quantity")("unit"))
+        .withColumn("volume_include", col("container")("specimenQuantity")("value"))
+        .withColumn("volume_unit_include", col("container")("specimenQuantity")("unit"))
+        .withColumn("volume", coalesce(col("volume_kf"), col("volume_include")))
+        .withColumn("volume_unit", coalesce(col("volume_unit_kf"), col("volume_unit_include")))
         .withColumn("biospecimen_storage", col("container")("description"))
         .withColumn("parent", col("parent")(0))
         .withColumn("parent_id", extractReferenceId(col("parent.reference")))
         .withColumn("parent_0", struct(col("fhir_id"), col("sample_id"), col("parent_id"), col("sample_type"), lit(0) as "level"))
-        .withColumn("external_sample_id", extractSecondaryIdentifier(col("identifier"), "/specimen"))
+        .withColumn("external_sample_id_kf", extractSecondaryIdentifier(col("identifier"), "/biospecimens"))
+        .withColumn("external_sample_id_include", extractSecondaryIdentifier(col("identifier"), "/specimen"))
+        .withColumn("external_sample_id", coalesce(col("external_sample_id_kf"), col("external_sample_id_include")))
         .withColumn("tissue_type_source_text", col("type")("text"))
         .withColumn("ncit_id_tissue_type", extractNcitAnatomySiteId(col("type")("coding")))
         .withColumn("consent_type", extractConsentType("consent_type"))
@@ -94,7 +100,13 @@ object SpecimensTransformations {
       "container",
       "collection_sample",
       "meta",
-      "processing"
+      "processing",
+      "external_sample_id_kf",
+      "external_sample_id_include",
+      "volume_kf",
+      "volume_unit_kf",
+      "volume_include",
+      "volume_unit_include"
     )
   )
 
