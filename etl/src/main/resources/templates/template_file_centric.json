@@ -147,7 +147,14 @@
                   "type": "integer"
                 },
                 "age_at_event": {
-                  "type": "object"
+                  "properties": {
+                    "units": {
+                      "type": "keyword"
+                    },
+                    "value": {
+                      "type": "long"
+                    }
+                  }
                 },
                 "biospecimen_facet_ids": {
                   "properties": {
@@ -302,7 +309,14 @@
                   "type": "keyword"
                 },
                 "age_at_event": {
-                  "type": "object"
+                  "properties": {
+                    "units": {
+                      "type": "keyword"
+                    },
+                    "value": {
+                      "type": "long"
+                    }
+                  }
                 },
                 "age_at_event_days": {
                   "type": "long"
