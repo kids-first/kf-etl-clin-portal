@@ -150,7 +150,14 @@
                   "type": "integer"
                 },
                 "age_at_event": {
-                  "type": "object"
+                  "properties": {
+                    "units": {
+                      "type": "keyword"
+                    },
+                    "value": {
+                      "type": "long"
+                    }
+                  }
                 },
                 "collection_anatomy_site": {
                   "type": "keyword"
