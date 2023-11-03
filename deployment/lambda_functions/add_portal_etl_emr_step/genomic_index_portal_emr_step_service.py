@@ -24,7 +24,7 @@ class GenomicIndexPortalEtlEmrStepService(PortalEtlEmrStepService):
         if not etl_step_name:
             return []
 
-        if etl_step_name in ['variant-centric', 'variant-suggestions']:
+        if etl_step_name in ['variant_centric', 'variant_suggestions']:
             next_steps_to_execute = generate_variant_etl_steps(etl_step_name, user_custom_chromosomes)
         else:
             next_steps_to_execute = [(etl_step_name, 'all')]
@@ -77,5 +77,5 @@ def generate_variant_etl_steps(etl_step_name: str, custom_chromosomes: list) -> 
 
 
 if __name__ == '__main__':
-    test_custom_chromosomes = ['x', '1', '10']
+    test_custom_chromosomes = []
     print(generate_variant_etl_steps(DEFAULT_GENOMIC_INDEX_PORTAL_ETL_STEPS[0], test_custom_chromosomes))
