@@ -224,6 +224,9 @@
                 "collection_ncit_anatomy_site_id": {
                   "type": "keyword"
                 },
+                "ncit_id_tissue_type": {
+                  "type": "keyword"
+                },
                 "parent_0": {
                   "properties": {
                     "fhir_id": {

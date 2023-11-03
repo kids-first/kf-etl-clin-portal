@@ -236,6 +236,9 @@
                 "collection_ncit_anatomy_site_id": {
                   "type": "keyword"
                 },
+                "ncit_id_tissue_type": {
+                  "type": "keyword"
+                },
                 "collection_ncit_id_tissue_type": {
                   "type": "keyword"
                 },
