@@ -45,7 +45,7 @@ class GenomicIndexPortalEtlEmrStepService(PortalEtlEmrStepService):
         sample = user_input.get('sample', 'all')
 
         # Force Sample to all when step is gene*
-        if portal_etl_step_name in ['gene-centric', 'gene-suggestions']:
+        if portal_etl_step_name in ['gene_centric', 'gene_suggestions']:
             sample = 'all'
 
         bucket = self.etl_args['etlPortalBucket']
