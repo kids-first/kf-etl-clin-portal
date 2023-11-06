@@ -18,8 +18,7 @@ class PortalETLMonitor:
         self.emr_client = boto3.client('emr')
 
     def get_etl_status(self):
-        self.step_statuses = [self.get_portal_etl_emr_step_status(step_id=step_id) for step_id in
-                              self.step_ids]
+        self.step_statuses = self.get_portal_etl_emr_step_statuses(self.step_ids)
         emr_cluster_status = self.get_emr_cluster_status()
 
         etl_steps_to_execute = self.etl_args['input']['etlStepsToExecute']
@@ -46,6 +45,38 @@ class PortalETLMonitor:
         except botocore.exceptions.ClientError as e:
             print(f"Error Getting EMR Cluster Status: {e}")
             return "FAILED"
+
+    def get_portal_etl_step_statuses_raw(self, step_ids: list):
+        try:
+            return self.emr_client.list_steps(
+                ClusterId=self.cluster_id,
+                StepIds=step_ids,
+            )
+
+        except botocore.exceptions.ClientError as e:
+            print(f"Error Getting EMR Cluster Status: {e}")
+            return ["FAILED"]
+
+    def get_portal_etl_step_statues_in_chunks(self, step_ids, chunk_size=10):
+        results = []
+        for i in range(0, len(step_ids), chunk_size):
+            ids_to_query = step_ids[i:i + chunk_size]
+            result = self.get_portal_etl_step_statuses_raw(ids_to_query)['Steps']
+            results.extend(result)
+        return results
+
+    def get_portal_etl_emr_step_statuses(self, step_ids: list) -> list:
+
+        response = self.get_portal_etl_step_statues_in_chunks(step_ids, 10)
+
+        # Check if any steps failed
+        failed_steps = [step_status for step_status in response if step_status['Status']['State'] == 'FAILED']
+        if failed_steps:
+            for failed_step in failed_steps:
+                print(f" Step ID: {failed_step['Id']} Failed")
+                print(failed_step['FailureDetails'])
+
+        return [step_status['Status']['State'] for step_status in response]
 
     def get_portal_etl_emr_step_status(self, step_id: str) -> str:
         """
@@ -131,5 +162,3 @@ if __name__ == '__main__':
         'clusterId': 'j-LX1W8APSM2XB',
         'currentEtlVariantStepId': 's-05048533OBXXV7C9Z5KR',
     }
-
-    check_portal_etl_emr_step_status(test_args, None)
