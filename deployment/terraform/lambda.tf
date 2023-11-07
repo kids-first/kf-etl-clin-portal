@@ -29,6 +29,7 @@ data "aws_iam_policy_document" "emr_role_policy" {
       "elasticmapreduce:TerminateJobFlows",
       "elasticmapreduce:AddJobFlowSteps",
       "elasticmapreduce:DescribeStep",
+      "elasticmapreduce:ListSteps",
     ]
     resources = ["*"]
   }
