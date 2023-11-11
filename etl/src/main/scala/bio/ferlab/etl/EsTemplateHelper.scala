@@ -23,13 +23,13 @@ object EsTemplateHelper extends App {
           .mkString
       )
     )
-  private def updateTemplate(rName: String, mProps: ujson.Value): ujson.Value = {
+  private def updateTemplateMappingsProps(rName: String, mProps: ujson.Value): ujson.Value = {
     val t = extractTemplate(rName)
     t("template")("mappings")("properties") = mProps
     t
   }
   implicit class Helper(s: String) {
-    def getProps: Value = s.pipe(extractTemplate).pipe(extractTemplateProperties)
+    def getMappingsProps: Value = s.pipe(extractTemplate).pipe(extractTemplateProperties)
   }
 
   val mTemplate = Map(
@@ -39,21 +39,21 @@ object EsTemplateHelper extends App {
     "biospecimen" -> "/templates/template_biospecimen_centric.json"
   )
 
-  val studyBase = mTemplate("study").getProps
+  val studyBase = mTemplate("study").getMappingsProps
   val participantBase = {
-    val props = mTemplate("participant").getProps
+    val props = mTemplate("participant").getMappingsProps
     props.obj.remove("files")
     props.obj.remove("study")
     props
   }
   val fileBase = {
-    val props = mTemplate("file").getProps
+    val props = mTemplate("file").getMappingsProps
     props.obj.remove("participants")
     props.obj.remove("study")
     props
   }
   val biospecimenBase = {
-    val props = mTemplate("biospecimen").getProps
+    val props = mTemplate("biospecimen").getMappingsProps
     props.obj.remove("files")
     props.obj.remove("participant")
     props.obj.remove("study")
@@ -96,16 +96,16 @@ object EsTemplateHelper extends App {
   }
 
   //WIP, TODO: override templates
-  val studyTemplate = updateTemplate(mTemplate("study"), studyCentric)
+  val studyTemplate = updateTemplateMappingsProps(mTemplate("study"), studyCentric)
   print("===== Study Template \n")
   println(ujson.write(studyTemplate, indent = 4))
-  val fileTemplate = updateTemplate(mTemplate("file"), fileCentric)
+  val fileTemplate = updateTemplateMappingsProps(mTemplate("file"), fileCentric)
   print("===== File Template \n")
   println(ujson.write(fileTemplate, indent = 4))
-  val participantTemplate = updateTemplate(mTemplate("participant"), participantCentric)
+  val participantTemplate = updateTemplateMappingsProps(mTemplate("participant"), participantCentric)
   print("===== Participant Template \n")
   println(ujson.write(participantTemplate, indent = 4))
-  val biospecimenTemplate = updateTemplate(mTemplate("biospecimen"), biospecimenCentric)
+  val biospecimenTemplate = updateTemplateMappingsProps(mTemplate("biospecimen"), biospecimenCentric)
   print("===== Biospecimen Template \n")
   println(ujson.write(biospecimenTemplate, indent = 4))
 }
