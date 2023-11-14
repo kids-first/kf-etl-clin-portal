@@ -22,7 +22,6 @@
           "type": "integer"
         },
         "diagnosis": {
-          "type": "nested",
           "properties": {
             "affected_status": {
               "type": "boolean"
@@ -36,43 +35,43 @@
             "diagnosis_icd": {
               "type": "keyword"
             },
-            "icd_code": {
-              "type": "keyword"
-            },
             "diagnosis_id": {
               "type": "keyword"
             },
             "diagnosis_mondo": {
               "type": "keyword"
             },
-            "mondo_code": {
-              "type": "keyword"
-            },
             "diagnosis_ncit": {
-              "type": "keyword"
-            },
-            "ncit_code": {
               "type": "keyword"
             },
             "fhir_id": {
               "type": "keyword"
             },
-            "icd_id_diagnosis": {
+            "icd_code": {
               "type": "keyword"
             },
             "icd_display_term": {
               "type": "keyword"
             },
-            "mondo_id_diagnosis": {
+            "icd_id_diagnosis": {
+              "type": "keyword"
+            },
+            "mondo_code": {
               "type": "keyword"
             },
             "mondo_display_term": {
               "type": "keyword"
             },
-            "ncit_id_diagnosis": {
+            "mondo_id_diagnosis": {
+              "type": "keyword"
+            },
+            "ncit_code": {
               "type": "keyword"
             },
             "ncit_display_term": {
+              "type": "keyword"
+            },
+            "ncit_id_diagnosis": {
               "type": "keyword"
             },
             "source_text": {
@@ -84,7 +83,8 @@
             "uberon_id_tumor_location": {
               "type": "keyword"
             }
-          }
+          },
+          "type": "nested"
         },
         "down_syndrome_diagnosis": {
           "type": "keyword"
@@ -107,15 +107,15 @@
               "type": "keyword"
             },
             "relations_to_proband": {
-              "type": "nested",
               "properties": {
-                "role": {
-                  "type": "keyword"
-                },
                 "participant_id": {
                   "type": "keyword"
+                },
+                "role": {
+                  "type": "keyword"
                 }
-              }
+              },
+              "type": "nested"
             }
           }
         },
@@ -126,7 +126,6 @@
           "type": "keyword"
         },
         "files": {
-          "type": "nested",
           "properties": {
             "access": {
               "type": "keyword"
@@ -138,7 +137,6 @@
               "type": "keyword"
             },
             "biospecimens": {
-              "type": "nested",
               "properties": {
                 "age_at_biospecimen_collection": {
                   "type": "integer"
@@ -159,9 +157,6 @@
                     }
                   }
                 },
-                "collection_anatomy_site": {
-                  "type": "keyword"
-                },
                 "biospecimen_facet_ids": {
                   "properties": {
                     "biospecimen_fhir_id_1": {
@@ -173,13 +168,25 @@
                   }
                 },
                 "biospecimen_id": {
-                  "type": "keyword",
-                  "normalizer": "custom_normalizer"
+                  "normalizer": "custom_normalizer",
+                  "type": "keyword"
                 },
                 "biospecimen_storage": {
                   "type": "keyword"
                 },
+                "collection_anatomy_site": {
+                  "type": "keyword"
+                },
                 "collection_fhir_id": {
+                  "type": "keyword"
+                },
+                "collection_method_of_sample_procurement": {
+                  "type": "keyword"
+                },
+                "collection_ncit_anatomy_site_id": {
+                  "type": "keyword"
+                },
+                "collection_ncit_id_tissue_type": {
                   "type": "keyword"
                 },
                 "collection_sample_id": {
@@ -191,34 +198,28 @@
                 "consent_type": {
                   "type": "keyword"
                 },
-                "dbgap_consent_code": {
-                  "type": "keyword"
-                },
                 "container_id": {
                   "type": "keyword"
                 },
-                "external_container_id": {
+                "dbgap_consent_code": {
                   "type": "keyword"
                 },
                 "diagnosis_icd": {
                   "type": "keyword"
                 },
-                "icd_code": {
-                  "type": "keyword"
-                },
                 "diagnosis_mondo": {
-                  "type": "keyword"
-                },
-                "mondo_code": {
                   "type": "keyword"
                 },
                 "diagnosis_ncit": {
                   "type": "keyword"
                 },
-                "ncit_code": {
+                "external_collection_sample_id": {
                   "type": "keyword"
                 },
-                "external_collection_sample_id": {
+                "external_container_id": {
+                  "type": "keyword"
+                },
+                "external_parent_sample_id": {
                   "type": "keyword"
                 },
                 "external_sample_id": {
@@ -227,19 +228,19 @@
                 "fhir_id": {
                   "type": "keyword"
                 },
+                "icd_code": {
+                  "type": "keyword"
+                },
                 "laboratory_procedure": {
                   "type": "keyword"
                 },
-                "collection_method_of_sample_procurement": {
+                "mondo_code": {
                   "type": "keyword"
                 },
-                "collection_ncit_anatomy_site_id": {
+                "ncit_code": {
                   "type": "keyword"
                 },
                 "ncit_id_tissue_type": {
-                  "type": "keyword"
-                },
-                "collection_ncit_id_tissue_type": {
                   "type": "keyword"
                 },
                 "parent_0": {
@@ -270,9 +271,6 @@
                 "parent_sample_id": {
                   "type": "keyword"
                 },
-                "external_parent_sample_id": {
-                  "type": "keyword"
-                },
                 "parent_sample_type": {
                   "type": "keyword"
                 },
@@ -291,10 +289,10 @@
                 "source_text": {
                   "type": "keyword"
                 },
-                "source_text_tumor_location": {
+                "source_text_tumor_descriptor": {
                   "type": "keyword"
                 },
-                "source_text_tumor_descriptor": {
+                "source_text_tumor_location": {
                   "type": "keyword"
                 },
                 "status": {
@@ -312,7 +310,8 @@
                 "volume_unit": {
                   "type": "keyword"
                 }
-              }
+              },
+              "type": "nested"
             },
             "controlled_access": {
               "type": "keyword"
@@ -415,21 +414,20 @@
               "type": "keyword"
             },
             "sequencing_experiment": {
-              "type": "nested",
               "properties": {
                 "center": {
                   "type": "keyword"
                 },
                 "experiment_date": {
-                  "type": "keyword",
-                  "index": false
+                  "index": false,
+                  "type": "keyword"
                 },
                 "experiment_strategy": {
                   "type": "keyword"
                 },
                 "external_id": {
-                  "type": "keyword",
-                  "index": false
+                  "index": false,
+                  "type": "keyword"
                 },
                 "instrument_model": {
                   "type": "keyword"
@@ -455,7 +453,8 @@
                 "sequencing_experiment_id": {
                   "type": "keyword"
                 }
-              }
+              },
+              "type": "nested"
             },
             "size": {
               "type": "long"
@@ -472,13 +471,13 @@
             "urls": {
               "type": "keyword"
             }
-          }
+          },
+          "type": "nested"
         },
         "is_proband": {
           "type": "boolean"
         },
         "mondo": {
-          "type": "nested",
           "properties": {
             "age_at_event_days": {
               "type": "long"
@@ -495,7 +494,8 @@
             "parents": {
               "type": "keyword"
             }
-          }
+          },
+          "type": "nested"
         },
         "nb_biospecimens": {
           "type": "integer"
@@ -504,7 +504,6 @@
           "type": "integer"
         },
         "non_observed_phenotype": {
-          "type": "nested",
           "properties": {
             "is_leaf": {
               "type": "boolean"
@@ -518,10 +517,10 @@
             "parents": {
               "type": "keyword"
             }
-          }
+          },
+          "type": "nested"
         },
         "observed_phenotype": {
-          "type": "nested",
           "properties": {
             "age_at_event_days": {
               "type": "long"
@@ -538,10 +537,10 @@
             "parents": {
               "type": "keyword"
             }
-          }
+          },
+          "type": "nested"
         },
         "outcomes": {
-          "type": "nested",
           "properties": {
             "age_at_event_days": {
               "properties": {
@@ -571,7 +570,8 @@
             "vital_status": {
               "type": "keyword"
             }
-          }
+          },
+          "type": "nested"
         },
         "participant_facet_ids": {
           "properties": {
@@ -584,11 +584,10 @@
           }
         },
         "participant_id": {
-          "type": "keyword",
-          "normalizer": "custom_normalizer"
+          "normalizer": "custom_normalizer",
+          "type": "keyword"
         },
         "phenotype": {
-          "type": "nested",
           "properties": {
             "age_at_event_days": {
               "type": "long"
@@ -617,7 +616,8 @@
             "source_text": {
               "type": "keyword"
             }
-          }
+          },
+          "type": "nested"
         },
         "race": {
           "type": "keyword"
@@ -631,6 +631,12 @@
         "study": {
           "properties": {
             "attribution": {
+              "type": "keyword"
+            },
+            "biobank_contact": {
+              "type": "keyword"
+            },
+            "biobank_request_link": {
               "type": "keyword"
             },
             "biospecimen_count": {
@@ -649,8 +655,8 @@
               "type": "keyword"
             },
             "external_id": {
-              "type": "keyword",
-              "normalizer": "custom_normalizer"
+              "normalizer": "custom_normalizer",
+              "type": "keyword"
             },
             "family_count": {
               "type": "long"
@@ -663,6 +669,12 @@
             },
             "file_count": {
               "type": "long"
+            },
+            "investigator_id": {
+              "type": "keyword"
+            },
+            "note": {
+              "type": "keyword"
             },
             "participant_count": {
               "type": "long"
@@ -692,18 +704,6 @@
               "type": "keyword"
             },
             "website": {
-              "type": "keyword"
-            },
-            "investigator_id": {
-              "type": "keyword"
-            },
-            "biobank_contact": {
-              "type": "keyword"
-            },
-            "biobank_request_link": {
-              "type": "keyword"
-            },
-            "note": {
               "type": "keyword"
             }
           }
