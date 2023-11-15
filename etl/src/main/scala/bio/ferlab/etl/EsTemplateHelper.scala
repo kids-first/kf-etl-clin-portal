@@ -51,12 +51,12 @@ object EsTemplateHelper extends App {
       props.obj.remove("files")
       props.obj.remove("study")
 
-      props("diagnosis")("properties") = sortByKeyShallowly(props("diagnosis")("properties"))
-      props("mondo")("properties") = sortByKeyShallowly(props("mondo")("properties"))
-      props("non_observed_phenotype")("properties") = sortByKeyShallowly(props("non_observed_phenotype")("properties"))
-      props("observed_phenotype")("properties") = sortByKeyShallowly(props("observed_phenotype")("properties"))
-      props("outcomes")("properties") = sortByKeyShallowly(props("outcomes")("properties"))
-      props("phenotype")("properties") = sortByKeyShallowly(props("phenotype")("properties"))
+      if (props.obj.contains("diagnosis")) props("diagnosis")("properties") = sortByKeyShallowly(props("diagnosis")("properties"))
+      if (props.obj.contains("mondo")) props("mondo")("properties") = sortByKeyShallowly(props("mondo")("properties"))
+      if (props.obj.contains("non_observed_phenotype"))  props("non_observed_phenotype")("properties") = sortByKeyShallowly(props("non_observed_phenotype")("properties"))
+      if (props.obj.contains("observed_phenotype")) props("observed_phenotype")("properties") = sortByKeyShallowly(props("observed_phenotype")("properties"))
+      if (props.obj.contains("outcomes")) props("outcomes")("properties") = sortByKeyShallowly(props("outcomes")("properties"))
+      if (props.obj.contains("phenotype")) props("phenotype")("properties") = sortByKeyShallowly(props("phenotype")("properties"))
 
       sortByKeyShallowly(props)
     }
@@ -66,9 +66,9 @@ object EsTemplateHelper extends App {
       props.obj.remove("participants")
       props.obj.remove("study")
 
-      props("hashes")("properties") = sortByKeyShallowly(props("hashes")("properties"))
-      props("index")("properties") = sortByKeyShallowly(props("index")("properties"))
-      props("sequencing_experiment")("properties") = sortByKeyShallowly(props("sequencing_experiment")("properties"))
+      if (props.obj.contains("hashes")) props("hashes")("properties") = sortByKeyShallowly(props("hashes")("properties"))
+      if (props.obj.contains("index")) props("index")("properties") = sortByKeyShallowly(props("index")("properties"))
+      if (props.obj.contains("sequencing_experiment")) props("sequencing_experiment")("properties") = sortByKeyShallowly(props("sequencing_experiment")("properties"))
 
       sortByKeyShallowly(props)
     }
