@@ -29,6 +29,16 @@
             "affected_status_text": {
               "type": "keyword"
             },
+            "age_at_event": {
+              "properties": {
+                "units": {
+                  "type": "keyword"
+                },
+                "value": {
+                  "type": "long"
+                }
+              }
+            },
             "age_at_event_days": {
               "type": "long"
             },
@@ -126,6 +136,7 @@
           "type": "keyword"
         },
         "files": {
+          "type": "nested",
           "properties": {
             "access": {
               "type": "keyword"
@@ -137,6 +148,7 @@
               "type": "keyword"
             },
             "biospecimens": {
+              "type": "nested",
               "properties": {
                 "age_at_biospecimen_collection": {
                   "type": "integer"
@@ -186,10 +198,8 @@
                 "collection_ncit_anatomy_site_id": {
                   "type": "keyword"
                 },
-                "collection_ncit_id_tissue_type": {
-                  "type": "keyword"
-                },
                 "collection_sample_id": {
+                  "normalizer": "custom_normalizer",
                   "type": "keyword"
                 },
                 "collection_sample_type": {
@@ -237,6 +247,12 @@
                 "mondo_code": {
                   "type": "keyword"
                 },
+                "nb_files": {
+                  "type": "integer"
+                },
+                "ncit_anatomy_site_id": {
+                  "type": "keyword"
+                },
                 "ncit_code": {
                   "type": "keyword"
                 },
@@ -281,6 +297,7 @@
                   "type": "keyword"
                 },
                 "sample_id": {
+                  "normalizer": "custom_normalizer",
                   "type": "keyword"
                 },
                 "sample_type": {
@@ -310,8 +327,7 @@
                 "volume_unit": {
                   "type": "keyword"
                 }
-              },
-              "type": "nested"
+              }
             },
             "controlled_access": {
               "type": "keyword"
@@ -320,9 +336,6 @@
               "type": "keyword"
             },
             "data_type": {
-              "type": "keyword"
-            },
-            "experimental_strategy": {
               "type": "keyword"
             },
             "external_id": {
@@ -348,6 +361,7 @@
               "type": "keyword"
             },
             "file_id": {
+              "normalizer": "custom_normalizer",
               "type": "keyword"
             },
             "file_name": {
@@ -402,6 +416,15 @@
               "type": "boolean"
             },
             "latest_did": {
+              "type": "keyword"
+            },
+            "nb_biospecimens": {
+              "type": "integer"
+            },
+            "nb_participants": {
+              "type": "integer"
+            },
+            "participant_fhir_id": {
               "type": "keyword"
             },
             "participant_fhir_ids": {
@@ -459,6 +482,9 @@
             "size": {
               "type": "long"
             },
+            "specimen_fhir_id": {
+              "type": "keyword"
+            },
             "specimen_fhir_ids": {
               "type": "keyword"
             },
@@ -471,8 +497,7 @@
             "urls": {
               "type": "keyword"
             }
-          },
-          "type": "nested"
+          }
         },
         "is_proband": {
           "type": "boolean"
@@ -686,6 +711,7 @@
               "type": "keyword"
             },
             "search_text": {
+              "normalizer": "custom_normalizer",
               "type": "keyword"
             },
             "status": {
