@@ -679,6 +679,9 @@
         "repository": {
           "type": "keyword"
         },
+        "s3_url": {
+          "type": "keyword"
+        },
         "sequencing_experiment": {
           "properties": {
             "center": {
