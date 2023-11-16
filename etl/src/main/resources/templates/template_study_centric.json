@@ -1,9 +1,11 @@
 {
-  "index_patterns" : ["study_centric*"],
-  "priority" : 1,
+  "index_patterns": [
+    "study_centric*"
+  ],
+  "priority": 1,
   "template": {
-    "settings" : {
-      "number_of_shards" : 5,
+    "settings": {
+      "number_of_shards": 5,
       "analysis": {
         "normalizer": {
           "custom_normalizer": {
@@ -17,6 +19,12 @@
     "mappings": {
       "properties": {
         "attribution": {
+          "type": "keyword"
+        },
+        "biobank_contact": {
+          "type": "keyword"
+        },
+        "biobank_request_link": {
           "type": "keyword"
         },
         "biospecimen_count": {
@@ -35,8 +43,8 @@
           "type": "keyword"
         },
         "external_id": {
-          "type": "keyword",
-          "normalizer": "custom_normalizer"
+          "normalizer": "custom_normalizer",
+          "type": "keyword"
         },
         "family_count": {
           "type": "long"
@@ -50,6 +58,12 @@
         "file_count": {
           "type": "long"
         },
+        "investigator_id": {
+          "type": "keyword"
+        },
+        "note": {
+          "type": "keyword"
+        },
         "participant_count": {
           "type": "long"
         },
@@ -60,8 +74,8 @@
           "type": "keyword"
         },
         "search_text": {
-          "type": "keyword",
-          "normalizer": "custom_normalizer"
+          "normalizer": "custom_normalizer",
+          "type": "keyword"
         },
         "status": {
           "type": "keyword"
@@ -79,18 +93,6 @@
           "type": "keyword"
         },
         "website": {
-          "type": "keyword"
-        },
-        "investigator_id": {
-          "type": "keyword"
-        },
-        "biobank_contact": {
-          "type": "keyword"
-        },
-        "biobank_request_link": {
-          "type": "keyword"
-        },
-        "note": {
           "type": "keyword"
         }
       }
