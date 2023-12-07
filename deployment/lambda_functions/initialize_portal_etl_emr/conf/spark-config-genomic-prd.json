@@ -34,6 +34,7 @@
       "spark.hadoop.fs.s3a.bucket.kf-strides-study-us-east-1-prd-sd-w6fwtd8a.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
       "spark.hadoop.fs.s3a.bucket.kf-strides-study-us-east-1-prd-sd-jk4z4t6v.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
       "spark.hadoop.fs.s3a.bucket.kf-strides-study-us-east-1-prd-sd-gpzg67fz.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
+      "spark.hadoop.fs.s3a.bucket.kf-strides-study-us-east-1-prd-sd-15a2mqq9.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
       "spark.hadoop.fs.s3a.bucket.include-373997854230-datalake-qa.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
       "spark.hadoop.fs.s3a.bucket.include-373997854230-datalake-prd.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
       "spark.hadoop.fs.s3a.bucket.kf-strides-variant-parquet-prd.aws.credentials.provider": "com.amazonaws.auth.InstanceProfileCredentialsProvider",
