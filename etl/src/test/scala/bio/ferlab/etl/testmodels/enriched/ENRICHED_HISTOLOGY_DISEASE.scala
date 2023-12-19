@@ -6,7 +6,7 @@ case class ENRICHED_HISTOLOGY_DISEASE(
                                            `specimen_id`: String = "336842",
                                            `diagnosis_mondo`: String =  "MONDO:0005072",
                                            `diagnosis_ncit`: String = "NCIT:0005072",
-                                           `diagnosis_icd`: Seq[String] = Seq.empty,
+                                           `diagnosis_icd`:  Option[String] = None,
                                            `source_text`: String = "Neuroblastoma",
                                            `source_text_tumor_location`: Seq[String] = Seq("Reported Unknown"),
                                            `study_id`: String = "SD_Z6MWD3H0",

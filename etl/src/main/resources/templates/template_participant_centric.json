@@ -159,16 +159,6 @@
                 "age_at_biospecimen_collection_years": {
                   "type": "integer"
                 },
-                "age_at_event": {
-                  "properties": {
-                    "units": {
-                      "type": "keyword"
-                    },
-                    "value": {
-                      "type": "long"
-                    }
-                  }
-                },
                 "biospecimen_facet_ids": {
                   "properties": {
                     "biospecimen_fhir_id_1": {
@@ -214,14 +204,38 @@
                 "dbgap_consent_code": {
                   "type": "keyword"
                 },
-                "diagnosis_icd": {
-                  "type": "keyword"
-                },
-                "diagnosis_mondo": {
-                  "type": "keyword"
-                },
-                "diagnosis_ncit": {
-                  "type": "keyword"
+                "diagnoses": {
+                  "type": "nested",
+                  "properties": {
+                    "age_at_event": {
+                      "properties": {
+                        "units": {
+                          "type": "keyword"
+                        },
+                        "value": {
+                          "type": "long"
+                        }
+                      }
+                    },
+                    "diagnosis_icd": {
+                      "type": "keyword"
+                    },
+                    "diagnosis_mondo": {
+                      "type": "keyword"
+                    },
+                    "diagnosis_ncit": {
+                      "type": "keyword"
+                    },
+                    "source_text": {
+                      "type": "keyword"
+                    },
+                    "source_text_tumor_descriptor": {
+                      "type": "keyword"
+                    },
+                    "source_text_tumor_location": {
+                      "type": "keyword"
+                    }
+                  }
                 },
                 "external_collection_sample_id": {
                   "type": "keyword"
@@ -301,15 +315,6 @@
                   "type": "keyword"
                 },
                 "sample_type": {
-                  "type": "keyword"
-                },
-                "source_text": {
-                  "type": "keyword"
-                },
-                "source_text_tumor_descriptor": {
-                  "type": "keyword"
-                },
-                "source_text_tumor_location": {
                   "type": "keyword"
                 },
                 "status": {
