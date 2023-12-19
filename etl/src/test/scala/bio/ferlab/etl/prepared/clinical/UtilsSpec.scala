@@ -695,10 +695,11 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithTestSimpleConfigurati
 
     val participantP1FileF1 = participant1._2.filter(_.`fhir_id`.contains("F1")).head
     participantP1FileF1.`biospecimens`.map(_.`fhir_id`) should contain theSameElementsAs Seq("B11", "B12")
-    participantP1FileF1.`biospecimens`.map(_.`diagnosis_mondo`) should contain(Some("MONDO:0005072"))
-    participantP1FileF1.`biospecimens`.map(_.`diagnosis_ncit`) should contain(Some("NCIT:0005072"))
-    participantP1FileF1.`biospecimens`.map(_.`source_text`) should contain(Some("Neuroblastoma"))
-    participantP1FileF1.`biospecimens`.map(_.`source_text_tumor_location`) should contain(Seq("Reported Unknown"))
+    val participantP1FileF1WithSpecimenDiagnoses = participantP1FileF1.`biospecimens`.filter(b => b.`diagnoses` != null && b.`diagnoses`.nonEmpty)
+    participantP1FileF1WithSpecimenDiagnoses.map(_.`diagnoses`.head.`diagnosis_mondo`) should contain(Some("MONDO:0005072"))
+    participantP1FileF1WithSpecimenDiagnoses.map(_.`diagnoses`.head.`diagnosis_ncit`) should contain(Some("NCIT:0005072"))
+    participantP1FileF1WithSpecimenDiagnoses.map(_.`diagnoses`.head.`source_text`) should contain(Some("Neuroblastoma"))
+    participantP1FileF1WithSpecimenDiagnoses.map(_.`diagnoses`.head.`source_text_tumor_location`) should contain(Seq("Reported Unknown"))
 
     val participantP1FileF2 = participant1._2.filter(_.`fhir_id`.contains("F2")).head
     participantP1FileF2.`biospecimens`.map(_.`fhir_id`) should contain theSameElementsAs Seq("B11", "B13")

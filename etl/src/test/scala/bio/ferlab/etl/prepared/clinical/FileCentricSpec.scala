@@ -99,11 +99,15 @@ class FileCentricSpec extends AnyFlatSpec with Matchers with WithSparkSession wi
             `fhir_id` = "222",
             `biospecimen_facet_ids` = BIOSPECIMEN_FACET_IDS(biospecimen_fhir_id_1 = "222", biospecimen_fhir_id_2 = "222"),
             `participant_fhir_id` = "2",
-            `diagnosis_mondo` = Some("MONDO:0005072"),
-            `diagnosis_ncit` = Some("NCIT:0005072"),
-            `diagnosis_icd` = Seq.empty,
-            `source_text` = Some("Neuroblastoma"),
-            `source_text_tumor_location` = Seq("Reported Unknown"),
+            `diagnoses` = Seq(
+              HIST_DIAGNOSES(
+                `diagnosis_mondo` = Some("MONDO:0005072"),
+                `diagnosis_ncit` = Some("NCIT:0005072"),
+                `diagnosis_icd` = None,
+                `source_text` = Some("Neuroblastoma"),
+                `source_text_tumor_location` = Seq("Reported Unknown")
+              )
+            )
           ))
         ))
       )
@@ -145,11 +149,15 @@ class FileCentricSpec extends AnyFlatSpec with Matchers with WithSparkSession wi
               `fhir_id` = "222",
               biospecimen_facet_ids = BIOSPECIMEN_FACET_IDS(biospecimen_fhir_id_1 = "222", biospecimen_fhir_id_2 = "222"),
               `participant_fhir_id` = "2",
-              `diagnosis_mondo` = Some("MONDO:0005072"),
-              `diagnosis_ncit` = Some("NCIT:0005072"),
-              `diagnosis_icd` = Seq.empty,
-              `source_text` = Some("Neuroblastoma"),
-              `source_text_tumor_location` = Seq("Reported Unknown"),
+              `diagnoses` = Seq(
+                HIST_DIAGNOSES(
+                  `diagnosis_mondo` = Some("MONDO:0005072"),
+                  `diagnosis_ncit` = Some("NCIT:0005072"),
+                  `diagnosis_icd` = None,
+                  `source_text` = Some("Neuroblastoma"),
+                  `source_text_tumor_location` = Seq("Reported Unknown"),
+                )
+              )
             ))
           )
         )
@@ -191,12 +199,15 @@ class FileCentricSpec extends AnyFlatSpec with Matchers with WithSparkSession wi
               `fhir_id` = "222",
               biospecimen_facet_ids = BIOSPECIMEN_FACET_IDS(biospecimen_fhir_id_1 = "222", biospecimen_fhir_id_2 = "222"),
               `participant_fhir_id` = "2",
-              `diagnosis_mondo` = Some("MONDO:0005072"),
-              `diagnosis_ncit` = Some("NCIT:0005072"),
-              `diagnosis_icd` = Seq.empty,
-              `source_text` = Some("Neuroblastoma"),
-              `source_text_tumor_location` = Seq("Reported Unknown"),
-
+              `diagnoses` = Seq(
+                HIST_DIAGNOSES(
+                  `diagnosis_mondo` = Some("MONDO:0005072"),
+                  `diagnosis_ncit` = Some("NCIT:0005072"),
+                  `diagnosis_icd` = None,
+                  `source_text` = Some("Neuroblastoma"),
+                  `source_text_tumor_location` = Seq("Reported Unknown"),
+                )
+              )
             ))
           ))
       )

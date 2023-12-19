@@ -307,26 +307,40 @@ object Utils {
     }
 
     def addHistologicalInformation(histToDiseasesDf: DataFrame): DataFrame = {
-      val histToDiseases = histToDiseasesDf
+      val specimenWithDiagnoses = histToDiseasesDf
         .select(
-          "specimen_id",
-          "diagnosis_mondo",
-          "diagnosis_ncit",
-          "diagnosis_icd",
-          "source_text",
-          "source_text_tumor_location",
-          "study_id",
-          "source_text_tumor_descriptor",
-          "age_at_event"
+          col("specimen_id"),
+          col("diagnosis_mondo"),
+          col("diagnosis_ncit"),
+          col("diagnosis_icd"),
+          col("source_text"),
+          col("source_text_tumor_location"),
+          col("study_id"),
+          col("source_text_tumor_descriptor"),
+          col("age_at_event")
+        )
+        .groupBy("specimen_id")
+        .agg(
+          first(col("study_id")) as "study_id",
+          collect_list(
+            struct(
+              col("diagnosis_mondo"),
+              col("diagnosis_ncit"),
+              col("diagnosis_icd"),
+              col("source_text"),
+              col("source_text_tumor_descriptor"),
+              col("source_text_tumor_location"),
+              col("age_at_event"),
+            )
+          ) as "diagnoses",
         )
       df.join(
-        histToDiseases,
-        df(
-          "fhir_id") === histToDiseases("specimen_id") and df("study_id") === histToDiseases("study_id"),
+          specimenWithDiagnoses,
+          df("fhir_id") === specimenWithDiagnoses("specimen_id") and df("study_id") === specimenWithDiagnoses("study_id"),
           "left_outer"
         )
-        .drop(histToDiseases("study_id"))
-        .drop(histToDiseases("specimen_id"))
+        .drop(specimenWithDiagnoses("study_id"))
+        .drop(specimenWithDiagnoses("specimen_id"))
     }
 
     def addBiospecimenParticipant(participantsDf: DataFrame): DataFrame = {
@@ -429,7 +443,7 @@ object Utils {
         .drop(col("family_type_families_with_proband"))
         // Dropping for "col enrichedReformattedFamily("participant_fhir_id")" is the fhir id of the proband
         .drop(enrichedReformattedFamily("participant_fhir_id"))
-        .drop( col("relations_to_proband"))
+        .drop(col("relations_to_proband"))
     }
   }
 }

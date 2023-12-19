@@ -49,15 +49,21 @@ class BiospecimenCentricSpec extends AnyFlatSpec with Matchers with WithSparkSes
     result.find(b => b.fhir_id == "111") shouldBe Some(
       PREPARED_BIOSPECIMEN(
         `fhir_id` = "111",
-        `diagnosis_mondo` = "MONDO:0005072",
-        `diagnosis_ncit` = "NCIT:0005072",
-        `diagnosis_icd` = Nil,
-        `source_text` = "Neuroblastoma",
-        `source_text_tumor_location` = Seq("Reported Unknown"),
-        biospecimen_facet_ids = BIOSPECIMEN_FACET_IDS(biospecimen_fhir_id_1 = "111", biospecimen_fhir_id_2 = "111"),
-        `participant_fhir_id` = "1",
-        `participant` = PREPARED_SIMPLE_PARTICIPANT(`fhir_id` = "1", participant_facet_ids = PARTICIPANT_FACET_IDS(participant_fhir_id_1 = "1", participant_fhir_id_2 = "1")),
-        `nb_files` = 3,
+        `diagnoses` = Seq(
+          HIST_DIAGNOSES(
+            `diagnosis_icd` = None,
+            `source_text_tumor_location` = Seq("Reported Unknown")
+          )
+        )
+        ,
+        biospecimen_facet_ids = BIOSPECIMEN_FACET_IDS(biospecimen_fhir_id_1 = "111", biospecimen_fhir_id_2 = "111")
+        ,
+        `participant_fhir_id` = "1"
+        ,
+        `participant` = PREPARED_SIMPLE_PARTICIPANT(`fhir_id` = "1", participant_facet_ids = PARTICIPANT_FACET_IDS(participant_fhir_id_1 = "1", participant_fhir_id_2 = "1"))
+        ,
+        `nb_files` = 3
+        ,
         `files` = Seq(
           PREPARED_FILES_FOR_BIOSPECIMEN(
             `fhir_id` = "11",
@@ -94,7 +100,8 @@ class BiospecimenCentricSpec extends AnyFlatSpec with Matchers with WithSparkSes
             `fhir_id` = "44",
             file_facet_ids = FILE_FACET_IDS(file_fhir_id_1 = "44", file_fhir_id_2 = "44")
           )
-        )
+        ),
+        `diagnoses` = null
       ))
   }
 }
