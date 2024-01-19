@@ -3,7 +3,6 @@ package bio.ferlab.etl.prepared.clinical
 import bio.ferlab.datalake.commons.config.{DatasetConf, RuntimeETLContext}
 import bio.ferlab.datalake.spark3.etl.v4.SimpleSingleETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
-import bio.ferlab.etl.Utils.minDateTime
 import bio.ferlab.etl.prepared.clinical.Utils._
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.col
@@ -21,7 +20,7 @@ case class ParticipantCentric(rc: RuntimeETLContext, studyIds: List[String]) ext
   private val enriched_histology_disease: DatasetConf = conf.getDataset("enriched_histology_disease")
 
 
-  override def extract(lastRunDateTime: LocalDateTime = minDateTime,
+  override def extract(lastRunDateTime: LocalDateTime = rc.dataMinValue,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now()): Map[String, DataFrame] = {
     Seq(
       simple_participant,
@@ -37,7 +36,7 @@ case class ParticipantCentric(rc: RuntimeETLContext, studyIds: List[String]) ext
   }
 
   override def transformSingle(data: Map[String, DataFrame],
-                               lastRunDateTime: LocalDateTime = minDateTime,
+                               lastRunDateTime: LocalDateTime = rc.dataMinValue,
                                currentRunDateTime: LocalDateTime = LocalDateTime.now()): DataFrame = {
     val patientDF = data(simple_participant.id)
     val filesWithSeqExp = data(normalized_drs_document_reference.id).addSequencingExperiment(data(normalized_sequencing_experiment.id), data(normalized_sequencing_experiment_genomic_file.id))
