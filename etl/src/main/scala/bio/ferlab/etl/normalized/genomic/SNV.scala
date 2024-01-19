@@ -6,7 +6,6 @@ import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits._
 import bio.ferlab.datalake.spark3.implicits.GenomicImplicits._
 import bio.ferlab.datalake.spark3.implicits.GenomicImplicits.columns._
 import bio.ferlab.etl.Constants.columns.{GENES_SYMBOL, TRANSMISSION_MODE}
-import bio.ferlab.etl.Utils.minDateTime
 import bio.ferlab.etl.normalized.genomic.KFVCFUtils.loadVCFs
 import bio.ferlab.fhir.etl.config.StudyConfiguration.defaultStudyConfiguration
 import bio.ferlab.fhir.etl.config.{KFRuntimeETLContext, StudyConfiguration}
@@ -22,7 +21,7 @@ case class SNV(rc:KFRuntimeETLContext, studyId: String, releaseId: String, refer
 
   private val studyConfiguration: StudyConfiguration = rc.config.studies.getOrElse(studyId, defaultStudyConfiguration)
 
-  override def extract(lastRunDateTime: LocalDateTime = minDateTime,
+  override def extract(lastRunDateTime: LocalDateTime = rc.dataMinValue,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now()): Map[String, DataFrame] = {
 
     Map(

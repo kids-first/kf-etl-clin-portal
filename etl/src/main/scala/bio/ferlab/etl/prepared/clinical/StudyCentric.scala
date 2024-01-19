@@ -3,7 +3,6 @@ package bio.ferlab.etl.prepared.clinical
 import bio.ferlab.datalake.commons.config.{DatasetConf, RuntimeETLContext}
 import bio.ferlab.datalake.spark3.etl.v4.SimpleSingleETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
-import bio.ferlab.etl.Utils.minDateTime
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 
@@ -19,7 +18,7 @@ case class StudyCentric(rc: RuntimeETLContext, studyIds: List[String]) extends S
   val normalized_specimen: DatasetConf = conf.getDataset("normalized_specimen")
   val normalized_sequencing_experiment: DatasetConf = conf.getDataset("normalized_sequencing_experiment")
 
-  override def extract(lastRunDateTime: LocalDateTime = minDateTime,
+  override def extract(lastRunDateTime: LocalDateTime = rc.dataMinValue,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now()): Map[String, DataFrame] = {
     Seq(
       normalized_researchstudy,
@@ -36,7 +35,7 @@ case class StudyCentric(rc: RuntimeETLContext, studyIds: List[String]) extends S
   }
 
   override def transformSingle(data: Map[String, DataFrame],
-                               lastRunDateTime: LocalDateTime = minDateTime,
+                               lastRunDateTime: LocalDateTime = rc.dataMinValue,
                                currentRunDateTime: LocalDateTime = LocalDateTime.now()): DataFrame = {
     val studyDF = data(normalized_researchstudy.id)
 
