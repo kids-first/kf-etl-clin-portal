@@ -18,7 +18,7 @@ case class StudyCentric(rc: RuntimeETLContext, studyIds: List[String]) extends S
   val normalized_specimen: DatasetConf = conf.getDataset("normalized_specimen")
   val normalized_sequencing_experiment: DatasetConf = conf.getDataset("normalized_sequencing_experiment")
 
-  override def extract(lastRunDateTime: LocalDateTime = rc.dataMinValue,
+  override def extract(lastRunDateTime: LocalDateTime = minValue,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now()): Map[String, DataFrame] = {
     Seq(
       normalized_researchstudy,
@@ -35,7 +35,7 @@ case class StudyCentric(rc: RuntimeETLContext, studyIds: List[String]) extends S
   }
 
   override def transformSingle(data: Map[String, DataFrame],
-                               lastRunDateTime: LocalDateTime = rc.dataMinValue,
+                               lastRunDateTime: LocalDateTime = minValue,
                                currentRunDateTime: LocalDateTime = LocalDateTime.now()): DataFrame = {
     val studyDF = data(normalized_researchstudy.id)
 

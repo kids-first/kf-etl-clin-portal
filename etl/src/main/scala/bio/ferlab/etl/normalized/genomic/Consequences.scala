@@ -18,7 +18,7 @@ case class Consequences(rc: KFRuntimeETLContext, studyId: String, referenceGenom
 
   private val studyConfiguration: StudyConfiguration = rc.config.studies.getOrElse(studyId, defaultStudyConfiguration)
 
-  override def extract(lastRunDateTime: LocalDateTime = rc.dataMinValue,
+  override def extract(lastRunDateTime: LocalDateTime = minValue,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now()): Map[String, DataFrame] = {
     Map(
       raw_vcf -> loadVCFs(document_reference.read, studyConfiguration, studyId, referenceGenomePath)

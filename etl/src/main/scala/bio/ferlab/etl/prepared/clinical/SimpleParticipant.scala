@@ -23,7 +23,7 @@ case class SimpleParticipant(rc: RuntimeETLContext, studyIds: List[String]) exte
   val mondo_terms: DatasetConf = conf.getDataset("mondo_terms")
   val enriched_family: DatasetConf = conf.getDataset("enriched_family")
 
-  override def extract(lastRunDateTime: LocalDateTime = rc.dataMinValue,
+  override def extract(lastRunDateTime: LocalDateTime = minValue,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now()): Map[String, DataFrame] = {
     (Seq(
       es_index_study_centric, normalized_patient, normalized_phenotype, normalized_disease, normalized_group, normalized_vital_status, normalized_proband_observation, enriched_family)
@@ -37,7 +37,7 @@ case class SimpleParticipant(rc: RuntimeETLContext, studyIds: List[String]) exte
   }
 
   override def transformSingle(data: Map[String, DataFrame],
-                               lastRunDateTime: LocalDateTime = rc.dataMinValue,
+                               lastRunDateTime: LocalDateTime = minValue,
                                currentRunDateTime: LocalDateTime = LocalDateTime.now()): DataFrame = {
     val patientDF = data(normalized_patient.id)
     val disease = data(normalized_disease.id)

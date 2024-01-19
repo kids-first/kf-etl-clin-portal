@@ -20,7 +20,7 @@ case class ParticipantCentric(rc: RuntimeETLContext, studyIds: List[String]) ext
   private val enriched_histology_disease: DatasetConf = conf.getDataset("enriched_histology_disease")
 
 
-  override def extract(lastRunDateTime: LocalDateTime = rc.dataMinValue,
+  override def extract(lastRunDateTime: LocalDateTime = minValue,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now()): Map[String, DataFrame] = {
     Seq(
       simple_participant,
@@ -36,7 +36,7 @@ case class ParticipantCentric(rc: RuntimeETLContext, studyIds: List[String]) ext
   }
 
   override def transformSingle(data: Map[String, DataFrame],
-                               lastRunDateTime: LocalDateTime = rc.dataMinValue,
+                               lastRunDateTime: LocalDateTime = minValue,
                                currentRunDateTime: LocalDateTime = LocalDateTime.now()): DataFrame = {
     val patientDF = data(simple_participant.id)
     val filesWithSeqExp = data(normalized_drs_document_reference.id).addSequencingExperiment(data(normalized_sequencing_experiment.id), data(normalized_sequencing_experiment_genomic_file.id))

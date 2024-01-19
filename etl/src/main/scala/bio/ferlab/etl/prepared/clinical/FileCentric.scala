@@ -21,7 +21,7 @@ case class FileCentric(rc: RuntimeETLContext, studyIds: List[String]) extends Si
   val enriched_histology_disease: DatasetConf = conf.getDataset("enriched_histology_disease")
 
 
-  override def extract(lastRunDateTime: LocalDateTime = rc.dataMinValue,
+  override def extract(lastRunDateTime: LocalDateTime = minValue,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now()): Map[String, DataFrame] = {
     Seq(
       normalized_drs_document_reference,
@@ -38,7 +38,7 @@ case class FileCentric(rc: RuntimeETLContext, studyIds: List[String]) extends Si
   }
 
   override def transformSingle(data: Map[String, DataFrame],
-                               lastRunDateTime: LocalDateTime = rc.dataMinValue,
+                               lastRunDateTime: LocalDateTime = minValue,
                                currentRunDateTime: LocalDateTime = LocalDateTime.now()): DataFrame = {
     val fileDF = data(normalized_drs_document_reference.id)
 
