@@ -1,8 +1,8 @@
 package bio.ferlab.etl.normalized.dataservice
 
 import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf, RuntimeETLContext}
-import bio.ferlab.datalake.spark3.etl.v2.ETL
-import bio.ferlab.datalake.spark3.etl.v3.SimpleETL
+import bio.ferlab.datalake.spark3.etl.v4.ETL
+import bio.ferlab.datalake.spark3.etl.v4.SimpleETL
 import bio.ferlab.etl.normalized.dataservice.model.{ESequencingCenter, ESequencingExperiment, ESequencingExperimentGenomicFile}
 import org.apache.spark.sql.functions.lit
 import org.apache.spark.sql.{DataFrame, SparkSession}

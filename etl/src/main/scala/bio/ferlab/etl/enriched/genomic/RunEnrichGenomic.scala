@@ -22,10 +22,10 @@ object RunEnrichGenomic {
   }
 
   private def variants(rc: RuntimeETLContext) = Variants(rc, snvDatasetId = "normalized_snv",
-    frequencies = Seq(
+    splits = Seq(
       FrequencySplit(
         "studies",
-        splitBy = Some(col("study_id")), byAffected = false,
+        extraSplitBy = Some(col("study_id")), byAffected = false,
         extraAggregations = Seq(
           AtLeastNElements(name = "participant_ids", c = col("participant_id"), n = 10),
           SimpleAggregation(name = TRANSMISSIONS, c = col(TRANSMISSION_MODE)),
