@@ -21,7 +21,7 @@ case class SNV(rc:KFRuntimeETLContext, studyId: String, releaseId: String, refer
 
   private val studyConfiguration: StudyConfiguration = rc.config.studies.getOrElse(studyId, defaultStudyConfiguration)
 
-  override def extract(lastRunDateTime: LocalDateTime = rc.dataMinValue,
+  override def extract(lastRunDateTime: LocalDateTime = minValue,
                        currentRunDateTime: LocalDateTime = LocalDateTime.now()): Map[String, DataFrame] = {
 
     Map(
