@@ -4,6 +4,7 @@ import bio.ferlab.datalake.commons.config.DatasetConf
 import bio.ferlab.datalake.spark3.genomics.normalized.BaseConsequences
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits._
 import bio.ferlab.datalake.spark3.implicits.GenomicImplicits.columns._
+import bio.ferlab.etl.Utils.minDateTime
 import bio.ferlab.etl.normalized.genomic.KFVCFUtils.loadVCFs
 import bio.ferlab.fhir.etl.config.StudyConfiguration.defaultStudyConfiguration
 import bio.ferlab.fhir.etl.config.{KFRuntimeETLContext, StudyConfiguration}

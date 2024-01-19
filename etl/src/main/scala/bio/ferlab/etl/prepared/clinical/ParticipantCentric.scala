@@ -1,8 +1,9 @@
 package bio.ferlab.etl.prepared.clinical
 
 import bio.ferlab.datalake.commons.config.{DatasetConf, RuntimeETLContext}
-import bio.ferlab.datalake.spark3.etl.v3.SimpleSingleETL
+import bio.ferlab.datalake.spark3.etl.v4.SimpleSingleETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
+import bio.ferlab.etl.Utils.minDateTime
 import bio.ferlab.etl.prepared.clinical.Utils._
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.col

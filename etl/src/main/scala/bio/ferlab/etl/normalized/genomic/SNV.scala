@@ -1,17 +1,17 @@
 package bio.ferlab.etl.normalized.genomic
 
-import bio.ferlab.datalake.commons.config.{Configuration, DatasetConf, RuntimeETLContext}
-import bio.ferlab.datalake.spark3.etl.ETLSingleDestination
-import bio.ferlab.datalake.spark3.etl.v3.{SimpleSingleETL, SingleETL}
+import bio.ferlab.datalake.commons.config.DatasetConf
+import bio.ferlab.datalake.spark3.etl.v4.SingleETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits._
 import bio.ferlab.datalake.spark3.implicits.GenomicImplicits._
 import bio.ferlab.datalake.spark3.implicits.GenomicImplicits.columns._
 import bio.ferlab.etl.Constants.columns.{GENES_SYMBOL, TRANSMISSION_MODE}
+import bio.ferlab.etl.Utils.minDateTime
 import bio.ferlab.etl.normalized.genomic.KFVCFUtils.loadVCFs
-import bio.ferlab.fhir.etl.config.{KFRuntimeETLContext, StudyConfiguration}
 import bio.ferlab.fhir.etl.config.StudyConfiguration.defaultStudyConfiguration
+import bio.ferlab.fhir.etl.config.{KFRuntimeETLContext, StudyConfiguration}
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{DataFrame, SparkSession, functions}
+import org.apache.spark.sql.{DataFrame, functions}
 
 import java.time.LocalDateTime
 
@@ -51,7 +51,7 @@ case class SNV(rc:KFRuntimeETLContext, studyId: String, releaseId: String, refer
       .withColumn("hgvsg", hgvsg)
       .withColumn("variant_class", variant_class)
       .withColumn(GENES_SYMBOL, array_distinct(annotations("symbol")))
-      .drop("annotation", "INFO_ANN")
+      .drop("annotation", "INFO_ANN", "alternates")
       .select(
         chromosome,
         start,

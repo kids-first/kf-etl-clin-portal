@@ -1,7 +1,7 @@
 package bio.ferlab.etl.normalized.clinical
 
 import bio.ferlab.datalake.commons.config.DatasetConf
-import bio.ferlab.datalake.spark3.etl.v3.TransformationsETL
+import bio.ferlab.datalake.spark3.etl.v4.TransformationsETL
 import bio.ferlab.datalake.spark3.implicits.DatasetConfImplicits.DatasetConfOperations
 import bio.ferlab.datalake.spark3.transformation.Transformation
 import bio.ferlab.fhir.etl.config.KFRuntimeETLContext
