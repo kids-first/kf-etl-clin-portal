@@ -101,7 +101,7 @@ case class SNV(rc:KFRuntimeETLContext, studyId: String, releaseId: String, refer
         col("file_name"),
         lit(releaseId) as "release_id",
         is_normalized
-      )
+      ).where(alternate notEqual "*")
       .withColumn("ad_ref", col("ad")(0))
       .withColumn("ad_alt", col("ad")(1))
       .withColumn("ad_total", col("ad_ref") + col("ad_alt"))
