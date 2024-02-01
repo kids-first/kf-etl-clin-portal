@@ -25,9 +25,7 @@ steps=$(cat <<EOF
        "consequences",
        "--config", "config/${env}-kf-strides.conf",
        "--steps", "default",
-       "--study-id", "${study_id}",
-       "--reference-genome-path", "/mnt/GRCh38_full_analysis_set_plus_decoy_hla.fa"
-
+       "--study-id", "${study_id}"
      ],
      "Type": "CUSTOM_JAR",
      "ActionOnFailure": "CONTINUE",

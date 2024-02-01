@@ -62,8 +62,6 @@ PORTAL_ETL_STEP_DESCRIPTION_MAP = {
                    .with_steps()
                    .with_custom_args(["--study-id", f"{study_id}"])
                    .with_release_id(etl_config['input']['releaseId'], include_flag=True)
-                   .with_custom_args(
-                             ["--reference-genome-path", "/mnt/GRCh38_full_analysis_set_plus_decoy_hla.fa"])
                    .build()
                    ).build(),
 
@@ -76,8 +74,6 @@ PORTAL_ETL_STEP_DESCRIPTION_MAP = {
                    .with_config(etl_config['environment'], etl_config['account'], include_flag=True)
                    .with_steps()
                    .with_custom_args(["--study-id", f"{study_id}"])
-                   .with_custom_args(
-                             ["--reference-genome-path", "/mnt/GRCh38_full_analysis_set_plus_decoy_hla.fa"])
                    .build()
                    ).build(),
 
