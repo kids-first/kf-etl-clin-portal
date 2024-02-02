@@ -234,6 +234,7 @@
                   "type": "keyword"
                 },
                 "external_sample_id": {
+                  "normalizer": "custom_normalizer",
                   "type": "keyword"
                 },
                 "fhir_id": {
