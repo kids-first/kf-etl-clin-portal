@@ -168,7 +168,7 @@ object Transformations {
       val df = input
         .select("fhir_id", "study_id", "release_id", "category", "securityLabel", "content", "type", "identifier", "subject", "context", "docStatus", "relatesTo", "full_url")
         .withColumn("access_urls", col("content")("attachment")("url")(0))
-        .withColumn("acl", extractAclFromList(col("securityLabel")("text"), col("study_id")))
+        .withColumn("acl", extractDocumentReferenceAcl(col("securityLabel")("text"), col("study_id")))
         .withColumn("controlled_access", firstSystemEquals(flatten(col("securityLabel.coding")), SYS_DATA_ACCESS_TYPES)("display"))
         .withColumn("data_type", firstSystemEquals(col("type")("coding"), SYS_DATA_TYPES)("display"))
         .withColumn("data_category", firstSystemEquals(flatten(col("category")("coding")), SYS_DATA_CATEGORIES)("display"))
