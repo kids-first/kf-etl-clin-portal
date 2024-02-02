@@ -1,7 +1,7 @@
 package bio.ferlab.etl.normalized.clinical
 
 import bio.ferlab.datalake.testutils.WithSparkSession
-import bio.ferlab.etl.normalized.clinical.Utils.{age_on_set, retrieveRepository, sanitizeFilename}
+import bio.ferlab.etl.normalized.clinical.Utils.{age_on_set, extractDocumentReferenceAcl, retrieveRepository, sanitizeFilename}
 import org.apache.spark.sql.functions.col
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -34,4 +34,23 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
 
   }
 
+  "extractDocumentReferenceAcl" should "extract acl and modify open access values if exist" in {
+    val rawDF = Seq(
+      ("f1", Seq("false", "*"), "s"),
+      ("f2", Seq(null, "Registered"), "s"),
+      ("f3", Seq("true", "phs002330.c1"), "s"),
+      ("f3", Seq("true", "s"), "s"),
+    ).toDF("file_id", "raw_acl", "study_id")
+
+    val df = rawDF
+      .withColumn("acl", extractDocumentReferenceAcl(col("raw_acl"), col("study_id")))
+
+    df
+      .select(col("file_id"), col("acl")).as[(String, Seq[String])].collect() should contain theSameElementsAs Seq(
+      ("f1", Seq("open_access")),
+      ("f2", Seq("open_access")),
+      ("f3", Seq("phs002330.c1")),
+      ("f3", Seq("s")),
+    )
+  }
 }

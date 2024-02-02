@@ -29,9 +29,12 @@ object Utils {
 
   def extractFirstMatchingSystem(column: Column, systemUrls: Seq[String]): Column = filter(column, c => c("system").isin(systemUrls: _*))(0)
 
-  val extractAclFromList: UserDefinedFunction =
-    udf((arr: Seq[String], studyId: String) => arr.filter(e => e != null && ((e matches actCodeR) || (e == studyId))))
-
+  val extractDocumentReferenceAcl: (Column, Column) => Column = (cFileAcl: Column, cStudyId: Column) => {
+    val openAcl = Seq("*", "Registered")
+    val xs = filter(cFileAcl, x => x.startsWith("phs") || x.isin(openAcl: _*) || x === cStudyId)
+    val acl = transform(xs, x => when(x.isin(openAcl: _*), lit("open_access")).otherwise(x))
+    array_distinct(acl)
+  }
   val extractReferencesId: Column => Column = (column: Column) => functions.transform(column, extractReferenceId)
 
   val extractReferenceId: Column => Column = (column: Column) => functions.split(column, "/")(1)
