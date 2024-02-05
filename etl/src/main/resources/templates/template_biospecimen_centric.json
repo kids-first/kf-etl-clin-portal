@@ -448,6 +448,7 @@
               "type": "keyword"
             },
             "external_id": {
+              "normalizer": "custom_normalizer",
               "type": "keyword"
             },
             "families_id": {
