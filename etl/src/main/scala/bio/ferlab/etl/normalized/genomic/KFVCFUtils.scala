@@ -108,14 +108,15 @@ object KFVCFUtils {
 
   private case class VCFFiles(version: VCFVersion, files: Seq[String]) {
     def load(referenceGenomePath: Option[String])(implicit spark: SparkSession): DataFrame = {
-      var df = vcf(files.toList, referenceGenomePath)
-      if (df.columns.contains("INFO_ANN") && df.columns.contains("INFO_CSQ")) {
-        df = df.withColumnRenamed("INFO_ANN", "OLD_INFO_ANN")
+      val df = vcf(files.toList, referenceGenomePath)
+      val renamedDf = if (df.columns.contains("INFO_ANN") && df.columns.contains("INFO_CSQ")) {
+        df.withColumnRenamed("INFO_ANN", "OLD_INFO_ANN").withColumnRenamed("INFO_CSQ", "INFO_ANN")
+      } else if (!df.columns.contains("INFO_ANN")) {
+        df.withColumnRenamed("INFO_CSQ", "INFO_ANN")
+      } else {
+        df
       }
-      if (!df.columns.contains("INFO_ANN")) {
-        df = df.withColumnRenamed("INFO_CSQ", "INFO_ANN")
-      }
-      version.loadVersion(df)
+      version.loadVersion(renamedDf)
     }
   }
 
