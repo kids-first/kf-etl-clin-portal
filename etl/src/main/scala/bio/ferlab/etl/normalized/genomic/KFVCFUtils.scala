@@ -45,8 +45,8 @@ object KFVCFUtils {
   /**
    * Get the versions of the vcf files. The version is inferred from the first line of each vcf file.
    *
-   * @param files         a dataframe containing the s3 urls of the vcf files.
-   * @param studyId       id of the study used to filter the files.
+   * @param files              a dataframe containing the s3 urls of the vcf files.
+   * @param studyId            id of the study used to filter the files.
    * @param studyConfiguration configuration of the study.
    * @param spark
    * @return a list of VCFFiles containing the version and the list of files.
@@ -109,10 +109,10 @@ object KFVCFUtils {
   private case class VCFFiles(version: VCFVersion, files: Seq[String]) {
     def load(referenceGenomePath: Option[String])(implicit spark: SparkSession): DataFrame = {
       var df = vcf(files.toList, referenceGenomePath)
-      if(df.columns.contains("INFO_ANN") && df.columns.contains("INFO_CSQ")) {
+      if (df.columns.contains("INFO_ANN") && df.columns.contains("INFO_CSQ")) {
         df = df.withColumnRenamed("INFO_ANN", "OLD_INFO_ANN")
       }
-      if(!df.columns.contains("INFO_ANN")) {
+      if (!df.columns.contains("INFO_ANN")) {
         df = df.withColumnRenamed("INFO_CSQ", "INFO_ANN")
       }
       version.loadVersion(df)
@@ -121,70 +121,57 @@ object KFVCFUtils {
 
   trait VCFVersion {
     def loadVersion(df: DataFrame): DataFrame
-
-    def mergeInfoAnnInfoCsq(df: DataFrame): DataFrame = {
-      if(!df.columns.contains("INFO_ANN")) {
-        df.withColumnRenamed("INFO_CSQ", "INFO_ANN")
-      }
-      df
-    }
   }
 
   case object V1 extends VCFVersion {
     override def loadVersion(df: DataFrame): DataFrame = {
-      mergeInfoAnnInfoCsq(
-        df
-          .withColumn("INFO_DS", lit(null).cast("boolean"))
-          .withColumn("INFO_HaplotypeScore", lit(null).cast("double"))
-          .withColumn("genotype", explode(col("genotypes")))
-          .drop("genotypes")
-          .withColumn("INFO_ReadPosRankSum", col("INFO_ReadPosRankSum")(0))
-          .withColumn("INFO_ClippingRankSum", col("INFO_ClippingRankSum")(0))
-          .withColumn("INFO_RAW_MQ", col("INFO_RAW_MQ")(0))
-          .withColumn("INFO_BaseQRankSum", col("INFO_BaseQRankSum")(0))
-          .withColumn("INFO_MQRankSum", col("INFO_MQRankSum")(0))
-          .withColumn("INFO_ExcessHet", col("INFO_ExcessHet")(0))
-          .withColumn(
-            "genotype",
-            struct(
-              col("genotype.sampleId"),
-              col("genotype.conditionalQuality"),
-              col("genotype.filters"),
-              col("genotype.SB"),
-              col("genotype.alleleDepths"),
-              col("genotype.PP"),
-              col("genotype.PID")(0) as "PID",
-              col("genotype.phased"),
-              col("genotype.calls"),
-              col("genotype.MIN_DP")(0) as "MIN_DP",
-              col("genotype.JL"),
-              col("genotype.PGT")(0) as "PGT",
-              col("genotype.phredLikelihoods"),
-              col("genotype.depth"),
-              col("genotype.RGQ"),
-              col("genotype.JP")
-            )
+      df
+        .withColumn("INFO_DS", lit(null).cast("boolean"))
+        .withColumn("INFO_HaplotypeScore", lit(null).cast("double"))
+        .withColumn("genotype", explode(col("genotypes")))
+        .drop("genotypes")
+        .withColumn("INFO_ReadPosRankSum", col("INFO_ReadPosRankSum")(0))
+        .withColumn("INFO_ClippingRankSum", col("INFO_ClippingRankSum")(0))
+        .withColumn("INFO_RAW_MQ", col("INFO_RAW_MQ")(0))
+        .withColumn("INFO_BaseQRankSum", col("INFO_BaseQRankSum")(0))
+        .withColumn("INFO_MQRankSum", col("INFO_MQRankSum")(0))
+        .withColumn("INFO_ExcessHet", col("INFO_ExcessHet")(0))
+        .withColumn(
+          "genotype",
+          struct(
+            col("genotype.sampleId"),
+            col("genotype.conditionalQuality"),
+            col("genotype.filters"),
+            col("genotype.SB"),
+            col("genotype.alleleDepths"),
+            col("genotype.PP"),
+            col("genotype.PID")(0) as "PID",
+            col("genotype.phased"),
+            col("genotype.calls"),
+            col("genotype.MIN_DP")(0) as "MIN_DP",
+            col("genotype.JL"),
+            col("genotype.PGT")(0) as "PGT",
+            col("genotype.phredLikelihoods"),
+            col("genotype.depth"),
+            col("genotype.RGQ"),
+            col("genotype.JP")
           )
-      )
+        )
     }
   }
 
   case object V2 extends VCFVersion {
     override def loadVersion(df: DataFrame): DataFrame = {
-      mergeInfoAnnInfoCsq(
-        df
-          .withColumn("genotype", explode(col("genotypes")))
-      )
+      df
+        .withColumn("genotype", explode(col("genotypes")))
     }
   }
 
   case object V2_WITHOUT_PG extends VCFVersion {
     override def loadVersion(df: DataFrame): DataFrame = {
-      mergeInfoAnnInfoCsq(
-        df
-          .withColumn("genotype", explode(col("genotypes")))
-          .withColumn("INFO_PG", lit(null).cast(ArrayType(IntegerType)))
-      )
+      df
+        .withColumn("genotype", explode(col("genotypes")))
+        .withColumn("INFO_PG", lit(null).cast(ArrayType(IntegerType)))
     }
   }
 }
