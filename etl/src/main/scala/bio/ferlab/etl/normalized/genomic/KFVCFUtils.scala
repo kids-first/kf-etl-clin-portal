@@ -45,8 +45,8 @@ object KFVCFUtils {
   /**
    * Get the versions of the vcf files. The version is inferred from the first line of each vcf file.
    *
-   * @param files         a dataframe containing the s3 urls of the vcf files.
-   * @param studyId       id of the study used to filter the files.
+   * @param files              a dataframe containing the s3 urls of the vcf files.
+   * @param studyId            id of the study used to filter the files.
    * @param studyConfiguration configuration of the study.
    * @param spark
    * @return a list of VCFFiles containing the version and the list of files.
@@ -109,7 +109,14 @@ object KFVCFUtils {
   private case class VCFFiles(version: VCFVersion, files: Seq[String]) {
     def load(referenceGenomePath: Option[String])(implicit spark: SparkSession): DataFrame = {
       val df = vcf(files.toList, referenceGenomePath)
-      version.loadVersion(df)
+      val renamedDf = if (df.columns.contains("INFO_ANN") && df.columns.contains("INFO_CSQ")) {
+        df.withColumnRenamed("INFO_ANN", "OLD_INFO_ANN").withColumnRenamed("INFO_CSQ", "INFO_ANN")
+      } else if (!df.columns.contains("INFO_ANN")) {
+        df.withColumnRenamed("INFO_CSQ", "INFO_ANN")
+      } else {
+        df
+      }
+      version.loadVersion(renamedDf)
     }
   }
 
