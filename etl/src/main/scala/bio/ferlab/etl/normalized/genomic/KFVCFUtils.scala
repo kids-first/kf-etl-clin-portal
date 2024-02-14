@@ -165,6 +165,7 @@ object KFVCFUtils {
     override def loadVersion(df: DataFrame): DataFrame = {
       df
         .withColumn("genotype", explode(col("genotypes")))
+        .drop("genotypes")
     }
   }
 
@@ -173,6 +174,7 @@ object KFVCFUtils {
       df
         .withColumn("genotype", explode(col("genotypes")))
         .withColumn("INFO_PG", lit(null).cast(ArrayType(IntegerType)))
+        .drop("genotypes")
     }
   }
 }
