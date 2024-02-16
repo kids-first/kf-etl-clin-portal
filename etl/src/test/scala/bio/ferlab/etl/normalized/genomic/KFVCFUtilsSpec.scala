@@ -1,6 +1,6 @@
 package bio.ferlab.etl.normalized.genomic
 
-import bio.ferlab.etl.normalized.genomic.KFVCFUtils.{V1, V2, V2_WITHOUT_PG, calculateVersionFromHeaders}
+import bio.ferlab.etl.normalized.genomic.KFVCFUtils.{V1, V2, V2_WITHOUT_PG, V3, calculateVersionFromHeaders}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -62,5 +62,17 @@ class KFVCFUtilsSpec extends AnyFlatSpec with Matchers{
     calculateVersionFromHeaders(input.iterator) shouldBe V1
   }
 
+  it should "return V3" in {
+    val input = Seq(
+      "##fileformat=VCFv4.2",
+      "##fileDate=2020-10-01",
+      "##source=Ensembl VEP 100.2",
+      "##reference=GRCh38",
+      "##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the variant described in this record\">",
+      "##INFO=<ID=PG,Number=1,Type=String,Description=\"Phasing genotype\">",
+      "##INFO=<ID=CSQ,Number=1,Type=Object,Description=\"Consequences\">",
+    )
+    calculateVersionFromHeaders(input.iterator) shouldBe V3
+  }
 
 }
