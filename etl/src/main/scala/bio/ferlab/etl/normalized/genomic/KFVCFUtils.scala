@@ -25,7 +25,7 @@ object KFVCFUtils {
     val vcfFiles: Seq[VCFFiles] = getVCFFiles(files, studyConfiguration, studyId)
 
     vcfFiles.map(_.load(referenceGenomePath))
-      .reduce { (df1, df2) => df1.unionByName(df2) }
+      .reduce { (df1, df2) => df1.unionByName(df2, true) }
       .withColumn("file_name", filename)
   }
 
@@ -95,12 +95,14 @@ object KFVCFUtils {
 
   def calculateVersionFromHeaders(it: Iterator[String]): VCFVersion = {
     val lines = it.take(200).toSeq
-    val containsInfoPG = lines.exists(line => line.contains("##INFO=<ID=PG"))
+    val containsInfoCSQ = lines.exists(line => line.contains("##INFO=<ID=CSQ"))
     val containsInfoDS = lines.exists(line => line.contains("##INFO=<ID=DS"))
-    val version = (containsInfoDS, containsInfoPG) match {
-      case (false, _) => V1
-      case (true, true) => V2
-      case (true, false) => V2_WITHOUT_PG
+    val containsInfoPG = lines.exists(line => line.contains("##INFO=<ID=PG"))
+    val version = (containsInfoCSQ, containsInfoDS, containsInfoPG) match {
+      case (false, false, _) => V1
+      case (false, true, true) => V2
+      case (false, true, false) => V2_WITHOUT_PG
+      case (true, _, _) => V3
     }
     version
   }
@@ -109,14 +111,7 @@ object KFVCFUtils {
   private case class VCFFiles(version: VCFVersion, files: Seq[String]) {
     def load(referenceGenomePath: Option[String])(implicit spark: SparkSession): DataFrame = {
       val df = vcf(files.toList, referenceGenomePath)
-      val renamedDf = if (df.columns.contains("INFO_ANN") && df.columns.contains("INFO_CSQ")) {
-        df.withColumnRenamed("INFO_ANN", "OLD_INFO_ANN").withColumnRenamed("INFO_CSQ", "INFO_ANN")
-      } else if (!df.columns.contains("INFO_ANN")) {
-        df.withColumnRenamed("INFO_CSQ", "INFO_ANN")
-      } else {
-        df
-      }
-      version.loadVersion(renamedDf)
+      version.loadVersion(df)
     }
   }
 
@@ -175,6 +170,47 @@ object KFVCFUtils {
         .withColumn("genotype", explode(col("genotypes")))
         .withColumn("INFO_PG", lit(null).cast(ArrayType(IntegerType)))
         .drop("genotypes")
+    }
+  }
+
+  case object V3 extends VCFVersion {
+    override def loadVersion(df: DataFrame): DataFrame = {
+      df
+        .drop("INFO_ANN")
+        .withColumn("genotype", explode(col("genotypes")))
+        .withColumn("INFO_ANN", transform(col("INFO_CSQ"), csq =>
+          struct(
+            csq("Allele") as "Allele",
+            csq("Consequence") as "Consequence",
+            csq("IMPACT") as "IMPACT",
+            csq("SYMBOL") as "SYMBOL",
+            csq("Gene") as "Gene",
+            csq("Feature_type") as "Feature_type",
+            csq("Feature") as "Feature",
+            csq("BIOTYPE") as "BIOTYPE",
+            csq("EXON") as "EXON",
+            csq("INTRON") as "INTRON",
+            csq("HGVSc") as "HGVSc",
+            csq("HGVSp") as "HGVSp",
+            csq("cDNA_position") as "cDNA_position",
+            csq("CDS_position") as "CDS_position",
+            csq("Protein_position") as "Protein_position",
+            csq("Amino_acids") as "Amino_acids",
+            csq("Codons") as "Codons",
+            csq("Existing_variation") as "Existing_variation",
+            csq("DISTANCE") as "DISTANCE",
+            csq("STRAND") as "STRAND",
+            csq("FLAGS") as "FLAGS",
+            csq("VARIANT_CLASS") as "VARIANT_CLASS",
+            csq("SYMBOL_SOURCE") as "SYMBOL_SOURCE",
+            csq("HGNC_ID") as "HGNC_ID",
+            csq("CANONICAL") as "CANONICAL",
+            csq("SIFT") as "SIFT",
+            csq("HGVS_OFFSET") as "HGVS_OFFSET",
+            csq("HGVSg") as "HGVSg",
+          )
+        ))
+        .drop("genotypes", "INFO_CSQ")
     }
   }
 }
