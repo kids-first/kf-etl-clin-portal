@@ -85,7 +85,7 @@ object KFVCFUtils {
     val reader = new BufferedReader(new InputStreamReader(gzipInputStream))
     try {
 
-      val lines = Iterator.continually(reader.readLine()).take(200)
+      val lines = Iterator.continually(reader.readLine()).take(3500)
       val version = calculateVersionFromHeaders(lines)
       (file, version)
     } finally {
@@ -94,7 +94,7 @@ object KFVCFUtils {
   }
 
   def calculateVersionFromHeaders(it: Iterator[String]): VCFVersion = {
-    val lines = it.take(200).toSeq
+    val lines = it.take(3500).toSeq
     val containsInfoCSQ = lines.exists(line => line.contains("##INFO=<ID=CSQ"))
     val containsInfoDS = lines.exists(line => line.contains("##INFO=<ID=DS"))
     val containsInfoPG = lines.exists(line => line.contains("##INFO=<ID=PG"))
