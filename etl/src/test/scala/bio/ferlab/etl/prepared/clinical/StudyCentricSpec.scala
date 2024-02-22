@@ -39,7 +39,7 @@ class StudyCentricSpec extends AnyFlatSpec with Matchers with WithTestSimpleConf
           `participant_count` = 2,
           `file_count` = 3,
           `biospecimen_count` = 2,
-          `experimental_strategy` = Seq("WGS", "Whole Genome Sequencing", "RNASeq")
+          `experimental_strategy` = Seq("WGS", "RNASeq")
         )
       )
   }
