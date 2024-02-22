@@ -44,7 +44,7 @@ object EsTemplateHelper extends App {
 
   def updateCentricMappingsProperties(mEntityToTemplateMappingsProps: Map[String, Value]) = {
     // not using keys from "global" variables to avoid delayed issues with tests.
-    val studyBase = mEntityToTemplateMappingsProps("study")
+    val studyBase = sortByKeyShallowly(mEntityToTemplateMappingsProps("study"))
     val participantBase = {
       val props = mEntityToTemplateMappingsProps("participant")
 

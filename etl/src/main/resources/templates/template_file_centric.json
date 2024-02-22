@@ -602,13 +602,40 @@
                 "biobank_request_link": {
                   "type": "keyword"
                 },
+                "biorepo_email": {
+                  "type": "keyword"
+                },
+                "biorepo_url": {
+                  "type": "keyword"
+                },
                 "biospecimen_count": {
                   "type": "long"
+                },
+                "contact_email": {
+                  "type": "keyword"
+                },
+                "contact_name": {
+                  "type": "keyword"
                 },
                 "controlled_access": {
                   "type": "keyword"
                 },
                 "data_category": {
+                  "type": "keyword"
+                },
+                "data_source": {
+                  "type": "keyword"
+                },
+                "dataset": {
+                  "type": "nested"
+                },
+                "date_collection_end_year": {
+                  "type": "keyword"
+                },
+                "date_collection_start_year": {
+                  "type": "keyword"
+                },
+                "description": {
                   "type": "keyword"
                 },
                 "domain": {
@@ -633,16 +660,28 @@
                 "file_count": {
                   "type": "long"
                 },
+                "institution": {
+                  "type": "keyword"
+                },
                 "investigator_id": {
                   "type": "keyword"
                 },
+                "investigator_name": {
+                  "type": "keyword"
+                },
                 "note": {
+                  "type": "keyword"
+                },
+                "part_lifespan_stage": {
                   "type": "keyword"
                 },
                 "participant_count": {
                   "type": "long"
                 },
                 "program": {
+                  "type": "keyword"
+                },
+                "publication": {
                   "type": "keyword"
                 },
                 "release_id": {
@@ -652,10 +691,16 @@
                   "normalizer": "custom_normalizer",
                   "type": "keyword"
                 },
+                "selection_criteria": {
+                  "type": "keyword"
+                },
                 "status": {
                   "type": "keyword"
                 },
                 "study_code": {
+                  "type": "keyword"
+                },
+                "study_design": {
                   "type": "keyword"
                 },
                 "study_id": {
@@ -755,13 +800,40 @@
             "biobank_request_link": {
               "type": "keyword"
             },
+            "biorepo_email": {
+              "type": "keyword"
+            },
+            "biorepo_url": {
+              "type": "keyword"
+            },
             "biospecimen_count": {
               "type": "long"
+            },
+            "contact_email": {
+              "type": "keyword"
+            },
+            "contact_name": {
+              "type": "keyword"
             },
             "controlled_access": {
               "type": "keyword"
             },
             "data_category": {
+              "type": "keyword"
+            },
+            "data_source": {
+              "type": "keyword"
+            },
+            "dataset": {
+              "type": "nested"
+            },
+            "date_collection_end_year": {
+              "type": "keyword"
+            },
+            "date_collection_start_year": {
+              "type": "keyword"
+            },
+            "description": {
               "type": "keyword"
             },
             "domain": {
@@ -786,16 +858,28 @@
             "file_count": {
               "type": "long"
             },
+            "institution": {
+              "type": "keyword"
+            },
             "investigator_id": {
               "type": "keyword"
             },
+            "investigator_name": {
+              "type": "keyword"
+            },
             "note": {
+              "type": "keyword"
+            },
+            "part_lifespan_stage": {
               "type": "keyword"
             },
             "participant_count": {
               "type": "long"
             },
             "program": {
+              "type": "keyword"
+            },
+            "publication": {
               "type": "keyword"
             },
             "release_id": {
@@ -805,10 +889,16 @@
               "normalizer": "custom_normalizer",
               "type": "keyword"
             },
+            "selection_criteria": {
+              "type": "keyword"
+            },
             "status": {
               "type": "keyword"
             },
             "study_code": {
+              "type": "keyword"
+            },
+            "study_design": {
               "type": "keyword"
             },
             "study_id": {
