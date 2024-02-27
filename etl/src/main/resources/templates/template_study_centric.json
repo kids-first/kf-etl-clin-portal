@@ -66,6 +66,12 @@
         "domain": {
           "type": "keyword"
         },
+        "expected_data_categories": {
+          "type": "keyword"
+        },
+        "expected_number_participants": {
+          "type": "long"
+        },
         "experimental_strategy": {
           "type": "keyword"
         },
