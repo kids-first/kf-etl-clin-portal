@@ -627,7 +627,60 @@
                   "type": "keyword"
                 },
                 "dataset": {
-                  "type": "nested"
+                  "type": "nested",
+                  "properties": {
+                    "dataset_id": {
+                      "type": "keyword"
+                    },
+                    "dataset_name": {
+                      "type": "keyword"
+                    },
+                    "date_collection_start_year": {
+                      "type": "keyword"
+                    },
+                    "date_collection_end_year": {
+                      "type": "keyword"
+                    },
+                    "data_category": {
+                      "type": "keyword"
+                    },
+                    "data_type": {
+                      "type": "keyword"
+                    },
+                    "expected_data_categories": {
+                      "type": "keyword"
+                    },
+                    "experimental_strategy": {
+                      "type": "keyword"
+                    },
+                    "experimental_platform": {
+                      "type": "keyword"
+                    },
+                    "publication": {
+                      "type": "keyword"
+                    },
+                    "access_limitation": {
+                      "type": "keyword"
+                    },
+                    "access_requirement": {
+                      "type": "keyword"
+                    },
+                    "repository": {
+                      "type": "keyword"
+                    },
+                    "repository_url": {
+                      "type": "keyword"
+                    },
+                    "participant_count": {
+                      "type": "keyword"
+                    },
+                    "biospecimen_count": {
+                      "type": "keyword"
+                    },
+                    "file_count": {
+                      "type": "keyword"
+                    }
+                  }
                 },
                 "date_collection_end_year": {
                   "type": "keyword"
@@ -831,7 +884,60 @@
               "type": "keyword"
             },
             "dataset": {
-              "type": "nested"
+              "type": "nested",
+              "properties": {
+                "dataset_id": {
+                  "type": "keyword"
+                },
+                "dataset_name": {
+                  "type": "keyword"
+                },
+                "date_collection_start_year": {
+                  "type": "keyword"
+                },
+                "date_collection_end_year": {
+                  "type": "keyword"
+                },
+                "data_category": {
+                  "type": "keyword"
+                },
+                "data_type": {
+                  "type": "keyword"
+                },
+                "expected_data_categories": {
+                  "type": "keyword"
+                },
+                "experimental_strategy": {
+                  "type": "keyword"
+                },
+                "experimental_platform": {
+                  "type": "keyword"
+                },
+                "publication": {
+                  "type": "keyword"
+                },
+                "access_limitation": {
+                  "type": "keyword"
+                },
+                "access_requirement": {
+                  "type": "keyword"
+                },
+                "repository": {
+                  "type": "keyword"
+                },
+                "repository_url": {
+                  "type": "keyword"
+                },
+                "participant_count": {
+                  "type": "keyword"
+                },
+                "biospecimen_count": {
+                  "type": "keyword"
+                },
+                "file_count": {
+                  "type": "keyword"
+                }
+              }
             },
             "date_collection_end_year": {
               "type": "keyword"
