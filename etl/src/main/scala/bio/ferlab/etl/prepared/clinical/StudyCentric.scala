@@ -76,8 +76,8 @@ case class StudyCentric(rc: RuntimeETLContext, studyIds: List[String]) extends S
       ))
       .withColumn("search_text", filter(col("search_text"), x => x.isNotNull && x =!= ""))
       .join(aggSeqExpDf, Seq("study_id"), "left_outer")
-      .withColumnRenamed("experimental_strategy_file", "experimental_strategy")
-      .drop("experimental_strategy_seq_exp")
+      .withColumnRenamed("experimental_strategy_seq_exp", "experimental_strategy")
+      .drop("experimental_strategy_file")
 
     transformedStudyDf
   }
