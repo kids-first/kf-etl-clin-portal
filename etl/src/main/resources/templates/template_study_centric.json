@@ -1,7 +1,5 @@
 {
-  "index_patterns": [
-    "study_centric*"
-  ],
+  "index_patterns": ["study_centric*"],
   "priority": 1,
   "template": {
     "settings": {
