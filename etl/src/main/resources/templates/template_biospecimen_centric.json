@@ -1,7 +1,5 @@
 {
-  "index_patterns": [
-    "biospecimen_centric*"
-  ],
+  "index_patterns": ["biospecimen_centric*"],
   "priority": 1,
   "template": {
     "settings": {
@@ -452,6 +450,7 @@
               "type": "keyword"
             },
             "families_id": {
+              "normalizer": "custom_normalizer",
               "type": "keyword"
             },
             "family": {

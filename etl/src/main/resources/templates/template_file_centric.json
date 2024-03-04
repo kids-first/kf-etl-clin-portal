@@ -1,7 +1,5 @@
 {
-  "index_patterns": [
-    "file_centric*"
-  ],
+  "index_patterns": ["file_centric*"],
   "priority": 1,
   "template": {
     "settings": {
@@ -411,6 +409,7 @@
               "type": "keyword"
             },
             "families_id": {
+              "normalizer": "custom_normalizer",
               "type": "keyword"
             },
             "family": {

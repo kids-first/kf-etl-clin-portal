@@ -1,7 +1,5 @@
 {
-  "index_patterns": [
-    "participant_centric*"
-  ],
+  "index_patterns": ["participant_centric*"],
   "priority": 1,
   "template": {
     "settings": {
@@ -110,6 +108,7 @@
           "type": "keyword"
         },
         "families_id": {
+          "normalizer": "custom_normalizer",
           "type": "keyword"
         },
         "family": {
