@@ -1,7 +1,7 @@
 package bio.ferlab.etl.normalized.clinical
 
 import bio.ferlab.datalake.testutils.WithSparkSession
-import bio.ferlab.etl.normalized.clinical.Utils.{age_on_set, extractDocumentReferenceAcl, retrieveRepository, sanitizeFilename}
+import bio.ferlab.etl.normalized.clinical.Utils._
 import org.apache.spark.sql.functions.col
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -11,9 +11,15 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
   import spark.implicits._
 
   "retrieveRepository" should "return dcf, gen3 or null" in {
-    val df = Seq("https://data.kidsfirstdrc.org/path", "https://api.gdc.cancer.gov/path", "other", null).toDF("repository")
+    val df = Seq(
+      s"https://$gen3Domain/path",
+      s"drs://$dcfDomain/path",
+      s"https://$dcfDomain2/path",
+      "other",
+      null
+    ).toDF("repository")
 
-    df.select(retrieveRepository(col("repository"))).as[String].collect() should contain theSameElementsAs Seq("gen3", "dcf", null, null)
+    df.select(retrieveRepository(col("repository"))).as[String].collect() should contain theSameElementsAs Seq("gen3", "dcf", "dcf", null, null)
   }
 
   "sanitizeFilename" should "remove special characters" in {

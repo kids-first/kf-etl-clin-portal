@@ -5,12 +5,7 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Column, functions}
 
 object Utils {
-
-  val actCodeR = "^phs[0-9.a-z]+"
   val extractSystemUrl = "^(http[s]?:\\/\\/[A-Za-z0-9-.\\/]+)\\/[A-za-z0-9-?.]+[a-z\\/=]{1}$"
-  val gen3Host = "data.kidsfirstdrc.org"
-  val dcfHost = "api.gdc.cancer.gov"
-  val patternUrnUniqueIdStudy = "[A-Z][a-z]+-(SD_[0-9A-Za-z]+)-([A-Z]{2}_[0-9A-Za-z]+)"
   val phenotypeExtract = "^[A-Z]{2,}.[0-9]+$"
   val DRS_HOSTNAME = "drs://data.kidsfirstdrc.org/"
   val virtualBiorepositoryContact = "Virtual Biorepository Contact"
@@ -68,9 +63,15 @@ object Utils {
 
   val retrieveIsHarmonized: Column => Column = url => url.isNotNull && (url like "harmonized-data")
 
-  val retrieveRepository: Column => Column = url => when(url like s"%$gen3Host%", "gen3")
-    .when(url like s"%$dcfHost%", "dcf")
-    .otherwise(null)
+  val gen3Domain = "data.kidsfirstdrc.org"
+  val dcfDomain = "nci-crdc.datacommons.io"
+  val dcfDomain2 = "api.gdc.cancer.gov"
+  val retrieveRepository: Column => Column = url =>
+    when(url like s"%$gen3Domain%", "gen3")
+      .when(url like s"%$dcfDomain%", "dcf")
+      //legacy test
+      .when(url like s"%$dcfDomain2%", "dcf")
+      .otherwise(null)
 
   val retrieveSize: UserDefinedFunction = udf((d: Option[String]) => d.map(BigInt(_).toLong))
 
