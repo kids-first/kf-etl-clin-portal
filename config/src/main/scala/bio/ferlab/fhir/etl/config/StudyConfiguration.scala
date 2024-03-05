@@ -44,7 +44,7 @@ object StudyConfiguration {
       snvVCFPattern = "(.*/harmonized/family-variants/.*.CGP.filtered.deNovo.vep.vcf.gz)"
     ),
     "SD_0TYVY1TW" -> StudyConfiguration(
-      snvVCFPattern = "(.*/harmonized-data/family-variants/.*.CGP.filtered.deNovo.vep.vcf.gz|.*/harmonized-data/family-variants/.*.multi.vqsr.filtered.denovo.vep_105.vcf.gz)"
+      snvVCFPattern = "(.*/harmonized-data/family-variants/.*.multi.vqsr.filtered.denovo.vep_105.vcf.gz)"
     ),
     "SD_YGVA0E1C" -> StudyConfiguration(
       snvVCFPattern = "(.*/harmonized/family-variants/.*.CGP.filtered.deNovo.vep.vcf.gz|.*/harmonized/family-variants/.*.postCGP.filtered.deNovo.vep.vcf.gz)"
@@ -83,7 +83,7 @@ object StudyConfiguration {
       snvVCFPattern = "(.*/harmonized-data/family-variants/.*.CGP.filtered.deNovo.vep.vcf.gz)"
     ),
     "SD_15A2MQQ9" -> StudyConfiguration(
-      snvVCFPattern = "(.*/harmonized-data/family-variants/.*.CGP.filtered.deNovo.vep.vcf.gz|.*/harmonized-data/family-variants/.*.multi.vqsr.filtered.denovo.vep_105.vcf.gz)"
+      snvVCFPattern = "(.*/harmonized-data/family-variants/.*.multi.vqsr.filtered.denovo.vep_105.vcf.gz)"
     ),
     "SD_9PYZAHHE" -> StudyConfiguration(
       snvVCFPattern = "(.*/harmonized/family-variants/.*.CGP.filtered.deNovo.vep.vcf.gz)"
