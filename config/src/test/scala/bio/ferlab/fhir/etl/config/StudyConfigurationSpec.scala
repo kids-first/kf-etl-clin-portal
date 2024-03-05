@@ -85,7 +85,6 @@ class StudyConfigurationSpec extends AnyFlatSpec with Matchers with WithSparkSes
       studyId = "SD_0TYVY1TW",
       pattern = kfStudiesConfiguration("SD_0TYVY1TW").snvVCFPattern,
       paths = Seq(
-        "s3://kf-study-us-east-1-prd-sd-0tyvy1tw/harmonized-data/family-variants/9bacad7b-b55a-4b13-8b92-88c90f47f0e1.CGP.filtered.deNovo.vep.vcf.gz",
         "s3://kf-study-us-east-1-prd-sd-0tyvy1tw/harmonized-data/family-variants/9bacad7b-b55a-4b13-8b92-88c90f47f0e1.multi.vqsr.filtered.denovo.vep_105.vcf.gz"
       )
     ),
@@ -177,7 +176,6 @@ class StudyConfigurationSpec extends AnyFlatSpec with Matchers with WithSparkSes
       studyId = "SD_15A2MQQ9",
       pattern = kfStudiesConfiguration("SD_15A2MQQ9").snvVCFPattern,
       paths = Seq(
-        "s3://kf-strides-study-us-east-1-prd-sd-15a2mqq9/harmonized-data/family-variants/447d9f46-9328-4bae-a39d-ac29d8a0c197.CGP.filtered.deNovo.vep.vcf.gz",
         "s3://kf-strides-study-us-east-1-prd-sd-15a2mqq9/harmonized-data/family-variants/447d9f46-9328-4bae-a39d-ac29d8a0c197.multi.vqsr.filtered.denovo.vep_105.vcf.gz"
       )
     ),
