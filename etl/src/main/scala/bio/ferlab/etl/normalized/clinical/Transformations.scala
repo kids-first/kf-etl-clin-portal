@@ -133,9 +133,9 @@ object Transformations {
     Custom(_
       .select("fhir_id", "keyword", "release_id", "study_id", "title", "identifier", "principalInvestigator", "status", "relatedArtifact", "category", "contact", "note")
       .withColumn("attribution", extractFirstForSystem(col("identifier"), Seq(SYS_NCBI_URL))("value"))
-      .withColumn("external_id", extractStudyExternalId(extractFirstForSystem(col("identifier"), Seq(SYS_NCBI_URL))("value")))
+      .withColumn("external_id", extractStudyExternalId(col("attribution")))
       .withColumnRenamed("title", "name")
-      .withColumn("version", extractStudyVersion(extractFirstForSystem(col("identifier"), Seq(SYS_NCBI_URL))("value")))
+      .withColumn("version", extractStudyVersion(col("attribution")))
       .withColumn(
         "investigator_id",
         regexp_extract(col("principalInvestigator")("reference"), patternPractitionerRoleResearchStudy, 1)
