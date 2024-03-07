@@ -91,4 +91,20 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
       Some("dy"),
     )
   }
+
+  "extractStudyExternalId" should "extract the external id" in {
+    val df = Seq(
+      "phs002330.v1.p1",
+      null,
+      "abcdefgh",
+      "stu.dy",
+    ).toDF("external_id")
+
+    df.select(extractStudyExternalId(col("external_id"))).as[Option[String]].collect() should contain theSameElementsAs Seq(
+      Some("phs002330"),
+      None,
+      Some("abcdefgh"),
+      Some("stu"),
+    )
+  }
 }

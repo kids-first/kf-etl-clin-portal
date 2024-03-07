@@ -81,7 +81,10 @@ object Utils {
       .otherwise(concat_ws(".", slice(split(rawVersion, "\\."), 2, Int.MaxValue)))
   }
 
-  val extractStudyExternalId: UserDefinedFunction = udf((s: Option[String]) => s.map(_.split('.').head))
+  val extractStudyExternalId: Column => Column = rawExternalId => {
+    when(rawExternalId.isNull, lit(null))
+      .otherwise(split(rawExternalId, "\\.")(0))
+  }
 
   val sanitizeFilename: Column => Column = fileName => slice(split(fileName, "/"), -1, 1)(0)
 
