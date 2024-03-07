@@ -59,4 +59,52 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
       ("f3", Seq("s")),
     )
   }
+
+  "retrieveSize" should "transform a string to a long" in {
+    val df = Seq(
+      "17290282717",
+      "200",
+      "2337555464123423423445",
+      null
+    ).toDF("size")
+
+    df.select(retrieveSize(col("size"))).as[Option[Long]].collect() should contain theSameElementsAs Seq(
+      Some(17290282717L),
+      Some(200L),
+      None,
+      None
+    )
+  }
+
+  "extractStudyVersion" should "extract the version" in {
+    val df = Seq(
+      "phs002330.v1.p1",
+      null,
+      "abcdefgh",
+      "stu.dy",
+    ).toDF("version")
+
+    df.select(extractStudyVersion(col("version"))).as[Option[String]].collect() should contain theSameElementsAs Seq(
+      Some("v1.p1"),
+      None,
+      Some(""),
+      Some("dy"),
+    )
+  }
+
+  "extractStudyExternalId" should "extract the external id" in {
+    val df = Seq(
+      "phs002330.v1.p1",
+      null,
+      "abcdefgh",
+      "stu.dy",
+    ).toDF("external_id")
+
+    df.select(extractStudyExternalId(col("external_id"))).as[Option[String]].collect() should contain theSameElementsAs Seq(
+      Some("phs002330"),
+      None,
+      Some("abcdefgh"),
+      Some("stu"),
+    )
+  }
 }

@@ -2,6 +2,7 @@ package bio.ferlab.etl.normalized.clinical
 
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.LongType
 import org.apache.spark.sql.{Column, functions}
 
 object Utils {
@@ -73,11 +74,17 @@ object Utils {
       .when(url like s"%$dcfDomain2%", "dcf")
       .otherwise(null)
 
-  val retrieveSize: UserDefinedFunction = udf((d: Option[String]) => d.map(BigInt(_).toLong))
+  val retrieveSize: Column => Column = rawFileSize => rawFileSize.cast(LongType)
 
-  val extractStudyVersion: UserDefinedFunction = udf((s: Option[String]) => s.map(_.split('.').tail.mkString(".")))
+  val extractStudyVersion: Column => Column = rawVersion => {
+    when(rawVersion.isNull, lit(null))
+      .otherwise(concat_ws(".", slice(split(rawVersion, "\\."), 2, Int.MaxValue)))
+  }
 
-  val extractStudyExternalId: UserDefinedFunction = udf((s: Option[String]) => s.map(_.split('.').head))
+  val extractStudyExternalId: Column => Column = rawExternalId => {
+    when(rawExternalId.isNull, lit(null))
+      .otherwise(split(rawExternalId, "\\.")(0))
+  }
 
   val sanitizeFilename: Column => Column = fileName => slice(split(fileName, "/"), -1, 1)(0)
 
