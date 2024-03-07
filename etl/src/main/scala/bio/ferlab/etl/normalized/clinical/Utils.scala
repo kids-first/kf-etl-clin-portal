@@ -76,15 +76,11 @@ object Utils {
 
   val retrieveSize: Column => Column = rawFileSize => rawFileSize.cast(LongType)
 
-  val extractStudyVersion: Column => Column = rawVersion => {
+  val extractStudyVersion: Column => Column = rawVersion =>
     when(rawVersion.isNull, lit(null))
-      .otherwise(concat_ws(".", slice(split(rawVersion, "\\."), 2, Int.MaxValue)))
-  }
+      .otherwise(concat_ws(".", slice(split(rawVersion, "\\."), 2, Short.MaxValue)))
 
-  val extractStudyExternalId: Column => Column = rawExternalId => {
-    when(rawExternalId.isNull, lit(null))
-      .otherwise(split(rawExternalId, "\\.")(0))
-  }
+  val extractStudyExternalId: Column => Column = rawExternalId => split(rawExternalId, "\\.")(0)
 
   val sanitizeFilename: Column => Column = fileName => slice(split(fileName, "/"), -1, 1)(0)
 

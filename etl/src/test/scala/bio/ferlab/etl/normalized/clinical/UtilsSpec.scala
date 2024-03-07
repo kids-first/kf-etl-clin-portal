@@ -64,6 +64,7 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
     val df = Seq(
       "17290282717",
       "200",
+      // Testing overflow of LongType, should return None
       "2337555464123423423445",
       null
     ).toDF("size")
@@ -82,6 +83,8 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
       null,
       "abcdefgh",
       "stu.dy",
+      "this.is.a.very.long.example",
+      "this.has,weird.characters"
     ).toDF("version")
 
     df.select(extractStudyVersion(col("version"))).as[Option[String]].collect() should contain theSameElementsAs Seq(
@@ -89,6 +92,8 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
       None,
       Some(""),
       Some("dy"),
+      Some("is.a.very.long.example"),
+      Some("has,weird.characters")
     )
   }
 
