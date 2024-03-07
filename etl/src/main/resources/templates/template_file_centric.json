@@ -811,6 +811,9 @@
             "instrument_model": {
               "type": "keyword"
             },
+            "is_paired_end": {
+              "type": "boolean"
+            },
             "library_name": {
               "type": "keyword"
             },
