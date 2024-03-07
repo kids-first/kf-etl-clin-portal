@@ -208,6 +208,9 @@ object KFVCFUtils {
             csq("SIFT") as "SIFT",
             csq("HGVS_OFFSET") as "HGVS_OFFSET",
             csq("HGVSg") as "HGVSg",
+            csq("RefSeq") as "RefSeq",
+            csq("PUBMED") as "PUBMED",
+            csq("PICK") as "PICK"
           )
         ))
         .drop("genotypes", "INFO_CSQ")
