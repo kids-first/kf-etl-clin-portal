@@ -64,7 +64,7 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
     val df = Seq(
       "17290282717",
       "200",
-      // Testing overflow of LongType, should return None
+      // Testing overflow
       "2337555464123423423445",
       null
     ).toDF("size")
