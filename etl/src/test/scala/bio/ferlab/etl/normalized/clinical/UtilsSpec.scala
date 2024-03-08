@@ -61,17 +61,18 @@ class UtilsSpec extends AnyFlatSpec with Matchers with WithSparkSession {
   }
 
   "retrieveSize" should "transform a string to a long" in {
+    // getBytes() is used since "fileSize" is defined as bytes in src/main/resources/schema/kfdrc-documentreference.avsc
     val df = Seq(
-      "17290282717",
-      "200",
+      "17290282717".getBytes(),
+      "1451170".getBytes(),
       // Testing overflow
-      "2337555464123423423445",
+      "2337555464123423423445".getBytes(),
       null
     ).toDF("size")
 
     df.select(retrieveSize(col("size"))).as[Option[Long]].collect() should contain theSameElementsAs Seq(
       Some(17290282717L),
-      Some(200L),
+      Some(1451170L),
       None,
       None
     )

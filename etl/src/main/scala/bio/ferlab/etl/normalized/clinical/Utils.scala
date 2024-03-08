@@ -2,7 +2,7 @@ package bio.ferlab.etl.normalized.clinical
 
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.LongType
+import org.apache.spark.sql.types.{LongType, StringType}
 import org.apache.spark.sql.{Column, functions}
 
 object Utils {
@@ -74,7 +74,7 @@ object Utils {
       .when(url like s"%$dcfDomain2%", "dcf")
       .otherwise(null)
 
-  val retrieveSize: Column => Column = rawFileSize => rawFileSize.cast(LongType)
+  val retrieveSize: Column => Column = rawFileSize => rawFileSize.cast(StringType).cast(LongType)
 
   val extractStudyVersion: Column => Column = rawVersion =>
     when(rawVersion.isNull, lit(null))
