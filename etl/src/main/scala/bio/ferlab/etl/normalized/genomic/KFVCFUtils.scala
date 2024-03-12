@@ -186,7 +186,7 @@ object KFVCFUtils {
             csq("SYMBOL") as "SYMBOL",
             csq("Gene") as "Gene",
             csq("Feature_type") as "Feature_type",
-            when(csq("SOURCE") === "Ensembl", csq("Feature")).otherwise(lit(null)) as "Feature",
+            when(csq("SOURCE") === "RefSeq", lit(null)).otherwise(csq("Feature")) as "Feature",
             csq("BIOTYPE") as "BIOTYPE",
             csq("EXON") as "EXON",
             csq("INTRON") as "INTRON",
