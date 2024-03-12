@@ -186,7 +186,7 @@ object KFVCFUtils {
             csq("SYMBOL") as "SYMBOL",
             csq("Gene") as "Gene",
             csq("Feature_type") as "Feature_type",
-            csq("Feature") as "Feature",
+            when(csq("SOURCE") === "Ensembl", csq("Feature")).otherwise(lit(null)) as "Feature",
             csq("BIOTYPE") as "BIOTYPE",
             csq("EXON") as "EXON",
             csq("INTRON") as "INTRON",
@@ -208,7 +208,7 @@ object KFVCFUtils {
             csq("SIFT") as "SIFT",
             csq("HGVS_OFFSET") as "HGVS_OFFSET",
             csq("HGVSg") as "HGVSg",
-            csq("RefSeq") as "RefSeq",
+            when(csq("SOURCE") === "RefSeq", csq("Feature")).otherwise(csq("RefSeq")) as "RefSeq",
             csq("PUBMED") as "PUBMED",
             csq("PICK") as "PICK"
           )
