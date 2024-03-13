@@ -49,6 +49,17 @@
         "data_source": {
           "type": "keyword"
         },
+        "data_types": {
+          "type": "nested",
+          "properties": {
+            "file_count": {
+              "type": "long"
+            },
+            "data_type": {
+              "type": "keyword"
+            }
+          }
+        },
         "dataset": {
           "type": "nested",
           "properties": {
@@ -101,7 +112,7 @@
               "type": "keyword"
             },
             "file_count": {
-              "type": "keyword"
+              "type": "long"
             }
           }
         },
@@ -123,8 +134,16 @@
         "expected_number_participants": {
           "type": "long"
         },
-        "experimental_strategy": {
-          "type": "keyword"
+        "experimental_strategies": {
+          "type": "nested",
+          "properties": {
+            "file_count": {
+              "type": "long"
+            },
+            "experimental_strategy": {
+              "type": "keyword"
+            }
+          }
         },
         "external_id": {
           "normalizer": "custom_normalizer",

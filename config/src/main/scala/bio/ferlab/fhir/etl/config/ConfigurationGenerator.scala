@@ -235,7 +235,8 @@ object ConfigurationGenerator extends App {
       args = args.toList,
       sparkconf = spark_conf
     ),
-      dataservice_url = "https://kf-api-dataservice-qa.kidsfirstdrc.org",
+      //same as QA!
+      dataservice_url = "https://kf-api-dataservice.kidsfirstdrc.org",
       studies = studiesConfigurations(project)
     ))
 
