@@ -221,7 +221,7 @@ object ConfigurationGenerator extends App {
         "spark.databricks.delta.schema.autoMerge.enabled" -> "true"
       )
     ),
-      dataservice_url = "https://kf-api-dataservice-qa.kidsfirstdrc.org"
+      dataservice_url = "https://kf-api-dataservice.kidsfirstdrc.org"
 
     ))
 
@@ -235,7 +235,8 @@ object ConfigurationGenerator extends App {
       args = args.toList,
       sparkconf = spark_conf
     ),
-      dataservice_url = "https://kf-api-dataservice-qa.kidsfirstdrc.org",
+      // data service prd is used for QA
+      dataservice_url = "https://kf-api-dataservice.kidsfirstdrc.org",
       studies = studiesConfigurations(project)
     ))
 
