@@ -69,7 +69,7 @@ class PortalEtlEmrCreator(ABC):
 
         response = client.run_job_flow(
             Name=emr_name,
-            ReleaseLabel='emr-6.11.0',
+            ReleaseLabel='emr-7.0.0',
             LogUri=f's3n://{self.bucket}/jobs/elasticmapreduce/',
             Instances=instance_config,
             Applications=[

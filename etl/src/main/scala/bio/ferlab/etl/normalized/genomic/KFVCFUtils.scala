@@ -110,7 +110,7 @@ object KFVCFUtils {
 
   private case class VCFFiles(version: VCFVersion, files: Seq[String]) {
     def load(referenceGenomePath: Option[String])(implicit spark: SparkSession): DataFrame = {
-      val df = vcf(files.toList, referenceGenomePath)
+      val df = vcf(files.toList, referenceGenomePath, optional = false, split = true)
       version.loadVersion(df)
     }
   }

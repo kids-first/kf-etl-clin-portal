@@ -43,7 +43,7 @@ aws emr create-cluster \
   --ec2-attributes "{\"KeyName\":\"flintrock\",\"InstanceProfile\":\"kf-variant-emr-ec2-${env}-profile\",\"SubnetId\":\"${subnet}\"}" \
   --service-role kf-variant-emr-$env-role \
   --enable-debugging \
-  --release-label emr-6.11.0 \
+  --release-label emr-7.0.0 \
   --bootstrap-actions Path="s3://kf-strides-232196027141-datalake-${env}/jobs/bootstrap-actions/enable-ssm.sh" \
   --steps "${steps}" \
   --log-uri "s3n://kf-strides-232196027141-datalake-${env}/jobs/elasticmapreduce/" \
