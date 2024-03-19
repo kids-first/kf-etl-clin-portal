@@ -11,7 +11,7 @@ case class AWSConfig(bucketName: String)
 
 case class KeycloakConfig(cookie: String)
 
-case class FhirConfig(baseUrl: String, resources: List[FhirRequest])
+case class FhirConfig(resources: List[FhirRequest])
 
 case class FhirRequest(`type`: String, schema: String, total: Option[String], profile: Option[String], entityType: Option[String], count: Option[Int], additionalQueryParam: Option[Map[String, List[String]]])
 

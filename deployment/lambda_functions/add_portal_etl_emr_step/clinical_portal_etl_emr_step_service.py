@@ -55,9 +55,10 @@ PORTAL_ETL_STEP_DESCRIPTION_MAP = {
     'download and run fhavro-export': lambda etl_config, elastic_search_endpoint:
     EmrStepBuilder("Download and Run Fhavro-export", EmrStepArgumentBuilder()
                    .with_fhir_custom_job(etl_config['etlPortalBucket'], etl_config['input']['releaseId'],
-                                         etl_config['input']['studyIds'], etl_config['input']['fhirUrl'])
-                   .build()).build(),
-
+                                         etl_config['input']['studyIds'], etl_config['input']['fhirUrl'],
+                                         etl_config['input']['verbose'])
+                   .build())
+    .build(),
     'normalize dataservice': lambda etl_config, elastic_search_endpoint:
     EmrStepBuilder("Normalize Dataservice", EmrStepArgumentBuilder()
                    .with_spark_job("bio.ferlab.etl.normalized.dataservice.RunNormalizeDataservice",
@@ -174,7 +175,8 @@ if __name__ == '__main__':
             'test': 'test',
             'studyIds': ['SDTest1', 'SDTest2'],
             'releaseId': 're_1',
-            "fhirUrl": "https://kf-api-fhir-service.kidsfirstdrc.org"
+            "fhirUrl": "https://kf-api-fhir-service.kidsfirstdrc.org",
+            "verbose": "y"
         },
         'portalEtlClusterId': '1234'
     }
