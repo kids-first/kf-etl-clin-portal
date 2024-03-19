@@ -194,7 +194,8 @@ object ConfigurationGenerator extends App {
     "spark.sql.legacy.timeParserPolicy" -> "CORRECTED",
     "spark.sql.mapKeyDedupPolicy" -> "LAST_WIN",
     "spark.hadoop.fs.s3a.multiobjectdelete.enable" -> "false", //https://hadoop.apache.org/docs/stable/hadoop-aws/tools/hadoop-aws/troubleshooting_s3a.html#MultiObjectDeleteException_during_delete_or_rename_of_files,
-    "spark.databricks.delta.replaceWhere.constraintCheck.enabled" -> "false"
+    "spark.databricks.delta.replaceWhere.constraintCheck.enabled" -> "false",
+    "spark.rpc.message.maxSize" -> "256",
   )
   conf.foreach { case (project, _) =>
     ConfigurationWriter.writeTo(s"config/output/config/dev-$project.conf", ETLConfiguration(DatalakeConf(
