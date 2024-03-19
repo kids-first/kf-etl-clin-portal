@@ -8,7 +8,7 @@ import bio.ferlab.datalake.testutils.WithSparkSession
 import bio.ferlab.etl.normalized.clinical.FhirToNormalizedMappings.{generateFhirIdColumValueFromIdColum, mappings}
 import bio.ferlab.fhir.etl.config.ETLConfiguration
 import org.apache.spark.sql.functions.col
-import org.apache.spark.sql.internal.SQLConf.LegacyBehaviorPolicy.CORRECTED
+import org.apache.spark.sql.internal.LegacyBehaviorPolicy.CORRECTED
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 

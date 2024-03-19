@@ -8,8 +8,8 @@
   {
     "Classification": "spark-defaults",
     "Properties": {
-      "spark.jars.packages":  "io.projectglow:glow-spark3_2.12:1.2.1",
-      "spark.jars.excludes": "org.apache.httpcomponents:httpcore,org.apache.httpcomponents:httpclient",
+      "spark.jars.packages":  "io.projectglow:glow-spark3_2.12:2.0.0",
+      "spark.jars.excludes": "org.apache.httpcomponents:httpcore,org.apache.httpcomponents:httpclient,org.apache.hadoop:hadoop-client,io.netty:netty-all,io.netty:netty-handler,io.netty:netty-transport-native-epoll",
       "spark.jars.ivySettings" : "/mnt/ivysettings.xml",
       "spark.memory.storageFraction" : "0",
       "spark.sql.shuffle.partitions": "500",

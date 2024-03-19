@@ -123,11 +123,11 @@ aws emr create-cluster \
   --ec2-attributes "{\"KeyName\":\"${PROJECT_TO_KEYNAME["${PROJECT}"]}\",\"InstanceProfile\":\"${INSTANCE_PROFILE}\",\"SubnetId\":\"${SUBNET}\", \"ServiceAccessSecurityGroup\":\"${SG_SERVICE}\", \"EmrManagedMasterSecurityGroup\":\"${SG_MASTER}\", \"EmrManagedSlaveSecurityGroup\":\"${SG_SLAVE}\"}" \
   --service-role "${SERVICE_ROLE}" \
   --enable-debugging \
-  --release-label emr-6.11.0 \
+  --release-label emr-7.0.0 \
   --bootstrap-actions Path="s3://${BUCKET}/jobs/bootstrap-actions/enable-ssm.sh" \
   --steps "${STEPS}" \
   --log-uri "s3n://${BUCKET}/jobs/elasticmapreduce/" \
   --name "Zeppelin - ${ENV}" \
   --instance-groups "[{\"InstanceCount\":${INSTANCE_COUNT},\"InstanceGroupType\":\"CORE\",\"InstanceType\":\"${INSTANCE_TYPE}\",\"Name\":\"Core - 2\"},{\"InstanceCount\":1,\"EbsConfiguration\":{\"EbsBlockDeviceConfigs\":[{\"VolumeSpecification\":{\"SizeInGB\":32,\"VolumeType\":\"gp2\"},\"VolumesPerInstance\":2}]},\"InstanceGroupType\":\"MASTER\",\"InstanceType\":\"m5.xlarge\",\"Name\":\"Master - 1\"}]" \
-  --configurations file://./conf/spark-config-clinical.json \
+  --configurations file://./conf/spark-config-genomic.json \
   --region us-east-1

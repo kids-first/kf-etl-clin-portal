@@ -364,7 +364,7 @@ aws emr create-cluster \
   --ec2-attributes "{\"InstanceProfile\":\"${INSTANCE_PROFILE}\",\"SubnetId\":\"${SUBNET}\", \"ServiceAccessSecurityGroup\":\"${SG_SERVICE}\", \"EmrManagedMasterSecurityGroup\":\"${SG_MASTER}\", \"EmrManagedSlaveSecurityGroup\":\"${SG_SLAVE}\"}" \
   --service-role "${SERVICE_ROLE}" \
   --enable-debugging \
-  --release-label emr-6.11.0 \
+  --release-label emr-7.0.0 \
   --bootstrap-actions Path="s3://${BUCKET}/jobs/bootstrap-actions/install-java11.sh" \
   --steps "${STEPS}" \
   --log-uri "s3n://${BUCKET}/jobs/elasticmapreduce/" \
