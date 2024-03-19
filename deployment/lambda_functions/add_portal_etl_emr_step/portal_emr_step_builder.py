@@ -13,13 +13,14 @@ class EmrStepArgumentBuilder:
         ])
         return self
 
-    def with_fhir_custom_job(self, etl_portal_bucket: str, release_id: str, studies: list, fhir_url: str):
+    def with_fhir_custom_job(self, etl_portal_bucket: str, release_id: str, studies: list, fhir_url: str, verbose: str):
+        # TODO kc en vars
         fhavro_export_args = [
             "aws", "s3", "cp",
             f"s3://{etl_portal_bucket}/jobs/fhavro-export.jar", "/home/hadoop;",
-            f"export FHIR_URL='{fhir_url}'; export BUCKET='{etl_portal_bucket}';",
+            f"export BUCKET='{etl_portal_bucket}';",
             "cd /home/hadoop;","/usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar",
-            f"fhavro-export.jar {release_id} {','.join(studies)} default y"
+            f"fhavro-export.jar --release:{release_id} --studies:{','.join(studies)} --project:default --fhir:{fhir_url} --verbose:{verbose}"
         ]
 
         self.step_args.extend([

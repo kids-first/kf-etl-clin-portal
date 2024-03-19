@@ -1,55 +1,46 @@
 package bio.ferlab.fhir.etl
 
+import bio.ferlab.fhir.etl.auth.TokenRequest
 import bio.ferlab.fhir.etl.fhir.FhirUtils.buildFhirClient
 import bio.ferlab.fhir.etl.s3.S3Utils.buildS3Client
 import bio.ferlab.fhir.etl.task.FhavroExporter
 import ca.uhn.fhir.rest.client.impl.GenericClient
-import cats.implicits.catsSyntaxValidatedId
+import cats.syntax.all._
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent
 import software.amazon.awssdk.services.s3.S3Client
 
 object FhavroExport extends App {
-  println(s"ARGS: " + args.mkString("[", ", ", "]"))
-
-  private val positions = Map(
-    "releaseId" -> 0,
-    "studyIds" -> 1,
-    "project" -> 2,
-    "verbose" -> 3,
-  )
-
-  private def extractVerboseParamOrDefault(array: Array[String]): Boolean = {
-    def isVerbose(raw: String): Boolean = {
-      raw != null && List("yes", "true", "y").contains(raw.toLowerCase())
-    }
-    val argsLengthWhenVerbose = 4
-    val hasVerboseArg = array.length == argsLengthWhenVerbose
-    if (hasVerboseArg) isVerbose(array(positions("verbose"))) else false
+  println(s"ARGS: " + args.filter { x => !x.contains("secret") }.mkString("[", ", ", "]"))
+  val mArgs = args.filter { x => x.startsWith("--") && x.contains(":") }.map { x => {
+    val k :: v :: _ = x.split(":", 2).toList
+    (k.replace("--", ""), v)
   }
+  }.toMap
 
-  val releaseId = args(positions("releaseId"))
-  val studyIds = args(positions("studyIds"))
-  val project = args(positions("project"))
+  assert(!mArgs.getOrElse("release", "").isBlank, "'release' is needed")
+  assert(!mArgs.getOrElse("studies", "").isBlank, "'studies' must not be empty")
+  assert(!mArgs.getOrElse("project", "").isBlank, "'project' is needed")
 
-  private val studyList = studyIds.split(",").toList.distinct
-
-  studyList.foreach(studyId => {
-    withSystemExit {
-      withLog {
-        withConfiguration(project) { configuration =>
-          implicit val s3Client: S3Client = buildS3Client()
-          implicit val fhirClient: GenericClient = buildFhirClient(configuration, extractVerboseParamOrDefault(args))
-
-          val fhavroExporter = new FhavroExporter(configuration.awsConfig.bucketName, releaseId, studyId)
-
-          configuration.fhirConfig.resources.foreach { fhirRequest =>
-            val resources: List[BundleEntryComponent] = fhavroExporter.requestExportFor(fhirRequest)
-            fhavroExporter.uploadFiles(fhirRequest, resources)
-          }
-
-          "Success!".validNel[String]
-        }
+  private val studies = mArgs("studies").split(",").toList.distinct
+  private val isFhirVerbose = List("true", "y", "yes").contains(mArgs.getOrElse("verbose", "").toLowerCase)
+  withSystemExit {
+    withLog {
+      withConfiguration(mArgs("project")) { configuration =>
+        implicit val s3Client: S3Client = buildS3Client()
+        buildFhirClient(
+          TokenRequest(kcUrl = mArgs("fhir"), clientId = mArgs.getOrElse("client_id", ""), clientSecret = mArgs.getOrElse("client_secret", ""), realm = mArgs.getOrElse("realm", "")),
+          isFhirVerbose
+        ).map { client =>
+          implicit val fhirClient: GenericClient = client
+          studies.foreach(studyId => {
+            val fhavroExporter = new FhavroExporter(configuration.awsConfig.bucketName, mArgs("release"), studyId)
+            configuration.fhirConfig.resources.foreach { fhirRequest =>
+              val resources: List[BundleEntryComponent] = fhavroExporter.requestExportFor(fhirRequest)
+              fhavroExporter.uploadFiles(fhirRequest, resources)
+            }
+          })
+        }.toValidatedNel
       }
     }
-  })
+  }
 }
