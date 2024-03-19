@@ -1,4 +1,3 @@
-
 # Lambda IAM Resources
 #
 data "aws_iam_policy_document" "lambda_assume_role" {
@@ -71,7 +70,7 @@ data "aws_iam_policy_document" "get_secret_policy" {
   statement {
     effect    = "Allow"
     actions   = ["secretsmanager:GetSecretValue"]
-    resources = [aws_secretsmanager_secret.portal_etl_secret.arn]
+    resources = [aws_secretsmanager_secret.portal_etl_secret.arn,aws_secretmanager_secret.fhir_secret.arn]
   }
 }
 
