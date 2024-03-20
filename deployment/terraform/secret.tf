@@ -18,7 +18,7 @@ resource "aws_secretsmanager_secret" "fhir_secret" {
 }
 
 resource "aws_secretsmanager_secret_version" "fhir_secret_version" {
-  secret_id = aws_secretsmanager_secret.portal_etl_secret.id
+  secret_id = aws_secretsmanager_secret.fhir_secret.id
   secret_string = jsonencode(
     {
       "keycloak_client_id" : "",
