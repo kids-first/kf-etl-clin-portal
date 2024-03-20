@@ -1,7 +1,29 @@
 import sys
 from abc import ABC, abstractmethod
 
+import os
+import json
 import boto3
+
+FHIR_SECRETS_NAME = os.environ["FHIR_SECRETS_NAME"]
+
+
+def get_fhir_secrets(secret_name: str):
+    """
+    Retrieve the FHIR Secrets from AWS Secrets Manager.
+
+    Parameters:
+    - secret_name (str): The name or ARN of the secret in AWS Secrets Manager.
+
+    Returns:
+    - Map: The database password.
+    """
+
+    print(f"Getting secret {secret_name}")
+
+    client = boto3.client("secretsmanager")
+    response = client.get_secret_value(SecretId=secret_name)
+    return json.loads(response["SecretString"])
 
 
 def get_next_step_prefix(portal_etl_steps_to_execute: list, current_etl_steps: list, ) -> str:

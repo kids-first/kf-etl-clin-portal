@@ -40,7 +40,6 @@ resource "aws_sfn_state_machine" "genomic_index_etl" {
     account                                = var.account,
     run_genomic_index_etl                  = true,
     start_genomic_index_step_fn_lambda_arn = "",
-    fhir_secret                            = aws_secretsmanager_secret.fhir_secret.id
   })
 }
 
