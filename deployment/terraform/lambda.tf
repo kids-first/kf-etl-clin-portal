@@ -70,7 +70,7 @@ data "aws_iam_policy_document" "get_secret_policy" {
   statement {
     effect    = "Allow"
     actions   = ["secretsmanager:GetSecretValue"]
-    resources = [aws_secretsmanager_secret.portal_etl_secret.arn, aws_secretmanager_secret.fhir_secret.arn]
+    resources = [aws_secretsmanager_secret.portal_etl_secret.arn, aws_secretsmanager_secret.fhir_secret.arn]
   }
 }
 
@@ -141,10 +141,15 @@ data "archive_file" "archive_add_portal_etl_emr_step_lambda" {
 }
 
 resource "aws_lambda_function" "add_portal_etl_emr_step_lambda" {
-  function_name    = "PortalEtl-Submit-ETL-Step-${var.environment}"
-  filename         = "${path.module}/../lambda_functions/add_portal_etl_emr_step_archive.zip"
-  role             = aws_iam_role.lambda_service_role.arn
-  handler          = "main.add_portal_etl_emr_step"
+  function_name = "PortalEtl-Submit-ETL-Step-${var.environment}"
+  filename      = "${path.module}/../lambda_functions/add_portal_etl_emr_step_archive.zip"
+  role          = aws_iam_role.lambda_service_role.arn
+  handler       = "main.add_portal_etl_emr_step"
+  environment {
+    variables = {
+      FHIR_SECRETS_NAME = aws_secretsmanager_secret.fhir_secret.name
+    }
+  }
   runtime          = "python3.9"
   source_code_hash = data.archive_file.archive_add_portal_etl_emr_step_lambda.output_base64sha256
 }

@@ -1,3 +1,6 @@
+from portal_etl_emr_step_service import FhirSecretObject
+
+
 class EmrStepArgumentBuilder:
     def __init__(self):
         self.step_args = []
@@ -13,7 +16,10 @@ class EmrStepArgumentBuilder:
         ])
         return self
 
-    def with_fhir_custom_job(self, etl_portal_bucket: str, release_id: str, studies: list, fhir_url: str):
+    def with_fhir_custom_job(self, etl_portal_bucket: str, release_id: str, studies: list,
+                             fhir_url: str, fhir_secret_object: FhirSecretObject):
+
+        # TODO: Add Keycloak Args when ready
         fhavro_export_args = [
             "aws", "s3", "cp",
             f"s3://{etl_portal_bucket}/jobs/fhavro-export.jar", "/home/hadoop;",

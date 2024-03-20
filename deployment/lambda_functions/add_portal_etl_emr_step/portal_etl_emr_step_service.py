@@ -1,7 +1,37 @@
 import sys
 from abc import ABC, abstractmethod
+from collections import namedtuple
 
+import os
+import json
 import boto3
+
+FHIR_SECRETS_NAME = os.environ["FHIR_SECRETS_NAME"]
+
+FhirSecretObject = namedtuple('FhirSecretObject',
+                              ['keycloak_client_id', 'keycloak_client_secret', 'keycloak_url'])
+
+def get_fhir_secrets(secret_name: str) -> FhirSecretObject:
+    """
+    Retrieve the FHIR Secrets from AWS Secrets Manager.
+
+    Parameters:
+    - secret_name (str): The name or ARN of the secret in AWS Secrets Manager.
+
+    Returns:
+    - Map: The database password.
+    """
+
+    print(f"Getting secret {secret_name}")
+
+    client = boto3.client("secretsmanager")
+    response = client.get_secret_value(SecretId=secret_name)
+    secrets = json.loads(response["SecretString"])
+    return FhirSecretObject(
+        keycloak_client_id=secrets["keycloak_client_id"],
+        keycloak_client_secret=secrets["keycloak_client_secret"],
+        keycloak_url=secrets["keycloak_url"]
+    )
 
 
 def get_next_step_prefix(portal_etl_steps_to_execute: list, current_etl_steps: list, ) -> str:
@@ -28,6 +58,7 @@ class PortalEtlEmrStepService(ABC):
     def __init__(self, etl_args: dict):
         self.portal_etl_steps_to_execute = []
         self.etl_args = etl_args
+        self.fhir_secret_object = get_fhir_secrets(FHIR_SECRETS_NAME)
 
     @abstractmethod
     def get_default_etl_steps_to_execute(self) -> list:

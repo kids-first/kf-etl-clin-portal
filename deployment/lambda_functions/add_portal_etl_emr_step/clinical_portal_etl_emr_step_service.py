@@ -39,26 +39,28 @@ class ClinicalPortalEtlEmrStepService(PortalEtlEmrStepService):
     def get_etl_step_description(self, next_etl_steps: list) -> list[Any]:
         elastic_search_endpoint = self.etl_args['esEndpoint']
         return [PORTAL_ETL_STEP_DESCRIPTION_MAP[next_etl_steps[0]](etl_config=self.etl_args,
-                                                                   elastic_search_endpoint=elastic_search_endpoint)]
+                                                                   elastic_search_endpoint=elastic_search_endpoint,
+                                                                   fhir_secret_object=self.fhir_secret_object)]
 
     def get_etl_current_step_names(self, current_etl_steps) -> list:
         return current_etl_steps
 
 
 PORTAL_ETL_STEP_DESCRIPTION_MAP = {
-    'cleanup jars': lambda etl_config, elastic_search_endpoint:
+    'cleanup jars': lambda etl_config, elastic_search_endpoint, fhir_secret_object:
     EmrStepBuilder("Cleanup jars", EmrStepArgumentBuilder()
                    .with_custom_args(["bash", "-c",
                                       "sudo rm -f /usr/lib/spark/jars/spark-avro.jar"])
                    .build()).build(),
 
-    'download and run fhavro-export': lambda etl_config, elastic_search_endpoint:
+    'download and run fhavro-export': lambda etl_config, elastic_search_endpoint, fhir_secret_object:
     EmrStepBuilder("Download and Run Fhavro-export", EmrStepArgumentBuilder()
                    .with_fhir_custom_job(etl_config['etlPortalBucket'], etl_config['input']['releaseId'],
-                                         etl_config['input']['studyIds'], etl_config['input']['fhirUrl'])
+                                         etl_config['input']['studyIds'], etl_config['input']['fhirUrl'],
+                                         fhir_secret_object)
                    .build()).build(),
 
-    'normalize dataservice': lambda etl_config, elastic_search_endpoint:
+    'normalize dataservice': lambda etl_config, elastic_search_endpoint, fhir_secret_object:
     EmrStepBuilder("Normalize Dataservice", EmrStepArgumentBuilder()
                    .with_spark_job("bio.ferlab.etl.normalized.dataservice.RunNormalizeDataservice",
                                    etl_config['etlPortalBucket'])
@@ -69,7 +71,7 @@ PORTAL_ETL_STEP_DESCRIPTION_MAP = {
                    .with_studies(etl_config['input']['studyIds'], include_flag=True)
                    .build()).build(),
 
-    'normalize clinical': lambda etl_config, elastic_search_endpoint:
+    'normalize clinical': lambda etl_config, elastic_search_endpoint, fhir_secret_object:
     EmrStepBuilder("Normalize Clinical", EmrStepArgumentBuilder()
                    .with_spark_job("bio.ferlab.etl.normalized.clinical.RunNormalizeClinical",
                                    etl_config['etlPortalBucket'])
@@ -80,7 +82,7 @@ PORTAL_ETL_STEP_DESCRIPTION_MAP = {
                    .with_studies(etl_config['input']['studyIds'], include_flag=True)
                    .build()).build(),
 
-    'enrich all': lambda etl_config, elastic_search_endpoint:
+    'enrich all': lambda etl_config, elastic_search_endpoint, fhir_secret_object:
     EmrStepBuilder("Enrich All", EmrStepArgumentBuilder()
                    .with_spark_job("bio.ferlab.etl.enriched.clinical.RunEnrichClinical",
                                    etl_config['etlPortalBucket'])
@@ -91,7 +93,7 @@ PORTAL_ETL_STEP_DESCRIPTION_MAP = {
                    .with_studies(etl_config['input']['studyIds'], include_flag=True)
                    .build()).build(),
 
-    'prepare index': lambda etl_config, elastic_search_endpoint:
+    'prepare index': lambda etl_config, elastic_search_endpoint, fhir_secret_object:
     EmrStepBuilder("Prepare Index", EmrStepArgumentBuilder()
                    .with_spark_job("bio.ferlab.etl.prepared.clinical.RunPrepareClinical",
                                    etl_config['etlPortalBucket'])
@@ -102,7 +104,7 @@ PORTAL_ETL_STEP_DESCRIPTION_MAP = {
                    .with_studies(etl_config['input']['studyIds'], include_flag=True)
                    .build()).build(),
 
-    'index study': lambda etl_config, elastic_search_endpoint:
+    'index study': lambda etl_config, elastic_search_endpoint, fhir_secret_object:
     EmrStepBuilder("Index Study", EmrStepArgumentBuilder()
                    .with_spark_job("bio.ferlab.etl.indexed.clinical.RunIndexClinical",
                                    etl_config['etlPortalBucket'])
@@ -115,7 +117,7 @@ PORTAL_ETL_STEP_DESCRIPTION_MAP = {
                    .with_config(etl_config['environment'], etl_config['account'], include_flag=False)
                    .build()).build(),
 
-    'index participant': lambda etl_config, elastic_search_endpoint:
+    'index participant': lambda etl_config, elastic_search_endpoint, fhir_secret_object:
     EmrStepBuilder("Index Participant", EmrStepArgumentBuilder()
                    .with_spark_job("bio.ferlab.etl.indexed.clinical.RunIndexClinical",
                                    etl_config['etlPortalBucket'])
@@ -128,7 +130,7 @@ PORTAL_ETL_STEP_DESCRIPTION_MAP = {
                    .with_config(etl_config['environment'], etl_config['account'], include_flag=False)
                    .build()).build(),
 
-    'index file': lambda etl_config, elastic_search_endpoint:
+    'index file': lambda etl_config, elastic_search_endpoint, fhir_secret_object:
     EmrStepBuilder("Index File", EmrStepArgumentBuilder()
                    .with_spark_job("bio.ferlab.etl.indexed.clinical.RunIndexClinical",
                                    etl_config['etlPortalBucket'])
@@ -141,7 +143,7 @@ PORTAL_ETL_STEP_DESCRIPTION_MAP = {
                    .with_config(etl_config['environment'], etl_config['account'], include_flag=False)
                    .build()).build(),
 
-    'index biospecimen': lambda etl_config, elastic_search_endpoint:
+    'index biospecimen': lambda etl_config, elastic_search_endpoint, fhir_secret_object:
     EmrStepBuilder("Index Biospecimen", EmrStepArgumentBuilder()
                    .with_spark_job("bio.ferlab.etl.indexed.clinical.RunIndexClinical",
                                    etl_config['etlPortalBucket'])
