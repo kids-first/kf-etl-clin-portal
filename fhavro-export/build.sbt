@@ -20,7 +20,7 @@ libraryDependencies ++= Seq(
   "org.typelevel" %% "cats-core" % "2.3.1",
   "com.typesafe.play" %% "play-json" % "2.9.2",
   "com.github.pureconfig" %% "pureconfig" % "0.15.0",
-  "com.softwaremill.sttp.client3" %% "core" % "3.1.0",
+  "com.softwaremill.sttp.client3" %% "core" % "3.9.4",
   "org.apache.avro" % "avro" % avroVersion,
   "org.apache.avro" % "avro-ipc-netty" % avroVersion,
   "bio.ferlab" % "fhavro" % fhavroVersion,

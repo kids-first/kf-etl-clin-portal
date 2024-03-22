@@ -1,8 +1,6 @@
 import sbtassembly.AssemblyPlugin.autoImport.assembly
 val datalakeLibVersion = "12.0.2"
 
-lazy val fhavro_export = project in file("fhavro-export")
-
 val sparkDepsSetting = Seq(
   libraryDependencies ++= Seq(
     "bio.ferlab" %% "datalake-spark3" % datalakeLibVersion,
@@ -16,6 +14,8 @@ val sparkDepsSetting = Seq(
     "org.scalatest" %% "scalatest" % "3.2.9" % Test,
   )
 )
+
+val commonLibs = Seq(libraryDependencies += "com.lihaoyi" %% "ujson" % "3.0.0")
 
 val commonSettings = Seq(
   scalaVersion := "2.12.14",
@@ -39,9 +39,10 @@ val commonSettings = Seq(
   },
   assembly / test := {},
   resolvers += "Sonatype OSS Releases" at "https://s01.oss.sonatype.org/content/repositories/releases"
-
-
 )
+
+lazy val fhavro_export = (project in file("fhavro-export")).settings(commonLibs)
+
 lazy val config = (project in file("config")).settings(sparkDepsSetting)
 
-lazy val etl = (project in file("etl")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting)
+lazy val etl = (project in file("etl")).dependsOn(config).settings(commonSettings ++ sparkDepsSetting ++ commonLibs)
