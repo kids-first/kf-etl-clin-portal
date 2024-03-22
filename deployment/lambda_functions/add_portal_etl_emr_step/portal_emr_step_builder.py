@@ -24,7 +24,7 @@ class EmrStepArgumentBuilder:
             f"s3://{etl_portal_bucket}/jobs/fhavro-export.jar", "/home/hadoop;",
             f"export FHIR_URL='{fhir_url}'; export BUCKET='{etl_portal_bucket}'; {kc_exports}",
             "cd /home/hadoop;","/usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar",
-            f"fhavro-export.jar --release:{release_id} studies:{','.join(studies)} --project:default --verbose:{fhir_verbose}"
+            f"fhavro-export.jar --release:{release_id} --studies:{','.join(studies)} --project:default --verbose:{fhir_verbose}"
         ]
 
         self.step_args.extend([
