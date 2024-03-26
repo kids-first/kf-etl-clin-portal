@@ -7,10 +7,14 @@ import ca.uhn.fhir.rest.client.impl.GenericClient
 import ca.uhn.fhir.rest.client.interceptor.{BearerTokenAuthInterceptor, LoggingInterceptor}
 import org.apache.http.HttpHost
 import org.apache.http.client.utils.URIUtils
+import org.slf4j.{Logger, LoggerFactory}
 
 import java.net.URI
 
 object FhirUtils {
+
+  val LOGGER: Logger = LoggerFactory.getLogger(getClass)
+
   private def isUpgradedServer(url: String) = {
     //https://github.com/kids-first/kf-api-fhir-service/blob/eacdf0771ec87da1428b58cf915b78106cc3d801/README.md?plain=1#L19
     List(
@@ -33,11 +37,20 @@ object FhirUtils {
       loggingInterceptor.setLogRequestBody(true)
       fhirClient.registerInterceptor(loggingInterceptor);
     }
+    LOGGER.debug(s"isUpgradedServer? ${isUpgradedServer(tr.url)}") //TODO: remove
     if (isUpgradedServer(tr.url)) {
+      LOGGER.debug(s"About to fetch access token") //TODO: remove
+      LOGGER.debug(s"Token Request is: url=${tr.url} client-id=${tr.clientId} grant-type=${tr.grantType} client-secret=${tr.clientSecret}") //TODO: remove
       val token: Either[String, String] = KcTokenHandler.fetch(
         tr
       )
+
+      if (token.isLeft) { //TODO: remove
+        LOGGER.debug(s"Error fetching token. Got ${token.left.getOrElse("no value")}")
+      }
+
       token.map { s =>
+        LOGGER.debug(s"Using Token ${s}") //TODO: remove
         fhirClient.registerInterceptor(new BearerTokenAuthInterceptor(s))
         fhirClient
       }
