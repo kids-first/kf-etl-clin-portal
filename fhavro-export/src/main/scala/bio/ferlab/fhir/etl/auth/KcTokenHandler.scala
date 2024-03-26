@@ -18,8 +18,6 @@ object KcTokenHandler {
       .post(uri"${tr.url}")
       .send(be)
     be.close()
-    println("Token response body: ") //TODO: remove
-    println(r.body) //TODO: remove
     r.body.map { x =>
       val j = ujson.read(x)
       j("access_token").str
