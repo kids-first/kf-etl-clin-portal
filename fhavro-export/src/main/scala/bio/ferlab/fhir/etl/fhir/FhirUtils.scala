@@ -37,8 +37,8 @@ object FhirUtils {
       loggingInterceptor.setLogRequestBody(true)
       fhirClient.registerInterceptor(loggingInterceptor);
     }
-    LOGGER.info(s"isUpgradedServer? ${isUpgradedServer(tr.url)}") //TODO: remove
-    if (isUpgradedServer(tr.url)) {
+    LOGGER.info(s"isUpgradedServer? ${isUpgradedServer(fhir_url)}") //TODO: remove
+    if (isUpgradedServer(fhir_url)) {
       LOGGER.info(s"About to fetch access token") //TODO: remove
       LOGGER.info(s"Token Request is: url=${tr.url} client-id=${tr.clientId} grant-type=${tr.grantType} client-secret=${tr.clientSecret}") //TODO: remove
       val token: Either[String, String] = KcTokenHandler.fetch(
