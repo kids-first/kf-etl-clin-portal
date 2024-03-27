@@ -1,4 +1,4 @@
-from portal_etl_emr_step_service import FhirSecretObject
+from portal_etl_emr_step_service import FhirSecretObject, FHIR_SECRETS_NAME
 
 
 class EmrStepArgumentBuilder:
@@ -18,11 +18,13 @@ class EmrStepArgumentBuilder:
 
     def with_fhir_custom_job(self, etl_portal_bucket: str, release_id: str, studies: list,
                              fhir_url: str, fhir_secret_object: FhirSecretObject, fhir_verbose: str):
-        kc_exports = f"export KEYCLOAK_CLIENT_ID='{fhir_secret_object.keycloak_client_id}'; export KEYCLOAK_CLIENT_SECRET='{fhir_secret_object.keycloak_client_secret}'; export KEYCLOAK_TOKEN_URL='{fhir_secret_object.keycloak_url}';"
+        kc_exports = f"export KEYCLOAK_CLIENT_ID='{fhir_secret_object.keycloak_client_id}'; export KEYCLOAK_TOKEN_URL='{fhir_secret_object.keycloak_url}';"
+        kc_secret = f"""export KEYCLOAK_CLIENT_SECRET=$(aws secretsmanager get-secret-value --secret-id {FHIR_SECRETS_NAME} --output text | grep -o '"keycloak_client_secret":"[^"]*"' | cut -d '"' -f 4);"""
+
         fhavro_export_args = [
             "aws", "s3", "cp",
             f"s3://{etl_portal_bucket}/jobs/fhavro-export.jar", "/home/hadoop;",
-            f"export FHIR_URL='{fhir_url}'; export BUCKET='{etl_portal_bucket}'; {kc_exports}",
+            f"export FHIR_URL='{fhir_url}'; export BUCKET='{etl_portal_bucket}'; {kc_exports} {kc_secret} ",
             "cd /home/hadoop;","/usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java -jar",
             f"fhavro-export.jar --release:{release_id} --studies:{','.join(studies)} --project:default --verbose:{fhir_verbose}"
         ]

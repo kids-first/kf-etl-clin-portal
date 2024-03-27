@@ -6,7 +6,7 @@ import os
 import json
 import boto3
 
-FHIR_SECRETS_NAME = os.environ["FHIR_SECRETS_NAME"]
+FHIR_SECRETS_NAME = "TEST_SECRET"#os.environ["FHIR_SECRETS_NAME"]
 
 FhirSecretObject = namedtuple('FhirSecretObject',
                               ['keycloak_client_id', 'keycloak_client_secret', 'keycloak_url'])
